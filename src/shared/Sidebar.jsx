@@ -1,9 +1,13 @@
 import React from 'react'
-import { NavLink, useLocation } from 'react-router-dom'
+import { NavLink, useLocation, useNavigate } from 'react-router-dom'
 import { T, moduleInfo } from '../design/tokens'
 
-export default function Sidebar() {
+export default function Sidebar({ isMobile = false, isOpen = false, onClose = () => {} }) {
   const location = useLocation()
+
+  const handleNavClick = () => {
+    if (isMobile) onClose()
+  }
 
   return (
     <nav style={{
@@ -11,25 +15,39 @@ export default function Sidebar() {
       borderRight: `1px solid ${T.border}`, display: 'flex',
       flexDirection: 'column', position: 'fixed', top: 0, left: 0,
       zIndex: 100, overflowY: 'auto',
+      transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
+      transition: isMobile ? 'transform 0.25s ease' : 'none',
     }}>
       {/* Logo */}
-      <div style={{ padding: '20px 20px 16px', borderBottom: `1px solid ${T.border}` }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-          <div style={{
-            width: 36, height: 36, borderRadius: 8,
-            background: 'linear-gradient(135deg, #22d3ee22, #a78bfa22)',
-            border: '1px solid #22d3ee44',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 18, fontWeight: 900, color: T.a1,
-          }}>Δ</div>
-          <div>
-            <div style={{ color: T.text, fontWeight: 800, fontSize: 16, letterSpacing: 0.5 }}>DPH3V</div>
-            <div style={{ color: T.muted, fontSize: 10, letterSpacing: 0.5 }}>Mennta Energy</div>
+      <div style={{ padding: '16px 20px', borderBottom: `1px solid ${T.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{
+              width: 36, height: 36, borderRadius: 8,
+              background: 'linear-gradient(135deg, #22d3ee22, #a78bfa22)',
+              border: '1px solid #22d3ee44',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 18, fontWeight: 900, color: T.a1,
+            }}>Δ</div>
+            <div>
+              <div style={{ color: T.text, fontWeight: 800, fontSize: 16, letterSpacing: 0.5 }}>DPH3V</div>
+              <div style={{ color: T.muted, fontSize: 10, letterSpacing: 0.5 }}>Mennta Energy</div>
+            </div>
           </div>
+          {/* Bouton fermer (mobile uniquement) */}
+          {isMobile && (
+            <button
+              onClick={onClose}
+              style={{
+                background: 'none', border: 'none', color: T.muted,
+                fontSize: 20, cursor: 'pointer', padding: 4, lineHeight: 1,
+              }}
+            >✕</button>
+          )}
         </div>
         <div style={{
           background: `${T.a1}11`, border: `1px solid ${T.a1}33`,
-          borderRadius: 6, padding: '6px 10px', marginTop: 8,
+          borderRadius: 6, padding: '6px 10px', marginTop: 10,
         }}>
           <div style={{ color: T.a1, fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
             Advanced Derivatives
@@ -49,6 +67,7 @@ export default function Sidebar() {
             <NavLink
               key={mod.id}
               to={mod.path}
+              onClick={handleNavClick}
               style={{ textDecoration: 'none', display: 'block', marginBottom: 2 }}
             >
               <div style={{
@@ -90,7 +109,7 @@ export default function Sidebar() {
 
         {/* Checklist */}
         <div style={{ borderTop: `1px solid ${T.border}`, marginTop: 8, paddingTop: 8 }}>
-          <NavLink to="/checklist" style={{ textDecoration: 'none', display: 'block' }}>
+          <NavLink to="/checklist" onClick={handleNavClick} style={{ textDecoration: 'none', display: 'block' }}>
             {({ isActive }) => (
               <div style={{
                 display: 'flex', alignItems: 'center', gap: 10,
