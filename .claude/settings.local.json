@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.mennta.com)",
+      "Bash(tail:*)",
+      "Bash(grep:*)",
+      "Bash(gh auth:*)"
+    ]
+  }
+}
