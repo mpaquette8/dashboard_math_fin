@@ -73,20 +73,75 @@ function DerivTab() {
         <strong style={{ color: ACCENT }}>Dérivée partielle vs dérivée totale :</strong> Quand une fonction dépend de plusieurs variables — par exemple le prix d'une option C(S, σ, r, T) dépend du sous-jacent S, de la volatilité σ, du taux r et de la maturité T — on distingue deux notions. La <strong>dérivée partielle ∂C/∂S</strong> mesure la sensibilité de C à S en maintenant σ, r, T constants : c'est le Delta. La <strong>dérivée totale dC</strong> capture la variation de C quand tous les paramètres bougent simultanément : dC = (∂C/∂S)dS + (∂C/∂σ)dσ + (∂C/∂r)dr + (∂C/∂T)dT. C'est la base de la décomposition P&L (profit and loss) d'un portefeuille d'options.
       </div>
 
-      <SectionTitle accent={ACCENT}>Dérivées partielles en finance</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Considérons le prix d'un call européen C(S, σ) qui dépend du prix du sous-jacent S et de la volatilité implicite σ. La dérivée partielle par rapport à S, notée ∂C/∂S, mesure comment C varie quand S change d'une unité, <em>σ restant fixe</em>. La dérivée partielle par rapport à σ, notée ∂C/∂σ, mesure la sensibilité à la volatilité, <em>S restant fixe</em>.
+      <SectionTitle accent={ACCENT}>Dérivées partielles — Technique pas à pas</SectionTitle>
+      <IntuitionBlock emoji="🔒" title='Principe fondamental : "geler" les autres variables' accent={ACCENT}>
+        Pour calculer <strong>∂f/∂x</strong>, on traite toutes les variables autres que x comme des <strong>constantes</strong> et on applique les règles habituelles. C'est tout !
+        <br /><br />
+        <strong>Analogie :</strong> imaginez une carte topographique f(x, y). La dérivée ∂f/∂x est la pente quand vous marchez vers l'Est (x croît, y fixe). La dérivée ∂f/∂y est la pente vers le Nord (y croît, x fixe). Deux sensibilités différentes pour la même surface.
+        <br /><br />
+        En finance : ∂C/∂S répond à "comment varie mon option si S monte de 1€ et que <em>rien d'autre ne bouge</em> ?" — c'est exactement le Delta.
+      </IntuitionBlock>
+
+      <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 1 — Polynôme à 2 variables : f(x, y) = 3x²y + 2xy³</div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>Calcul de <strong style={{ color: T.text }}>∂f/∂x</strong> (on gèle y) :</div>
+        <Step num={1} accent={ACCENT}>Terme <strong>3x²y</strong> : y est une constante multiplicative → dériver x² → 2x → contribution : 3·(2x)·y = <strong>6xy</strong></Step>
+        <Step num={2} accent={ACCENT}>Terme <strong>2xy³</strong> : y³ est une constante multiplicative → dériver x → 1 → contribution : 2·1·y³ = <strong>2y³</strong></Step>
+        <FormulaBox accent={ACCENT}>∂f/∂x = 6xy + 2y³</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, margin: '10px 0 8px' }}>Calcul de <strong style={{ color: T.text }}>∂f/∂y</strong> (on gèle x) :</div>
+        <Step num={3} accent={ACCENT}>Terme <strong>3x²y</strong> : x² est une constante multiplicative → dériver y → 1 → contribution : 3x²·1 = <strong>3x²</strong></Step>
+        <Step num={4} accent={ACCENT}>Terme <strong>2xy³</strong> : x est une constante multiplicative → dériver y³ → 3y² → contribution : 2x·(3y²) = <strong>6xy²</strong></Step>
+        <FormulaBox accent={ACCENT}>∂f/∂y = 3x² + 6xy²</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Vérification en (x=1, y=2) : ∂f/∂x = 6×1×2 + 2×8 = 12 + 16 = <strong>28</strong>. Si x monte de 1 (x: 1→2), f varie d'environ 28.
+          <br />∂f/∂y = 3×1 + 6×1×4 = 3 + 24 = <strong>27</strong>. Si y monte de 1 (y: 2→3), f varie d'environ 27.
+        </div>
       </div>
-      <Grid cols={2} gap="10px">
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>Delta = ∂C/∂S</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Si S passe de 100 à 101€ et Delta = 0.6 : le call gagne environ 0.60€. Delta indique combien d'unités de sous-jacent déteindre pour se couvrir (delta-hedge).</div>
+
+      <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 2 — Capitalisation continue : V(C, r, T) = C · e^(rT)</div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>V = valeur future d'un capital C placé à taux continu r pendant T années. Trois dérivées partielles, trois sensibilités :</div>
+        <Step num={1} accent={ACCENT}><strong>∂V/∂C</strong> (r et T constants) : e^(rT) est un facteur constant → <strong>∂V/∂C = e^(rT)</strong>. Interprétation : 1€ de capital supplémentaire crée e^(rT)€ de valeur future.</Step>
+        <Step num={2} accent={ACCENT}><strong>∂V/∂r</strong> (C et T constants) : règle de chaîne sur e^(rT) → dérivée par rapport à r = T·e^(rT) → <strong>∂V/∂r = C·T·e^(rT)</strong>. Interprétation : si r monte de 1%, la valeur future augmente de C·T·e^(rT).</Step>
+        <Step num={3} accent={ACCENT}><strong>∂V/∂T</strong> (C et r constants) : même logique → <strong>∂V/∂T = C·r·e^(rT)</strong>. C'est le taux de croissance instantanée de la valeur.</Step>
+        <FormulaBox accent={ACCENT}>∂V/∂C = e^(rT)   |   ∂V/∂r = C·T·e^(rT)   |   ∂V/∂T = C·r·e^(rT)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Exemple numérique : C = 1 000€, r = 5%, T = 2 ans → e^(0.10) ≈ 1.105.
+          ∂V/∂r = 1000 × 2 × 1.105 = 2 210€/unité de taux. Si r monte de 1% (+0.01), V augmente d'environ +22.10€.
         </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>Vega = ∂C/∂σ</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Si σ passe de 20% à 21% et Vega = 0.25 : le call gagne environ 0.25€ (par point de vol). Crucial sur les marchés de l'énergie où la vol implicite est très variable.</div>
+      </div>
+
+      <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Exemple 3 — Le paramètre d₁ de Black-Scholes</div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 12 }}>
+          d₁(S, σ, r, T) = [ln(S/K) + (r + σ²/2)·T] / (σ·√T), K = strike (constante).
+          <br />Ce sont les briques de base de tous les Greeks — calculons les 4 dérivées partielles.
         </div>
-      </Grid>
+        <Step num={1} accent={ACCENT}>
+          <strong>∂d₁/∂S</strong> : seul ln(S/K) = ln(S) − ln(K) dépend de S.
+          Règle de chaîne : ∂ln(S)/∂S = 1/S. Le dénominateur σ√T est constant.
+          → <strong>∂d₁/∂S = 1 / (S·σ·√T)</strong>
+        </Step>
+        <Step num={2} accent={ACCENT}>
+          <strong>∂d₁/∂σ</strong> : réécrivons d₁ = ln(S/K)/(σ√T) + r√T/σ + σ√T/2.
+          Trois termes : ∂/∂σ[ln(S/K)/(σ√T)] = −ln(S/K)/(σ²√T), ∂/∂σ[r√T/σ] = −r√T/σ², ∂/∂σ[σ√T/2] = √T/2.
+          → <strong>∂d₁/∂σ = −[ln(S/K) + rT] / (σ²√T) + √T/2</strong>
+        </Step>
+        <Step num={3} accent={ACCENT}>
+          <strong>∂d₁/∂r</strong> : seul le terme rT/(σ√T) = r·√T/σ dépend de r.
+          → <strong>∂d₁/∂r = √T / σ</strong>
+        </Step>
+        <Step num={4} accent={ACCENT}>
+          <strong>∂d₁/∂T</strong> : posons d₁ = (A + B·T)/(σ√T) où A = ln(S/K), B = r + σ²/2.
+          Règle du quotient : ∂/∂T[(A+BT)·(σ√T)⁻¹] = B/(σ√T) − (A+BT)·σ/(2σ²T√T) = [BT − A] / (2T·σ√T).
+          → <strong>∂d₁/∂T = [(r + σ²/2)T − ln(S/K)] / (2T·σ√T)</strong>
+        </Step>
+        <FormulaBox accent={ACCENT}>∂d₁/∂S = 1/(Sσ√T)     ∂d₁/∂σ = −(ln(S/K)+rT)/(σ²√T) + √T/2{'\n'}∂d₁/∂r = √T/σ           ∂d₁/∂T = [(r+σ²/2)T − ln(S/K)] / (2Tσ√T)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Note : d₂ = d₁ − σ√T, donc ∂d₂/∂S = ∂d₁/∂S et ∂d₂/∂r = ∂d₁/∂r (σ√T ne dépend pas de S ni r).
+          En revanche : ∂d₂/∂σ = ∂d₁/∂σ − √T et ∂d₂/∂T = ∂d₁/∂T − σ/(2√T).
+        </div>
+      </div>
 
       <SectionTitle accent={ACCENT}>Règles essentielles</SectionTitle>
       <Grid cols={2} gap="10px">
@@ -106,57 +161,139 @@ function DerivTab() {
         ))}
       </Grid>
 
-      <SectionTitle accent={ACCENT}>Application : Les Greeks</SectionTitle>
+      <SectionTitle accent={ACCENT}>Les Greeks de Black-Scholes — Dérivation complète</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Les Greeks sont les dérivées du prix d'une option par rapport aux différents paramètres de marché. Ils permettent aux traders de quantifier précisément leur exposition et de construire des couvertures efficaces. En marchés de l'énergie, les options sur le pétrole brut (Brent, WTI) et sur le gaz naturel ont des Greeks qui varient fortement en fonction de la saison et de la liquidité.
+        Chaque Greek est une <strong style={{ color: T.text }}>dérivée partielle</strong> du prix C par rapport à un paramètre de marché. On part de la formule de Black-Scholes et on dérive pas à pas. Toutes les dérivations exploitent une même identité remarquable qui élimine les termes complexes.
       </div>
-      <Grid cols={1} gap="12px">
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Δ Delta = ∂C/∂S</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>
-            <em>"Le call réagit comme si on détenait Delta unités du sous-jacent."</em> Un Delta de 0.6 signifie que si le prix du pétrole monte de 1$, l'option call sur le pétrole gagne environ 0.60$. Delta varie entre 0 (option très hors de la monnaie) et 1 (option très dans la monnaie).
-          </div>
-          <code style={{ color: T.text, fontSize: 12, display: 'block', background: `${ACCENT}0d`, borderRadius: 6, padding: '6px 10px' }}>
-            Δ_call = N(d₁)   ∈ [0, 1]   |   Δ_put = N(d₁) - 1 ∈ [-1, 0]
-          </code>
+
+      <FormulaBox accent={ACCENT} label="Formule de Black-Scholes (call européen) — point de départ de tous les Greeks">
+        C = S·N(d₁) − K·e^(−rT)·N(d₂){'\n'}d₁ = [ln(S/K) + (r + σ²/2)·T] / (σ·√T)   ,   d₂ = d₁ − σ·√T
+      </FormulaBox>
+
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['N(·)', 'CDF de la loi normale standard — P(Z ≤ x)'],
+        ['φ(·)', 'PDF de la loi normale standard — N′(·) = (1/√2π)·e^(−x²/2)'],
+        ['d₁, d₂', 'Arguments de la loi normale (dépendent de S, σ, r, T)'],
+      ]} />
+
+      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 10, padding: 16, margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>🔑 Identité clé utilisée dans toutes les dérivations : S·φ(d₁) = K·e^(−rT)·φ(d₂)</div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10, lineHeight: 1.6 }}>
+          Cette identité permet d'annuler des termes croisés dans toutes les dérivées partielles. Voici sa preuve :
         </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Γ Gamma = ∂²C/∂S²</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>
-            <em>"La vitesse à laquelle Delta change."</em> Un Gamma élevé signifie que votre couverture Delta devient rapidement obsolète si le sous-jacent bouge. Les market makers adorent le Gamma (profit si le marché bouge beaucoup) mais redoutent le Theta associé (coût du temps qui passe). Gamma est maximum pour les options at-the-money proches de l'expiration.
-          </div>
-          <code style={{ color: T.text, fontSize: 12, display: 'block', background: `${ACCENT}0d`, borderRadius: 6, padding: '6px 10px' }}>
-            Γ = φ(d₁) / (S × σ × √T)   ≥ 0   où φ = densité normale standard
-          </code>
+        <Step num={1} accent={ACCENT}>φ(d₁)/φ(d₂) = e^[−(d₁²−d₂²)/2]. Factorisons : d₁²−d₂² = (d₁+d₂)·(d₁−d₂) = (d₁+d₂)·σ√T.</Step>
+        <Step num={2} accent={ACCENT}>d₁+d₂ = 2·[ln(S/K) + rT]/(σ√T), donc (d₁²−d₂²)/2 = ln(S/K) + rT = ln(S·e^(rT)/K).</Step>
+        <Step num={3} accent={ACCENT}>φ(d₁)/φ(d₂) = e^[−ln(S·e^(rT)/K)] = K·e^(−rT)/S → <strong>S·φ(d₁) = K·e^(−rT)·φ(d₂) ✓</strong></Step>
+      </div>
+
+      <Accordion title="Δ Delta = ∂C/∂S — Dérivation complète" accent={ACCENT} badge="Greek 1">
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
+          Question : si S monte de 1€ et que rien d'autre ne bouge, de combien varie C ?
+          <br />On dérive C = S·N(d₁) − K·e^(−rT)·N(d₂) par rapport à S. Attention : d₁ et d₂ dépendent aussi de S via ln(S/K).
         </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>ν Vega = ∂C/∂σ</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>
-            <em>"L'option devient plus chère quand les marchés s'agitent."</em> Une hausse de la volatilité implicite augmente toujours la valeur d'une option (call ou put), car l'incertitude accroît la valeur de l'asymétrie du payoff. Sur les marchés de l'énergie, la vol implicite peut doubler lors de crises géopolitiques — le Vega permet de quantifier l'impact.
-          </div>
-          <code style={{ color: T.text, fontSize: 12, display: 'block', background: `${ACCENT}0d`, borderRadius: 6, padding: '6px 10px' }}>
-            ν = S × φ(d₁) × √T   ≥ 0   (identique pour call et put)
-          </code>
+        <Step num={1} accent={ACCENT}>Règle du produit sur S·N(d₁) : ∂/∂S[S·N(d₁)] = 1·N(d₁) + S·N′(d₁)·∂d₁/∂S = N(d₁) + S·φ(d₁)·<strong>1/(S·σ√T)</strong></Step>
+        <Step num={2} accent={ACCENT}>Dériver −K·e^(−rT)·N(d₂) : −K·e^(−rT)·φ(d₂)·∂d₂/∂S. Or ∂d₂/∂S = ∂d₁/∂S = 1/(S·σ√T) (car d₂ = d₁ − σ√T, constante en S). → −K·e^(−rT)·φ(d₂)·<strong>1/(S·σ√T)</strong></Step>
+        <Step num={3} accent={ACCENT}>Assembler les deux termes : Δ = N(d₁) + <strong>[S·φ(d₁) − K·e^(−rT)·φ(d₂)]</strong> / (S·σ√T)</Step>
+        <Step num={4} accent={ACCENT}>Identité clé : S·φ(d₁) = K·e^(−rT)·φ(d₂) → le crochet est exactement <strong>zéro !</strong></Step>
+        <FormulaBox accent={ACCENT}>Δ_call = N(d₁) ∈ [0, 1]   |   Δ_put = N(d₁) − 1 = −N(−d₁) ∈ [−1, 0]</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
+          <strong>Interprétation géométrique :</strong> N(d₁) est la valeur de la CDF normale en d₁. Pour une option ATM (S≈K, T moyen), d₁ ≈ 0 → Δ ≈ N(0) = 0.5. Pour une option deep-ITM, d₁ → +∞ → Δ → 1. Pour deep-OTM, d₁ → −∞ → Δ → 0.
+          <br /><br />
+          <strong>Exemple Brent :</strong> S=80$, K=85$, σ=35%, r=3%, T=0.5. d₁ ≈ −0.06, N(−0.06) ≈ 0.476 → Δ ≈ 0.48. Si le Brent monte de 1$, le call gagne ~0.48$.
         </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Θ Theta = ∂C/∂t</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>
-            <em>"L'option perd de la valeur chaque jour qui passe, comme une assurance qui approche de sa date d'expiration."</em> Si vous achetez une option à 30 jours, elle vaudra moins à 29 jours, même si le marché n'a pas bougé. Cette érosion temporelle s'accélère à l'approche de la maturité. Theta est généralement négatif pour l'acheteur d'option.
-          </div>
-          <code style={{ color: T.text, fontSize: 12, display: 'block', background: `${ACCENT}0d`, borderRadius: 6, padding: '6px 10px' }}>
-            Θ_call = -[S·φ(d₁)·σ / (2√T)] - r·K·e^(-rT)·N(d₂)   {'<'} 0
-          </code>
+      </Accordion>
+
+      <Accordion title="Γ Gamma = ∂²C/∂S² — Dérivation complète" accent={ACCENT} badge="Greek 2">
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
+          Gamma est la dérivée de Delta par rapport à S — la "courbure" du prix. Il mesure à quelle vitesse Delta change quand S bouge.
         </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>ρ Rho = ∂C/∂r</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6, marginBottom: 6 }}>
-            <em>"La valeur du call augmente quand les taux montent"</em> (car le strike est actualisé à un taux plus élevé, donc sa valeur présente baisse). Sur les marchés de l'énergie, Rho est souvent secondaire face au Delta et au Vega, mais redevient crucial pour les options long terme (maturités {'>'} 1 an).
-          </div>
-          <code style={{ color: T.text, fontSize: 12, display: 'block', background: `${ACCENT}0d`, borderRadius: 6, padding: '6px 10px' }}>
-            ρ_call = K·T·e^(-rT)·N(d₂)   {'>'} 0   |   ρ_put = -K·T·e^(-rT)·N(-d₂) {'<'} 0
-          </code>
+        <Step num={1} accent={ACCENT}>Γ = ∂Δ/∂S = ∂N(d₁)/∂S (puisqu'on vient de montrer que Δ = N(d₁))</Step>
+        <Step num={2} accent={ACCENT}>Règle de chaîne : ∂N(d₁)/∂S = N′(d₁)·∂d₁/∂S = φ(d₁)·<strong>1/(S·σ·√T)</strong> (on utilise ∂d₁/∂S calculé dans l'Exemple 3 ci-dessus)</Step>
+        <FormulaBox accent={ACCENT}>Γ = φ(d₁) / (S·σ·√T) ≥ 0   (identique pour call et put)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
+          <strong>Gamma est le même pour le call et le put</strong> (par parité call-put, Δ_call − Δ_put = 1, donc leurs Gamma sont égaux).
+          <br /><br />
+          Gamma est maximal pour les options ATM proches de l'expiration : σ√T → 0 fait exploser Γ.
+          <br /><br />
+          <strong>Exemple :</strong> S=100, K=100 (ATM), σ=20%, T=0.25. d₁ ≈ 0.05 → φ(d₁) ≈ 0.399. Γ = 0.399 / (100 × 0.20 × 0.5) = 0.399/10 ≈ <strong>0.040</strong>. Si S monte de 1€, le Delta augmente d'environ 0.040 — la couverture doit être rebalancée.
         </div>
-      </Grid>
+      </Accordion>
+
+      <Accordion title="ν Vega = ∂C/∂σ — Dérivation complète" accent={ACCENT} badge="Greek 3">
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
+          Question : si la volatilité implicite monte de 1%, de combien varie C ?
+          <br />On dérive C par rapport à σ. Attention : d₁ et d₂ dépendent tous deux de σ de façon différente.
+        </div>
+        <Step num={1} accent={ACCENT}>∂C/∂σ = S·φ(d₁)·∂d₁/∂σ − K·e^(−rT)·φ(d₂)·∂d₂/∂σ</Step>
+        <Step num={2} accent={ACCENT}>Factoriser avec l'identité clé S·φ(d₁) = K·e^(−rT)·φ(d₂) :
+          <br />∂C/∂σ = S·φ(d₁)·<strong>(∂d₁/∂σ − ∂d₂/∂σ)</strong></Step>
+        <Step num={3} accent={ACCENT}>Or d₁ − d₂ = σ√T (par définition), donc ∂(d₁−d₂)/∂σ = ∂(σ√T)/∂σ = <strong>√T</strong>. Le terme ∂d₁/∂σ − ∂d₂/∂σ = √T.</Step>
+        <FormulaBox accent={ACCENT}>ν = S·φ(d₁)·√T ≥ 0   (identique pour call et put)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
+          <strong>L'astuce de l'étape 2</strong> est la même identité que pour Delta : elle transforme deux termes complexes en une soustraction simple. C'est pourquoi apprendre cette identité une fois suffit pour tous les Greeks.
+          <br /><br />
+          Vega est toujours positif : plus de vol → option plus précieuse (call et put). Sur les marchés de l'énergie, la vol peut doubler lors d'une crise géopolitique (ex: WTI : 30% → 80% en 2022) — Vega permet de chiffrer l'impact.
+          <br /><br />
+          <strong>Exemple :</strong> S=100, σ=25%, T=1. φ(d₁) ≈ 0.38. ν = 100 × 0.38 × 1 = <strong>38€ par unité de vol</strong>. Si σ passe de 25% à 26% (+0.01), le call gagne 38 × 0.01 = 0.38€.
+        </div>
+      </Accordion>
+
+      <Accordion title="Θ Theta = ∂C/∂t — Étapes principales" accent={ACCENT} badge="Greek 4">
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
+          Theta mesure l'érosion temporelle. Convention : t = temps écoulé (T = maturité − t). Quand t augmente d'un jour, T diminue d'un jour. Theta = ∂C/∂t = −∂C/∂T.
+        </div>
+        <Step num={1} accent={ACCENT}>∂C/∂T = ∂/∂T[S·N(d₁)] − ∂/∂T[K·e^(−rT)·N(d₂)]
+          <br />= S·φ(d₁)·∂d₁/∂T + r·K·e^(−rT)·N(d₂) − K·e^(−rT)·φ(d₂)·∂d₂/∂T</Step>
+        <Step num={2} accent={ACCENT}>Regrouper les termes en d₁ et d₂ avec l'identité clé :
+          <br />S·φ(d₁)·∂d₁/∂T − K·e^(−rT)·φ(d₂)·∂d₂/∂T = S·φ(d₁)·<strong>(∂d₁/∂T − ∂d₂/∂T)</strong></Step>
+        <Step num={3} accent={ACCENT}>∂d₁/∂T − ∂d₂/∂T = ∂(d₁−d₂)/∂T = ∂(σ√T)/∂T = <strong>σ/(2√T)</strong></Step>
+        <Step num={4} accent={ACCENT}>∂C/∂T = S·φ(d₁)·σ/(2√T) + r·K·e^(−rT)·N(d₂). Theta = −∂C/∂T :</Step>
+        <FormulaBox accent={ACCENT}>Θ_call = −S·φ(d₁)·σ/(2√T) − r·K·e^(−rT)·N(d₂) {'<'} 0</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
+          Les deux termes sont négatifs (φ {'>'} 0, N(d₂) {'>'} 0, r {'>'} 0) → Theta est toujours négatif pour l'acheteur d'option.
+          En pratique, Theta s'exprime <em>par jour</em> : Θ_jour = Θ_annuel / 365 (ou /252 pour jours ouvrés).
+          <br /><br />
+          <strong>Exemple :</strong> S=100, K=100, σ=20%, r=3%, T=0.25. Θ ≈ −7€/an ≈ −<strong>0.019€/jour</strong>. L'option perd environ 2 centimes chaque jour qui passe, même si le marché ne bouge pas.
+        </div>
+      </Accordion>
+
+      <Accordion title="ρ Rho = ∂C/∂r — Dérivation complète" accent={ACCENT} badge="Greek 5">
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
+          Question : si le taux sans risque monte de 1%, de combien varie C ?
+          <br />On dérive C par rapport à r. d₁ et d₂ dépendent de r via le terme r·T.
+        </div>
+        <Step num={1} accent={ACCENT}>∂C/∂r = S·φ(d₁)·∂d₁/∂r + K·T·e^(−rT)·N(d₂) − K·e^(−rT)·φ(d₂)·∂d₂/∂r</Step>
+        <Step num={2} accent={ACCENT}>Or ∂d₁/∂r = ∂d₂/∂r = √T/σ (d₁ et d₂ diffèrent d'une constante σ√T indépendante de r)</Step>
+        <Step num={3} accent={ACCENT}>Regrouper le 1er et le 3e terme : [S·φ(d₁) − K·e^(−rT)·φ(d₂)]·(√T/σ) = <strong>0</strong> par l'identité clé !</Step>
+        <Step num={4} accent={ACCENT}>Il ne reste que le terme du milieu :</Step>
+        <FormulaBox accent={ACCENT}>ρ_call = K·T·e^(−rT)·N(d₂) {'>'} 0   |   ρ_put = −K·T·e^(−rT)·N(−d₂) {'<'} 0</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
+          <strong>Interprétation :</strong> quand les taux montent, la valeur actualisée du strike K·e^(−rT) diminue → acheter l'actif coûte moins cher en termes actualisés → le call s'apprécie. Pour le put, c'est l'inverse.
+          <br /><br />
+          Rho est secondaire sur les options courtes (T petit) mais crucial pour les options long terme {'>'} 1 an (contrats énergétiques pluriannuels).
+          <br /><br />
+          <strong>Exemple :</strong> K=100, T=1, r=3%, N(d₂)=0.50. ρ = 100×1×e^(−0.03)×0.50 ≈ <strong>48.5€ par unité de r</strong>. Si r passe de 3% à 4% (+0.01), le call gagne 48.5 × 0.01 ≈ 0.49€.
+        </div>
+      </Accordion>
+
+      <div style={{ background: T.panel2, borderRadius: 10, padding: 14, margin: '16px 0', border: `1px solid ${ACCENT}22` }}>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 13, marginBottom: 10 }}>Récapitulatif — Les 5 Greeks en un coup d'œil</div>
+        <Grid cols={2} gap="8px">
+          {[
+            { g: 'Δ Delta', f: 'N(d₁)', d: '∂C/∂S', i: 'Sensibilité au prix ∈ [0,1]' },
+            { g: 'Γ Gamma', f: 'φ(d₁)/(Sσ√T)', d: '∂²C/∂S²', i: 'Convexité, variation du Delta' },
+            { g: 'ν Vega', f: 'S·φ(d₁)·√T', d: '∂C/∂σ', i: 'Sensibilité à la vol. ≥ 0' },
+            { g: 'Θ Theta', f: '−S·φ(d₁)·σ/(2√T) − rKe^(−rT)N(d₂)', d: '∂C/∂t', i: 'Érosion temporelle ≤ 0' },
+            { g: 'ρ Rho', f: 'K·T·e^(−rT)·N(d₂)', d: '∂C/∂r', i: 'Sensibilité aux taux ≥ 0' },
+          ].map(({ g, f, d, i }) => (
+            <div key={g} style={{ background: T.bg, borderRadius: 8, padding: '10px 12px', border: `1px solid ${ACCENT}22` }}>
+              <div style={{ color: ACCENT, fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{g} = {d}</div>
+              <code style={{ color: T.text, fontSize: 10, display: 'block', marginBottom: 4 }}>{f}</code>
+              <div style={{ color: T.muted, fontSize: 11 }}>{i}</div>
+            </div>
+          ))}
+        </Grid>
+      </div>
 
       <IntuitionBlock emoji="💡" title="Décomposition P&L : comprendre chaque source de profit/perte" accent={ACCENT}>
         Un portefeuille d'options voit sa valeur changer chaque jour. La <strong>décomposition P&L</strong> permet d'attribuer chaque centime de gain ou de perte à une cause précise. Par la formule de Taylor au second ordre appliquée au prix de l'option C(S, σ, t) :
