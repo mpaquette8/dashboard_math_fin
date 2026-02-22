@@ -45,7 +45,7 @@ export function DerivTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Les dérivées sont <strong style={{ color: T.text }}>l'outil central de la finance quantitative</strong>. Chaque fois qu'un trader veut savoir "comment mon portefeuille va-t-il réagir si le marché bouge ?", il calcule une dérivée. Les <em>Greeks</em> des options (Delta, Gamma, Vega, Theta, Rho) sont tous des dérivées du prix de l'option par rapport à différents paramètres de marché. La <em>couverture dynamique</em> (delta-hedging) consiste à ajuster continuellement une position en fonction de la dérivée du prix. En <em>analyse de sensibilité</em>, on utilise les dérivées pour mesurer l'impact d'un choc de 1% de volatilité ou de 10$/bbl sur le prix du pétrole. Sans dérivées, pas de pricing, pas de hedging, pas de risk management.
+        La dérivée est l'outil fondamental pour mesurer <strong style={{ color: T.text }}>comment une quantité change en réponse à une autre</strong>. Elle apparaît dans tous les domaines : en physique (vitesse, accélération, flux thermique), en biologie (taux de croissance d'une population), en chimie (cinétique de réaction), en économie (coût marginal, élasticité). Partout où l'on pose la question <em>"à quelle vitesse évolue cette grandeur ?"</em>, la dérivée est la réponse.
       </div>
       <IntuitionBlock emoji="🚗" title="La dérivée = vitesse instantanée" accent={ACCENT}>
         Imaginez que vous conduisez. La position est <strong>f(t)</strong>, la vitesse est <strong>f'(t)</strong>.
@@ -70,7 +70,7 @@ export function DerivTab() {
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Dérivée partielle vs dérivée totale :</strong> Quand une fonction dépend de plusieurs variables — par exemple le prix d'une option C(S, σ, r, T) dépend du sous-jacent S, de la volatilité σ, du taux r et de la maturité T — on distingue deux notions. La <strong>dérivée partielle ∂C/∂S</strong> mesure la sensibilité de C à S en maintenant σ, r, T constants : c'est le Delta. La <strong>dérivée totale dC</strong> capture la variation de C quand tous les paramètres bougent simultanément : dC = (∂C/∂S)dS + (∂C/∂σ)dσ + (∂C/∂r)dr + (∂C/∂T)dT. C'est la base de la décomposition P&L (profit and loss) d'un portefeuille d'options.
+        <strong style={{ color: ACCENT }}>Dérivée partielle vs dérivée totale :</strong> Quand une fonction dépend de plusieurs variables — par exemple la température T(x, y, t) d'une plaque chauffante dépend des coordonnées x, y et du temps t — on distingue deux notions. La <strong>dérivée partielle ∂T/∂x</strong> mesure le gradient thermique horizontal en maintenant y et t constants. La <strong>dérivée totale dT</strong> capture la variation complète quand toutes les variables évoluent simultanément : dT = (∂T/∂x)dx + (∂T/∂y)dy + (∂T/∂t)dt. Cette décomposition est universelle : en mécanique, en thermodynamique, en toute discipline multi-variable.
       </div>
 
       <SectionTitle accent={ACCENT}>Dérivées partielles — Technique pas à pas</SectionTitle>
@@ -79,7 +79,7 @@ export function DerivTab() {
         <br /><br />
         <strong>Analogie :</strong> imaginez une carte topographique f(x, y). La dérivée ∂f/∂x est la pente quand vous marchez vers l'Est (x croît, y fixe). La dérivée ∂f/∂y est la pente vers le Nord (y croît, x fixe). Deux sensibilités différentes pour la même surface.
         <br /><br />
-        En finance : ∂C/∂S répond à "comment varie mon option si S monte de 1€ et que <em>rien d'autre ne bouge</em> ?" — c'est exactement le Delta.
+        En physique : ∂P/∂T (pression par rapport à la température, volume fixé) répond à "comment varie la pression si je chauffe à volume constant ?" — c'est la loi de Gay-Lussac.
       </IntuitionBlock>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
@@ -99,47 +99,39 @@ export function DerivTab() {
       </div>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 2 — Capitalisation continue : V(C, r, T) = C · e^(rT)</div>
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>V = valeur future d'un capital C placé à taux continu r pendant T années. Trois dérivées partielles, trois sensibilités :</div>
-        <Step num={1} accent={ACCENT}><strong>∂V/∂C</strong> (r et T constants) : e^(rT) est un facteur constant → <strong>∂V/∂C = e^(rT)</strong>. Interprétation : 1€ de capital supplémentaire crée e^(rT)€ de valeur future.</Step>
-        <Step num={2} accent={ACCENT}><strong>∂V/∂r</strong> (C et T constants) : règle de chaîne sur e^(rT) → dérivée par rapport à r = T·e^(rT) → <strong>∂V/∂r = C·T·e^(rT)</strong>. Interprétation : si r monte de 1%, la valeur future augmente de C·T·e^(rT).</Step>
-        <Step num={3} accent={ACCENT}><strong>∂V/∂T</strong> (C et r constants) : même logique → <strong>∂V/∂T = C·r·e^(rT)</strong>. C'est le taux de croissance instantanée de la valeur.</Step>
-        <FormulaBox accent={ACCENT}>∂V/∂C = e^(rT)   |   ∂V/∂r = C·T·e^(rT)   |   ∂V/∂T = C·r·e^(rT)</FormulaBox>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 2 — Énergie cinétique : E(m, v) = ½ · m · v²</div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>E = énergie cinétique d'un objet de masse m se déplaçant à vitesse v. Deux dérivées partielles, deux sensibilités physiques :</div>
+        <Step num={1} accent={ACCENT}><strong>∂E/∂m</strong> (v constant) : v² est un facteur constant → <strong>∂E/∂m = v²/2</strong>. Interprétation : 1 kg de masse supplémentaire ajoute v²/2 joules d'énergie cinétique.</Step>
+        <Step num={2} accent={ACCENT}><strong>∂E/∂v</strong> (m constant) : règle de puissance sur v² → <strong>∂E/∂v = m·v</strong>. C'est la quantité de mouvement ! Doubler la vitesse quadruple l'énergie, mais la sensibilité marginale (dérivée) est proportionnelle à v.</Step>
+        <FormulaBox accent={ACCENT}>∂E/∂m = v²/2   |   ∂E/∂v = m·v</FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
-          Exemple numérique : C = 1 000€, r = 5%, T = 2 ans → e^(0.10) ≈ 1.105.
-          ∂V/∂r = 1000 × 2 × 1.105 = 2 210€/unité de taux. Si r monte de 1% (+0.01), V augmente d'environ +22.10€.
+          Exemple numérique : m = 1 000 kg (voiture), v = 30 m/s. ∂E/∂v = 1000 × 30 = 30 000 N (newtons).
+          Si la vitesse augmente de 1 m/s (de 30 à 31 m/s), l'énergie cinétique augmente d'environ 30 000 J.
         </div>
       </div>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Exemple 3 — Le paramètre d₁ de Black-Scholes</div>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Exemple 3 — Loi des gaz parfaits : P(n, T, V) = nRT / V</div>
         <div style={{ color: T.muted, fontSize: 12, marginBottom: 12 }}>
-          d₁(S, σ, r, T) = [ln(S/K) + (r + σ²/2)·T] / (σ·√T), K = strike (constante).
-          <br />Ce sont les briques de base de tous les Greeks — calculons les 4 dérivées partielles.
+          P = pression, n = quantité (moles), T = température (K), V = volume (L), R = 8.314 J/(mol·K) constante.
+          <br />Quatre variables, quatre dérivées partielles — chacune correspond à une loi physique classique.
         </div>
         <Step num={1} accent={ACCENT}>
-          <strong>∂d₁/∂S</strong> : seul ln(S/K) = ln(S) − ln(K) dépend de S.
-          Règle de chaîne : ∂ln(S)/∂S = 1/S. Le dénominateur σ√T est constant.
-          → <strong>∂d₁/∂S = 1 / (S·σ·√T)</strong>
+          <strong>∂P/∂n</strong> (T, V constants) : RT/V est un facteur constant.
+          → <strong>∂P/∂n = RT/V</strong>. Ajouter une mole de gaz augmente la pression de RT/V.
         </Step>
         <Step num={2} accent={ACCENT}>
-          <strong>∂d₁/∂σ</strong> : réécrivons d₁ = ln(S/K)/(σ√T) + r√T/σ + σ√T/2.
-          Trois termes : ∂/∂σ[ln(S/K)/(σ√T)] = −ln(S/K)/(σ²√T), ∂/∂σ[r√T/σ] = −r√T/σ², ∂/∂σ[σ√T/2] = √T/2.
-          → <strong>∂d₁/∂σ = −[ln(S/K) + rT] / (σ²√T) + √T/2</strong>
+          <strong>∂P/∂T</strong> (n, V constants) : nR/V est constant.
+          → <strong>∂P/∂T = nR/V</strong>. Loi de Gay-Lussac : à volume fixé, P est proportionnelle à T.
         </Step>
         <Step num={3} accent={ACCENT}>
-          <strong>∂d₁/∂r</strong> : seul le terme rT/(σ√T) = r·√T/σ dépend de r.
-          → <strong>∂d₁/∂r = √T / σ</strong>
+          <strong>∂P/∂V</strong> (n, T constants) : règle de puissance sur 1/V = V⁻¹.
+          → <strong>∂P/∂V = −nRT/V²</strong>. Loi de Boyle-Mariotte : comprimer le gaz augmente la pression (signe négatif : P décroît quand V croît).
         </Step>
-        <Step num={4} accent={ACCENT}>
-          <strong>∂d₁/∂T</strong> : posons d₁ = (A + B·T)/(σ√T) où A = ln(S/K), B = r + σ²/2.
-          Règle du quotient : ∂/∂T[(A+BT)·(σ√T)⁻¹] = B/(σ√T) − (A+BT)·σ/(2σ²T√T) = [BT − A] / (2T·σ√T).
-          → <strong>∂d₁/∂T = [(r + σ²/2)T − ln(S/K)] / (2T·σ√T)</strong>
-        </Step>
-        <FormulaBox accent={ACCENT}>∂d₁/∂S = 1/(Sσ√T)     ∂d₁/∂σ = −(ln(S/K)+rT)/(σ²√T) + √T/2{'\n'}∂d₁/∂r = √T/σ           ∂d₁/∂T = [(r+σ²/2)T − ln(S/K)] / (2Tσ√T)</FormulaBox>
+        <FormulaBox accent={ACCENT}>∂P/∂n = RT/V   |   ∂P/∂T = nR/V   |   ∂P/∂V = −nRT/V²</FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
-          Note : d₂ = d₁ − σ√T, donc ∂d₂/∂S = ∂d₁/∂S et ∂d₂/∂r = ∂d₁/∂r (σ√T ne dépend pas de S ni r).
-          En revanche : ∂d₂/∂σ = ∂d₁/∂σ − √T et ∂d₂/∂T = ∂d₁/∂T − σ/(2√T).
+          Exemple : n=1 mol, T=300 K, V=10 L. P = 1×8.314×300/10 = 249.4 kPa.
+          ∂P/∂T = 8.314/10 = 0.83 kPa/K → chauffer de 1 K augmente la pression d'environ 0.83 kPa.
         </div>
       </div>
 
@@ -161,161 +153,35 @@ export function DerivTab() {
         ))}
       </Grid>
 
-      <SectionTitle accent={ACCENT}>Les Greeks de Black-Scholes — Dérivation complète</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Chaque Greek est une <strong style={{ color: T.text }}>dérivée partielle</strong> du prix C par rapport à un paramètre de marché. On part de la formule de Black-Scholes et on dérive pas à pas. Toutes les dérivations exploitent une même identité remarquable qui élimine les termes complexes.
-      </div>
-
-      <FormulaBox accent={ACCENT} label="Formule de Black-Scholes (call européen) — point de départ de tous les Greeks">
-        C = S·N(d₁) − K·e^(−rT)·N(d₂){'\n'}d₁ = [ln(S/K) + (r + σ²/2)·T] / (σ·√T)   ,   d₂ = d₁ − σ·√T
-      </FormulaBox>
-
-      <SymbolLegend accent={ACCENT} symbols={[
-        ['N(·)', 'CDF de la loi normale standard — P(Z ≤ x)'],
-        ['φ(·)', 'PDF de la loi normale standard — N′(·) = (1/√2π)·e^(−x²/2)'],
-        ['d₁, d₂', 'Arguments de la loi normale (dépendent de S, σ, r, T)'],
-      ]} />
-
-      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 10, padding: 16, margin: '14px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>🔑 Identité clé utilisée dans toutes les dérivations : S·φ(d₁) = K·e^(−rT)·φ(d₂)</div>
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10, lineHeight: 1.6 }}>
-          Cette identité permet d'annuler des termes croisés dans toutes les dérivées partielles. Voici sa preuve :
-        </div>
-        <Step num={1} accent={ACCENT}>φ(d₁)/φ(d₂) = e^[−(d₁²−d₂²)/2]. Factorisons : d₁²−d₂² = (d₁+d₂)·(d₁−d₂) = (d₁+d₂)·σ√T.</Step>
-        <Step num={2} accent={ACCENT}>d₁+d₂ = 2·[ln(S/K) + rT]/(σ√T), donc (d₁²−d₂²)/2 = ln(S/K) + rT = ln(S·e^(rT)/K).</Step>
-        <Step num={3} accent={ACCENT}>φ(d₁)/φ(d₂) = e^[−ln(S·e^(rT)/K)] = K·e^(−rT)/S → <strong>S·φ(d₁) = K·e^(−rT)·φ(d₂) ✓</strong></Step>
-      </div>
-
-      <Accordion title="Δ Delta = ∂C/∂S — Dérivation complète" accent={ACCENT} badge="Greek 1">
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
-          Question : si S monte de 1€ et que rien d'autre ne bouge, de combien varie C ?
-          <br />On dérive C = S·N(d₁) − K·e^(−rT)·N(d₂) par rapport à S. Attention : d₁ et d₂ dépendent aussi de S via ln(S/K).
-        </div>
-        <Step num={1} accent={ACCENT}>Règle du produit sur S·N(d₁) : ∂/∂S[S·N(d₁)] = 1·N(d₁) + S·N′(d₁)·∂d₁/∂S = N(d₁) + S·φ(d₁)·<strong>1/(S·σ√T)</strong></Step>
-        <Step num={2} accent={ACCENT}>Dériver −K·e^(−rT)·N(d₂) : −K·e^(−rT)·φ(d₂)·∂d₂/∂S. Or ∂d₂/∂S = ∂d₁/∂S = 1/(S·σ√T) (car d₂ = d₁ − σ√T, constante en S). → −K·e^(−rT)·φ(d₂)·<strong>1/(S·σ√T)</strong></Step>
-        <Step num={3} accent={ACCENT}>Assembler les deux termes : Δ = N(d₁) + <strong>[S·φ(d₁) − K·e^(−rT)·φ(d₂)]</strong> / (S·σ√T)</Step>
-        <Step num={4} accent={ACCENT}>Identité clé : S·φ(d₁) = K·e^(−rT)·φ(d₂) → le crochet est exactement <strong>zéro !</strong></Step>
-        <FormulaBox accent={ACCENT}>Δ_call = N(d₁) ∈ [0, 1]   |   Δ_put = N(d₁) − 1 = −N(−d₁) ∈ [−1, 0]</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-          <strong>Interprétation géométrique :</strong> N(d₁) est la valeur de la CDF normale en d₁. Pour une option ATM (S≈K, T moyen), d₁ ≈ 0 → Δ ≈ N(0) = 0.5. Pour une option deep-ITM, d₁ → +∞ → Δ → 1. Pour deep-OTM, d₁ → −∞ → Δ → 0.
-          <br /><br />
-          <strong>Exemple Brent :</strong> S=80$, K=85$, σ=35%, r=3%, T=0.5. d₁ ≈ −0.06, N(−0.06) ≈ 0.476 → Δ ≈ 0.48. Si le Brent monte de 1$, le call gagne ~0.48$.
-        </div>
-      </Accordion>
-
-      <Accordion title="Γ Gamma = ∂²C/∂S² — Dérivation complète" accent={ACCENT} badge="Greek 2">
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
-          Gamma est la dérivée de Delta par rapport à S — la "courbure" du prix. Il mesure à quelle vitesse Delta change quand S bouge.
-        </div>
-        <Step num={1} accent={ACCENT}>Γ = ∂Δ/∂S = ∂N(d₁)/∂S (puisqu'on vient de montrer que Δ = N(d₁))</Step>
-        <Step num={2} accent={ACCENT}>Règle de chaîne : ∂N(d₁)/∂S = N′(d₁)·∂d₁/∂S = φ(d₁)·<strong>1/(S·σ·√T)</strong> (on utilise ∂d₁/∂S calculé dans l'Exemple 3 ci-dessus)</Step>
-        <FormulaBox accent={ACCENT}>Γ = φ(d₁) / (S·σ·√T) ≥ 0   (identique pour call et put)</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-          <strong>Gamma est le même pour le call et le put</strong> (par parité call-put, Δ_call − Δ_put = 1, donc leurs Gamma sont égaux).
-          <br /><br />
-          Gamma est maximal pour les options ATM proches de l'expiration : σ√T → 0 fait exploser Γ.
-          <br /><br />
-          <strong>Exemple :</strong> S=100, K=100 (ATM), σ=20%, T=0.25. d₁ ≈ 0.05 → φ(d₁) ≈ 0.399. Γ = 0.399 / (100 × 0.20 × 0.5) = 0.399/10 ≈ <strong>0.040</strong>. Si S monte de 1€, le Delta augmente d'environ 0.040 — la couverture doit être rebalancée.
-        </div>
-      </Accordion>
-
-      <Accordion title="ν Vega = ∂C/∂σ — Dérivation complète" accent={ACCENT} badge="Greek 3">
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
-          Question : si la volatilité implicite monte de 1%, de combien varie C ?
-          <br />On dérive C par rapport à σ. Attention : d₁ et d₂ dépendent tous deux de σ de façon différente.
-        </div>
-        <Step num={1} accent={ACCENT}>∂C/∂σ = S·φ(d₁)·∂d₁/∂σ − K·e^(−rT)·φ(d₂)·∂d₂/∂σ</Step>
-        <Step num={2} accent={ACCENT}>Factoriser avec l'identité clé S·φ(d₁) = K·e^(−rT)·φ(d₂) :
-          <br />∂C/∂σ = S·φ(d₁)·<strong>(∂d₁/∂σ − ∂d₂/∂σ)</strong></Step>
-        <Step num={3} accent={ACCENT}>Or d₁ − d₂ = σ√T (par définition), donc ∂(d₁−d₂)/∂σ = ∂(σ√T)/∂σ = <strong>√T</strong>. Le terme ∂d₁/∂σ − ∂d₂/∂σ = √T.</Step>
-        <FormulaBox accent={ACCENT}>ν = S·φ(d₁)·√T ≥ 0   (identique pour call et put)</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-          <strong>L'astuce de l'étape 2</strong> est la même identité que pour Delta : elle transforme deux termes complexes en une soustraction simple. C'est pourquoi apprendre cette identité une fois suffit pour tous les Greeks.
-          <br /><br />
-          Vega est toujours positif : plus de vol → option plus précieuse (call et put). Sur les marchés de l'énergie, la vol peut doubler lors d'une crise géopolitique (ex: WTI : 30% → 80% en 2022) — Vega permet de chiffrer l'impact.
-          <br /><br />
-          <strong>Exemple :</strong> S=100, σ=25%, T=1. φ(d₁) ≈ 0.38. ν = 100 × 0.38 × 1 = <strong>38€ par unité de vol</strong>. Si σ passe de 25% à 26% (+0.01), le call gagne 38 × 0.01 = 0.38€.
-        </div>
-      </Accordion>
-
-      <Accordion title="Θ Theta = ∂C/∂t — Étapes principales" accent={ACCENT} badge="Greek 4">
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
-          Theta mesure l'érosion temporelle. Convention : t = temps écoulé (T = maturité − t). Quand t augmente d'un jour, T diminue d'un jour. Theta = ∂C/∂t = −∂C/∂T.
-        </div>
-        <Step num={1} accent={ACCENT}>∂C/∂T = ∂/∂T[S·N(d₁)] − ∂/∂T[K·e^(−rT)·N(d₂)]
-          <br />= S·φ(d₁)·∂d₁/∂T + r·K·e^(−rT)·N(d₂) − K·e^(−rT)·φ(d₂)·∂d₂/∂T</Step>
-        <Step num={2} accent={ACCENT}>Regrouper les termes en d₁ et d₂ avec l'identité clé :
-          <br />S·φ(d₁)·∂d₁/∂T − K·e^(−rT)·φ(d₂)·∂d₂/∂T = S·φ(d₁)·<strong>(∂d₁/∂T − ∂d₂/∂T)</strong></Step>
-        <Step num={3} accent={ACCENT}>∂d₁/∂T − ∂d₂/∂T = ∂(d₁−d₂)/∂T = ∂(σ√T)/∂T = <strong>σ/(2√T)</strong></Step>
-        <Step num={4} accent={ACCENT}>∂C/∂T = S·φ(d₁)·σ/(2√T) + r·K·e^(−rT)·N(d₂). Theta = −∂C/∂T :</Step>
-        <FormulaBox accent={ACCENT}>Θ_call = −S·φ(d₁)·σ/(2√T) − r·K·e^(−rT)·N(d₂) {'<'} 0</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-          Les deux termes sont négatifs (φ {'>'} 0, N(d₂) {'>'} 0, r {'>'} 0) → Theta est toujours négatif pour l'acheteur d'option.
-          En pratique, Theta s'exprime <em>par jour</em> : Θ_jour = Θ_annuel / 365 (ou /252 pour jours ouvrés).
-          <br /><br />
-          <strong>Exemple :</strong> S=100, K=100, σ=20%, r=3%, T=0.25. Θ ≈ −7€/an ≈ −<strong>0.019€/jour</strong>. L'option perd environ 2 centimes chaque jour qui passe, même si le marché ne bouge pas.
-        </div>
-      </Accordion>
-
-      <Accordion title="ρ Rho = ∂C/∂r — Dérivation complète" accent={ACCENT} badge="Greek 5">
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 10 }}>
-          Question : si le taux sans risque monte de 1%, de combien varie C ?
-          <br />On dérive C par rapport à r. d₁ et d₂ dépendent de r via le terme r·T.
-        </div>
-        <Step num={1} accent={ACCENT}>∂C/∂r = S·φ(d₁)·∂d₁/∂r + K·T·e^(−rT)·N(d₂) − K·e^(−rT)·φ(d₂)·∂d₂/∂r</Step>
-        <Step num={2} accent={ACCENT}>Or ∂d₁/∂r = ∂d₂/∂r = √T/σ (d₁ et d₂ diffèrent d'une constante σ√T indépendante de r)</Step>
-        <Step num={3} accent={ACCENT}>Regrouper le 1er et le 3e terme : [S·φ(d₁) − K·e^(−rT)·φ(d₂)]·(√T/σ) = <strong>0</strong> par l'identité clé !</Step>
-        <Step num={4} accent={ACCENT}>Il ne reste que le terme du milieu :</Step>
-        <FormulaBox accent={ACCENT}>ρ_call = K·T·e^(−rT)·N(d₂) {'>'} 0   |   ρ_put = −K·T·e^(−rT)·N(−d₂) {'<'} 0</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-          <strong>Interprétation :</strong> quand les taux montent, la valeur actualisée du strike K·e^(−rT) diminue → acheter l'actif coûte moins cher en termes actualisés → le call s'apprécie. Pour le put, c'est l'inverse.
-          <br /><br />
-          Rho est secondaire sur les options courtes (T petit) mais crucial pour les options long terme {'>'} 1 an (contrats énergétiques pluriannuels).
-          <br /><br />
-          <strong>Exemple :</strong> K=100, T=1, r=3%, N(d₂)=0.50. ρ = 100×1×e^(−0.03)×0.50 ≈ <strong>48.5€ par unité de r</strong>. Si r passe de 3% à 4% (+0.01), le call gagne 48.5 × 0.01 ≈ 0.49€.
-        </div>
-      </Accordion>
-
-      <div style={{ background: T.panel2, borderRadius: 10, padding: 14, margin: '16px 0', border: `1px solid ${ACCENT}22` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 13, marginBottom: 10 }}>Récapitulatif — Les 5 Greeks en un coup d'œil</div>
-        <Grid cols={2} gap="8px">
-          {[
-            { g: 'Δ Delta', f: 'N(d₁)', d: '∂C/∂S', i: 'Sensibilité au prix ∈ [0,1]' },
-            { g: 'Γ Gamma', f: 'φ(d₁)/(Sσ√T)', d: '∂²C/∂S²', i: 'Convexité, variation du Delta' },
-            { g: 'ν Vega', f: 'S·φ(d₁)·√T', d: '∂C/∂σ', i: 'Sensibilité à la vol. ≥ 0' },
-            { g: 'Θ Theta', f: '−S·φ(d₁)·σ/(2√T) − rKe^(−rT)N(d₂)', d: '∂C/∂t', i: 'Érosion temporelle ≤ 0' },
-            { g: 'ρ Rho', f: 'K·T·e^(−rT)·N(d₂)', d: '∂C/∂r', i: 'Sensibilité aux taux ≥ 0' },
-          ].map(({ g, f, d, i }) => (
-            <div key={g} style={{ background: T.bg, borderRadius: 8, padding: '10px 12px', border: `1px solid ${ACCENT}22` }}>
-              <div style={{ color: ACCENT, fontWeight: 800, fontSize: 13, marginBottom: 2 }}>{g} = {d}</div>
-              <code style={{ color: T.text, fontSize: 10, display: 'block', marginBottom: 4 }}>{f}</code>
-              <div style={{ color: T.muted, fontSize: 11 }}>{i}</div>
-            </div>
-          ))}
-        </Grid>
-      </div>
-
-      <IntuitionBlock emoji="💡" title="Décomposition P&L : comprendre chaque source de profit/perte" accent={ACCENT}>
-        Un portefeuille d'options voit sa valeur changer chaque jour. La <strong>décomposition P&L</strong> permet d'attribuer chaque centime de gain ou de perte à une cause précise. Par la formule de Taylor au second ordre appliquée au prix de l'option C(S, σ, t) :
+      <SectionTitle accent={ACCENT}>Applications des dérivées — Développement de Taylor</SectionTitle>
+      <IntuitionBlock emoji="💡" title="Approximation locale : le développement de Taylor" accent={ACCENT}>
+        La dérivée permet d'<strong>approximer localement</strong> toute fonction différentiable. Autour d'un point x₀, on peut écrire :
         <br /><br />
-        <strong>ΔC ≈ Δ × ΔS + ½ × Γ × ΔS² + Θ × Δt + ν × Δσ</strong>
+        <strong>f(x₀ + Δx) ≈ f(x₀) + f′(x₀)·Δx + ½·f″(x₀)·Δx²</strong>
         <br /><br />
-        — <strong>Δ × ΔS</strong> : profit/perte lié au mouvement du sous-jacent (exposition directionnelle). Si Delta = 0.6 et le pétrole monte de 2$, contribution = +1.20$.<br />
-        — <strong>½ × Γ × ΔS²</strong> : profit lié à la convexité (le Gamma est toujours positif pour un acheteur d'option : on gagne toujours sur les grands mouvements dans les deux sens).<br />
-        — <strong>Θ × Δt</strong> : coût du temps qui passe (négatif chaque nuit pour l'acheteur).<br />
-        — <strong>ν × Δσ</strong> : gain/perte lié à un mouvement de la volatilité implicite (sur les marchés de l'énergie, ce terme peut dominer lors de publications d'inventaires EIA).<br />
+        — Le premier terme <strong>f′(x₀)·Δx</strong> est la contribution linéaire (pente tangente).<br />
+        — Le deuxième terme <strong>½·f″(x₀)·Δx²</strong> est la correction de courbure (dérivée seconde).<br />
         <br />
-        En pratique, un delta-hedge annule le premier terme, laissant un P&L dominé par Gamma et Theta — d'où le célèbre arbitrage Gamma/Theta.
+        Cette décomposition est universelle : en optique (aberrations), en mécanique (oscillateurs), en numérique (méthodes de Newton).
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du P&L Taylor — chaque terme</div>
-        <Step num={1} accent={ACCENT}><strong>Δ·ΔS</strong> — contribution directionnelle : si Delta = 0.6 et le sous-jacent monte de 2$, ce terme vaut +1.20$. Le delta-hedge vise à annuler ce terme en détenant -Δ unités du sous-jacent.</Step>
-        <Step num={2} accent={ACCENT}><strong>½Γ·(ΔS)²</strong> — gain de convexité : toujours positif pour l'acheteur d'option (long Gamma). Si Γ = 0.012 et ΔS = 2$, contribution = ½ × 0.012 × 4 = +0.024$. Ce terme est quadratique : doubler le choc quadruple le gain Gamma.</Step>
-        <Step num={3} accent={ACCENT}><strong>Θ·Δt</strong> — érosion temporelle : toujours négatif pour l'acheteur. Si Θ = -0.08€/jour, on perd 0.08€ chaque nuit même si le marché ne bouge pas. L'érosion s'accélère à l'approche de la maturité.</Step>
-        <Step num={4} accent={ACCENT}><strong>ν·Δσ</strong> — gain/perte sur variation de vol implicite : si Vega = 0.25€/vol% et la vol baisse de 0.5%, contribution = -0.125€. Sur les marchés de l'énergie, ce terme peut dominer lors de publications EIA.</Step>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : la relation Θ + ½Γσ²S² = rV (EDP de Black-Scholes) montre que le coût du temps (Θ) est exactement compensé par le gain Gamma espéré sous volatilité σ. Un portefeuille delta-hedgé génère un P&L nul en espérance — le vrai risque est la réalisation effective de la vol vs la vol implicite payée.
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Exemple — Approximation de sin(x) autour de x₀ = 0</div>
+        <Step num={1} accent={ACCENT}><strong>f(x) = sin(x)</strong>. En x₀ = 0 : f(0) = 0, f′(x) = cos(x) → f′(0) = 1, f″(x) = −sin(x) → f″(0) = 0.</Step>
+        <Step num={2} accent={ACCENT}>Taylor ordre 1 : sin(x) ≈ x. Précision : sin(0.1) ≈ 0.100 vs exact 0.0998. Erreur {'<'} 0.2%.</Step>
+        <Step num={3} accent={ACCENT}>Taylor ordre 3 : sin(x) ≈ x − x³/6. Précision : sin(0.5) ≈ 0.479 vs exact 0.479. Erreur {'<'} 0.01%.</Step>
+        <FormulaBox accent={ACCENT}>sin(x) ≈ x − x³/6 + x⁵/120 − …   (série entière autour de 0)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Cette approximation est utilisée en ingénierie (petits angles en mécanique), en traitement du signal (analyse spectrale) et en physique quantique.
+        </div>
+      </div>
+
+      <div style={{ background: T.panel2, borderRadius: 8, padding: 14, margin: '10px 0', border: `1px solid ${T.a4}33` }}>
+        <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+          → Application en finance &amp; énergie
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+          Les dérivées partielles appliquées au pricing d'options (Greeks : Delta, Gamma, Vega, Theta, Rho) et la décomposition de sensibilité de portefeuilles sont traitées dans <strong>Mathématiques Financières › Greeks &amp; Sensibilités</strong>.
         </div>
       </div>
 
@@ -360,48 +226,45 @@ export function DerivTab() {
         <Step num={4} accent={ACCENT}>d/dx(5x) = 5 ; d/dx(-7) = 0</Step>
         <FormulaBox accent={ACCENT}>f'(x) = 12x³ - 4x + 5</FormulaBox>
       </Accordion>
-      <Accordion title="Exercice 2 — Delta d'un call" accent={ACCENT} badge="Moyen">
+      <Accordion title="Exercice 2 — Règle de chaîne : vitesse d'une fusée" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Un call European a C(S) = S × N(d₁) - K×e^(-rT) × N(d₂). Quelle est la formule de Delta ?
+          La distance d'une fusée est d(t) = 3t² + 2t. Calculez la vitesse v(t) = d′(t) et l'accélération a(t) = v′(t).
         </p>
-        <Step num={1} accent={ACCENT}>Delta = ∂C/∂S — on dérive par rapport à S</Step>
-        <Step num={2} accent={ACCENT}>Par le théorème de différenciation : Delta = N(d₁) + S × N'(d₁) × ∂d₁/∂S - K×e^(-rT) × N'(d₂) × ∂d₂/∂S</Step>
-        <Step num={3} accent={ACCENT}>On peut montrer que S × N'(d₁) × ∂d₁/∂S = K×e^(-rT) × N'(d₂) × ∂d₂/∂S (ces deux termes se compensent)</Step>
-        <FormulaBox accent={ACCENT}>Delta_call = N(d₁) ∈ [0, 1]</FormulaBox>
+        <Step num={1} accent={ACCENT}>v(t) = d′(t) = d/dt(3t² + 2t) = 6t + 2</Step>
+        <Step num={2} accent={ACCENT}>a(t) = v′(t) = d/dt(6t + 2) = 6</Step>
+        <FormulaBox accent={ACCENT}>v(t) = 6t + 2   |   a(t) = 6 (accélération constante)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>À t = 3s : vitesse = 6×3 + 2 = 20 m/s. L'accélération est constante : la fusée gagne 6 m/s chaque seconde.</div>
       </Accordion>
-      <Accordion title="Exercice 3 — Règle de chaîne (Vega)" accent={ACCENT} badge="Difficile">
+      <Accordion title="Exercice 3 — Règle de chaîne : composition de fonctions" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Si C dépend de d₁(σ) et d₂(σ), calculez ∂C/∂σ sachant d₁ = [ln(S/K) + (r + σ²/2)T] / (σ√T)
+          Soit h(x) = sin(x²). Calculez h′(x) par la règle de chaîne.
         </p>
-        <Step num={1} accent={ACCENT}>∂d₁/∂σ = √T - [ln(S/K) + rT]/(σ²√T) = ... après simplification = √T - d₂/σ</Step>
-        <Step num={2} accent={ACCENT}>∂d₂/∂σ = ∂d₁/∂σ - √T</Step>
-        <Step num={3} accent={ACCENT}>Vega = S × N'(d₁) × √T (après simplification des termes)</Step>
-        <FormulaBox accent={ACCENT}>Vega = S × N'(d₁) × √T = S × φ(d₁) × √T ≥ 0</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>φ(d₁) est la densité normale standard (toujours positive) → Vega est toujours positive</div>
+        <Step num={1} accent={ACCENT}>Identifier : h = f∘g avec g(x) = x² et f(u) = sin(u)</Step>
+        <Step num={2} accent={ACCENT}>g′(x) = 2x   et   f′(u) = cos(u)</Step>
+        <Step num={3} accent={ACCENT}>Règle de chaîne : h′(x) = f′(g(x)) × g′(x) = cos(x²) × 2x</Step>
+        <FormulaBox accent={ACCENT}>h′(x) = 2x · cos(x²)</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>En x = √(π/2) : h′ = 2√(π/2) × cos(π/2) = 0 — point stationnaire (extremum local).</div>
       </Accordion>
-      <Accordion title="Exercice 4 — Dérivées partielles d'une fonction à 2 variables" accent={ACCENT} badge="Moyen">
+      <Accordion title="Exercice 4 — Dérivées partielles : surface d'un cylindre" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Soit f(S, σ) = S² × σ + 3S × ln(σ). Calculez ∂f/∂S et ∂f/∂σ, puis évaluez-les en S=100, σ=0.2.
+          La surface latérale d'un cylindre est S(r, h) = 2π·r·h. Calculez ∂S/∂r et ∂S/∂h, puis évaluez-les en r=3, h=10.
         </p>
-        <Step num={1} accent={ACCENT}>∂f/∂S : on dérive par rapport à S en traitant σ comme une constante → ∂f/∂S = 2S × σ + 3 × ln(σ)</Step>
-        <Step num={2} accent={ACCENT}>∂f/∂σ : on dérive par rapport à σ en traitant S comme une constante → ∂f/∂σ = S² + 3S × (1/σ) = S² + 3S/σ</Step>
-        <Step num={3} accent={ACCENT}>En S=100, σ=0.2 : ∂f/∂S = 2×100×0.2 + 3×ln(0.2) = 40 + 3×(-1.609) = 40 - 4.83 = 35.17</Step>
-        <Step num={4} accent={ACCENT}>En S=100, σ=0.2 : ∂f/∂σ = 100² + 3×100/0.2 = 10000 + 1500 = 11500</Step>
-        <FormulaBox accent={ACCENT}>∂f/∂S|_(100,0.2) ≈ 35.17   |   ∂f/∂σ|_(100,0.2) = 11500</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Interprétation : si S monte de 1 unité (prix du pétrole +1$), f augmente d'environ 35.17. Si σ monte de 0.01 (1% de vol supplémentaire), f augmente d'environ 115.</div>
+        <Step num={1} accent={ACCENT}>∂S/∂r : h est constant → ∂S/∂r = 2π·h</Step>
+        <Step num={2} accent={ACCENT}>∂S/∂h : r est constant → ∂S/∂h = 2π·r</Step>
+        <Step num={3} accent={ACCENT}>En r=3, h=10 : ∂S/∂r = 2π×10 ≈ 62.8 cm²/cm</Step>
+        <Step num={4} accent={ACCENT}>En r=3, h=10 : ∂S/∂h = 2π×3 ≈ 18.8 cm²/cm</Step>
+        <FormulaBox accent={ACCENT}>∂S/∂r|_(3,10) ≈ 62.8   |   ∂S/∂h|_(3,10) ≈ 18.8</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Interprétation : augmenter le rayon de 1 cm ajoute plus de surface (~63 cm²) qu'augmenter la hauteur de 1 cm (~19 cm²), car le rayon intervient dans toute la circonférence.</div>
       </Accordion>
-      <Accordion title="Exercice 5 — Attribution P&L d'un portefeuille d'options" accent={ACCENT} badge="Difficile">
+      <Accordion title="Exercice 5 — Taylor : approximation de e^x" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Un trader détient un call sur le Brent avec Delta=0.55, Gamma=0.012, Theta=-0.08€/jour, Vega=0.25€/vol%. Pendant la nuit : le Brent monte de 2$, la vol implicite baisse de 0.5%. Calculez la décomposition P&L.
+          Approximez e^(0.3) avec un développement de Taylor d'ordre 3 autour de x₀ = 0. Comparez à la valeur exacte.
         </p>
-        <Step num={1} accent={ACCENT}>Contribution Delta : Δ × ΔS = 0.55 × 2 = +1.10€</Step>
-        <Step num={2} accent={ACCENT}>Contribution Gamma : ½ × Γ × ΔS² = 0.5 × 0.012 × 4 = +0.024€</Step>
-        <Step num={3} accent={ACCENT}>Contribution Theta : Θ × Δt = -0.08 × 1 = -0.08€ (une nuit passée)</Step>
-        <Step num={4} accent={ACCENT}>Contribution Vega : ν × Δσ = 0.25 × (-0.5) = -0.125€</Step>
-        <FormulaBox accent={ACCENT}>P&L total ≈ 1.10 + 0.024 - 0.08 - 0.125 = +0.919€</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Analyse : le mouvement favorable du prix du pétrole (+1.10€) est partiellement annulé par la compression de volatilité (-0.125€) et le passage du temps (-0.08€). La convexité (Gamma) apporte un faible gain supplémentaire.
-        </div>
+        <Step num={1} accent={ACCENT}>f(x) = eˣ → toutes les dérivées valent eˣ. En x₀=0 : f(0) = f′(0) = f″(0) = f‴(0) = 1.</Step>
+        <Step num={2} accent={ACCENT}>Taylor ordre 3 : eˣ ≈ 1 + x + x²/2 + x³/6</Step>
+        <Step num={3} accent={ACCENT}>En x = 0.3 : 1 + 0.3 + 0.09/2 + 0.027/6 = 1 + 0.3 + 0.045 + 0.0045 = 1.3495</Step>
+        <FormulaBox accent={ACCENT}>Approximation : e^(0.3) ≈ 1.3495   |   Valeur exacte : 1.34986…</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Erreur relative : (1.34986 − 1.3495) / 1.34986 ≈ 0.027%. Trois termes suffisent pour une précision de l'ordre du millième.</div>
       </Accordion>
     </div>
   )
@@ -439,13 +302,12 @@ export function IntegTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        L'intégrale est omniprésente en finance quantitative à travers trois usages fondamentaux. <strong style={{ color: T.text }}>(a) Probabilité comme aire</strong> : la probabilité qu'une variable aléatoire tombe dans un intervalle [a, b] est exactement l'intégrale de sa densité de probabilité sur cet intervalle — P(a ≤ X ≤ b) = ∫[a,b] f(x)dx. <strong style={{ color: T.text }}>(b) Espérance comme intégrale pondérée</strong> : l'espérance E[X] = ∫ x · f(x) dx est une moyenne "continue" où chaque valeur possible x est pondérée par sa probabilité d'occurrence f(x)dx. <strong style={{ color: T.text }}>(c) Pricing par espérance actualisée</strong> : le prix d'un dérivé est l'espérance actualisée de son payoff futur sous la mesure risque-neutre — C = e^(-rT) × E_Q[payoff(S_T)] = e^(-rT) × ∫ max(S-K, 0) × f_Q(S) dS. C'est la philosophie profonde derrière la formule de Black-Scholes.
+        L'intégrale mesure l'<strong style={{ color: T.text }}>accumulation d'une grandeur variable</strong>. Elle apparaît dans tous les domaines : en physique <em>(distance = intégrale de la vitesse, travail = intégrale de la force)</em>, en probabilités <em>(probabilité = aire sous la densité)</em>, en biologie <em>(biomasse totale = intégrale de la densité de population)</em>, en thermodynamique <em>(chaleur échangée = intégrale du flux)</em>. Partout où l'on additionne infiniment de petites contributions, l'intégrale est l'outil.
       </div>
       <IntuitionBlock emoji="📐" title="L'intégrale = superficie sous la courbe" accent={ACCENT}>
-        Imaginez une route avec une vitesse variable. L'intégrale de la vitesse sur [a,b] donne
-        la distance parcourue. En probabilités : l'intégrale de la densité normale sur [a,b]
-        donne P(a ≤ X ≤ b). En finance : ∫ payoff × densité donne l'espérance du payoff → c'est
-        le cœur du pricing par risque-neutre.
+        Imaginez une route avec une vitesse variable v(t). La <strong>distance parcourue</strong> entre t=a et t=b est l'intégrale ∫[a,b] v(t) dt — la somme de toutes les petites distances v(t)×dt.
+        En probabilités : l'intégrale de la densité φ(x) sur [a,b] donne P(a ≤ X ≤ b) — la probabilité d'être dans l'intervalle.
+        L'aire sous la courbe est à la fois une surface géométrique et une somme physique.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Intégrale de Riemann">
@@ -461,27 +323,31 @@ export function IntegTab() {
         E[X] = ∫[-∞, +∞] x · f(x) dx
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        C'est la généralisation continue de la moyenne : au lieu de sommer x_i × P(X=x_i), on intègre x × f(x) sur tous les x possibles. En finance, l'espérance du payoff d'un call européen avant actualisation vaut :
-      </div>
-      <FormulaBox accent={ACCENT} label="Espérance du payoff d'un call">
-        E[max(S_T - K, 0)] = ∫[K, +∞] (s - K) · f(s) ds
-      </FormulaBox>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        L'intégrale part de K (car le payoff est nul pour S_T {'<'} K) jusqu'à +∞. La résolution de cette intégrale sous hypothèse log-normale de f(s) donne exactement la formule de Black-Scholes : C = S₀N(d₁) - Ke^(-rT)N(d₂).
+        C'est la généralisation continue de la moyenne : au lieu de sommer x_i × P(X=x_i), on intègre x × f(x) sur tous les x possibles. Par exemple, si X est la taille d'un individu adulte (densité f gaussienne centrée sur 175 cm), l'espérance E[X] = ∫ x·f(x)dx donne la taille moyenne de la population — une intégrale pondérée par les probabilités.
       </div>
 
       <SectionTitle accent={ACCENT}>Lien avec la probabilité normale</SectionTitle>
       <FormulaBox accent={ACCENT} label="CDF normale standard">
-        N(d) = P(Z ≤ d) = ∫[-∞, d] φ(x) dx   où φ(x) = (1/√2π) e^(-x²/2)
+        Φ(d) = P(Z ≤ d) = ∫[-∞, d] φ(x) dx   où φ(x) = (1/√2π) e^(-x²/2)
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 16 }}>
-        N(d₁) dans Black-Scholes est exactement cette intégrale évaluée en d₁ — c'est la probabilité
-        risque-neutre que S_T ≥ K à maturité.
+        La fonction de répartition Φ(d) est une intégrale de la densité gaussienne. Elle ne possède pas de forme fermée analytique — c'est pourquoi les <strong>tables de la loi normale</strong> ont été si précieuses avant l'informatique. Quand vous lisez "Φ(1.96) = 0.975", vous lisez la valeur d'une intégrale : ∫[-∞, 1.96] φ(x) dx = 0.975.
       </div>
 
-      <IntuitionBlock emoji="∫" title="N(d₁) et N(d₂) : des intégrales de la gaussienne" accent={ACCENT}>
-        Quand vous lisez dans une table de loi normale "N(1.96) = 0.975", vous lisez en réalité la valeur d'une intégrale : ∫[-∞, 1.96] (1/√2π) × e^(-x²/2) dx = 0.975. Cette intégrale n'a pas de forme fermée analytique simple — c'est pourquoi les <strong>tables de la loi normale standard</strong> ont été si précieuses avant l'informatique, et pourquoi les fonctions d'approximation numérique (comme la formule de Zelen & Severo à 5 termes) sont essentielles dans le code de pricing. N(d₂) représente la probabilité risque-neutre que l'option finisse dans la monnaie (S_T {'>'} K) ; N(d₁) est une probabilité ajustée pondérant aussi le gain conditionnel.
+      <IntuitionBlock emoji="∫" title="Φ(d) : une intégrale de la gaussienne" accent={ACCENT}>
+        La densité gaussienne φ(x) = (1/√2π)·e^(-x²/2) est une courbe en cloche symétrique. Son intégrale sur tout ℝ vaut 1 (c'est une densité de probabilité). Sur [-1.96, 1.96] elle vaut 0.95 — c'est l'intervalle de confiance à 95% utilisé en statistiques et en physique (mesures expérimentales, intervalles de tolérance industrielle, tests d'hypothèse).
+        <br /><br />
+        Les approximations numériques de Φ (polynomiales, rationnelles) sont des algorithmes fondamentaux en analyse numérique, indépendamment de toute application sectorielle.
       </IntuitionBlock>
+
+      <div style={{ background: T.panel2, borderRadius: 8, padding: 14, margin: '10px 0', border: `1px solid ${T.a4}33` }}>
+        <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+          → Application en finance &amp; énergie
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+          L'intégrale de l'espérance du payoff d'un dérivé sous mesure risque-neutre (pricing par espérance actualisée, lien avec Black-Scholes) est traitée dans <strong>Mathématiques Financières › Pricing Options</strong>.
+        </div>
+      </div>
 
       <SectionTitle accent={ACCENT}>Visualisation interactive</SectionTitle>
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
@@ -526,25 +392,24 @@ export function IntegTab() {
         <FormulaBox accent={ACCENT}>∫[0,3] 2x dx = 9</FormulaBox>
         <div style={{ color: T.muted, fontSize: 12 }}>Interprétation géométrique : triangle de base 3, hauteur 6 → aire = (3×6)/2 = 9 ✓</div>
       </Accordion>
-      <Accordion title="Exercice 2 — Lien probabilité / intégrale" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text, marginBottom: 8 }}>Un actif suit une loi N(0,1). Quelle est la probabilité P(-1.96 ≤ Z ≤ 1.96) ?</p>
-        <Step num={1} accent={ACCENT}>P(-1.96 ≤ Z ≤ 1.96) = N(1.96) - N(-1.96)</Step>
-        <Step num={2} accent={ACCENT}>Par symétrie : N(-1.96) = 1 - N(1.96)</Step>
-        <Step num={3} accent={ACCENT}>N(1.96) ≈ 0.9750</Step>
-        <FormulaBox accent={ACCENT}>P(-1.96 ≤ Z ≤ 1.96) = 2 × 0.9750 - 1 = 95%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>→ Base de la VaR 95% : 5% de probabilité que Z {'<'} -1.645</div>
+      <Accordion title="Exercice 2 — Probabilité et intégrale gaussienne" accent={ACCENT} badge="Moyen">
+        <p style={{ color: T.text, marginBottom: 8 }}>La taille des adultes suit une loi N(175, 7²) cm. Quelle est la probabilité d'avoir entre 168 et 182 cm ?</p>
+        <Step num={1} accent={ACCENT}>Standardiser : Z = (X − 175) / 7. L'intervalle [168, 182] devient [(168−175)/7, (182−175)/7] = [−1, +1].</Step>
+        <Step num={2} accent={ACCENT}>P(168 ≤ X ≤ 182) = P(−1 ≤ Z ≤ 1) = Φ(1) − Φ(−1)</Step>
+        <Step num={3} accent={ACCENT}>Par symétrie : Φ(−1) = 1 − Φ(1). Φ(1) ≈ 0.8413</Step>
+        <FormulaBox accent={ACCENT}>P(168 ≤ X ≤ 182) = 2 × 0.8413 − 1 ≈ 68.3%</FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12 }}>Règle empirique : ±1σ couvre ~68% de la population, ±2σ couvre ~95%, ±3σ couvre ~99.7%.</div>
       </Accordion>
-      <Accordion title="Exercice 3 — Espérance d'un payoff log-normal" accent={ACCENT} badge="Difficile">
+      <Accordion title="Exercice 3 — Espérance d'une variable tronquée" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Un call sur le Brent : S₀ = 80$/bbl, K = 85$, r = 3%, σ = 35%, T = 0.5 an (mesure risque-neutre). Calculez E_Q[max(S_T - 85, 0)] = ∫[85, +∞] (s - 85) · f_Q(s) ds par la formule Black-Scholes, puis actualisez.
+          X suit une loi uniforme sur [0, 4]. Calculez E[X], E[X²], puis E[max(X − 2, 0)] = ∫[2, 4] (x−2) · (1/4) dx.
         </p>
-        <Step num={1} accent={ACCENT}>Sous Q (mesure risque-neutre), le drift est r=3%. Paramètre log-normal : µ̃ = r - σ²/2 = 0.03 - 0.0612 = -0.0312. σ_ln = 0.35 × √0.5 = 0.2475</Step>
-        <Step num={2} accent={ACCENT}>d₁ = [ln(80/85) + (0.03 + 0.35²/2)×0.5] / (0.35×√0.5) = [-0.0606 + 0.0456] / 0.2475 = -0.0150/0.2475 = -0.0606</Step>
-        <Step num={3} accent={ACCENT}>d₂ = d₁ - σ√T = -0.0606 - 0.2475 = -0.3081</Step>
-        <Step num={4} accent={ACCENT}>C = 80 × N(-0.0606) - 85 × e^(-0.015) × N(-0.3081) = 80 × 0.4758 - 83.73 × 0.3791</Step>
-        <FormulaBox accent={ACCENT}>C = 38.07 - 31.74 = 6.33$/bbl</FormulaBox>
+        <Step num={1} accent={ACCENT}>Densité f(x) = 1/4 sur [0,4]. E[X] = ∫[0,4] x × (1/4) dx = (1/4) × [x²/2]₀⁴ = (1/4) × 8 = 2</Step>
+        <Step num={2} accent={ACCENT}>E[X²] = ∫[0,4] x² × (1/4) dx = (1/4) × [x³/3]₀⁴ = (1/4) × 64/3 = 16/3 ≈ 5.33</Step>
+        <Step num={3} accent={ACCENT}>E[max(X−2, 0)] = ∫[2,4] (x−2)/4 dx = (1/4) × [(x−2)²/2]₂⁴ = (1/4) × 2 = 0.5</Step>
+        <FormulaBox accent={ACCENT}>E[X] = 2   |   E[X²] = 16/3   |   E[max(X−2, 0)] = 0.5</FormulaBox>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Interprétation : l'espérance actualisée du payoff max(S_T-85,0) est 6.33$/bbl. C'est le prix "juste" de cette option Brent à 6 mois selon Black-Scholes, soit environ 7.9% du prix spot.
+          La variable tronquée max(X−2, 0) est nulle pour X ≤ 2, puis croît linéairement. L'espérance de cette fonction tronquée est un concept fondamental en théorie des probabilités (espérance conditionnelle, loi des valeurs extrêmes).
         </div>
       </Accordion>
     </div>
