@@ -269,7 +269,7 @@ export function MarchesTab() {
       <IntuitionBlock emoji="📅" title="Calendar spreads — L'ADN de la saisonnalité" accent={ACCENT}>
         Un <strong>calendar spread</strong> est la différence de prix entre deux maturités futures sur la même commodité. Exemple : F(décembre) - F(juillet) sur le gaz naturel.
         C'est un indicateur clé de l'état des stocks et de la structure du marché :<br />
-        • <strong>Spread Dec-Jul gaz {'>'} 0</strong> : le marché anticipe une tension hivernale → les traders "long spread" profitent<br />
+        • <strong>Spread Dec-Jul gaz <K>{"\\gt 0"}</K></strong> : le marché anticipe une tension hivernale → les traders "long spread" profitent<br />
         • <strong>Spread négatif (backwardation inter-saisons)</strong> : surplus de gaz, stockages pleins → incitation à stocker maintenant et livrer plus tard<br />
         Les calendar spreads permettent de trader la saisonnalité sans prendre de risque de direction sur les prix. Ils sont utilisés par les gestionnaires de stockage de gaz pour optimiser le remplissage des cavernes.
       </IntuitionBlock>
@@ -277,9 +277,9 @@ export function MarchesTab() {
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice — Identifier la saisonnalité du gaz naturel" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Analysez la courbe forward du gaz Henry Hub : Jan=4.5$/MMBtu, Avr=2.8$, Jul=3.1$, Oct=3.4$, Jan+1=4.8$. Quels patterns observez-vous ?</p>
-        <FormulaBox accent={ACCENT}>Implied storage value ≈ Calendar spread Jan-Jul = 4.5 - 3.1 = 1.4$/MMBtu = rémunération du stockage sur 6 mois</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Implied storage value} \\approx \\text{Calendar spread Jan-Jul} = 4.5 - 3.1 = 1.4\\$/\\text{MMBtu}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Saisonnalité" ruleDetail="Pattern saisonnier forward curve" accent={ACCENT}>Pattern "dents de scie" saisonnier : hiver (Jan) {'>'} printemps (Avr) {'<'} été (Jul) {'<'} automne/hiver suivant</DemoStep>
+          <DemoStep num={1} rule="Saisonnalité" ruleDetail="Pattern saisonnier forward curve" accent={ACCENT}>Pattern "dents de scie" saisonnier : hiver (Jan) <K>{"\\gt"}</K> printemps (Avr) <K>{"\\lt"}</K> été (Jul) <K>{"\\lt"}</K> automne/hiver suivant</DemoStep>
           <DemoStep num={2} rule="Décomposition saisonnière" ruleDetail="Spread = F(hiver) − F(printemps)" accent={ACCENT}>Calendar spread Jan-Avr = <K>{"4.5 - 2.8 = 1.7"}</K> $/MMBtu → prime hivernale élevée</DemoStep>
           <DemoStep num={3} rule="Saisonnalité" ruleDetail="Coût de stockage inter-saison" accent={ACCENT}>Cette structure traduit le coût de stockage du gaz de l'été vers l'hiver</DemoStep>
           <DemoStep num={4} rule="Saisonnalité" ruleDetail="Trading de spread saisonnier" accent={ACCENT}>Stratégie : achat futures Avr + vente futures Jan = achat de ce spread à −1.7$ → gagnant si la prime hivernale se réduit</DemoStep>
@@ -287,13 +287,13 @@ export function MarchesTab() {
       </Accordion>
       <Accordion title="Exercice — Calcul d'un basis risk" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Un producteur de gaz au Texas vend au prix Houston Ship Channel (HSC). Il couvre avec des futures Henry Hub (HH). HSC = 2.70$/MMBtu, HH = 2.80$/MMBtu. Il vend 1M MMBtu/mois. Calculez le basis et le P&L si le basis se dégrade.</p>
-        <FormulaBox accent={ACCENT}>Basis risk = risque de variation du spread HSC-HH. Pour l'éliminer : couvrir avec des forwards OTC spécifiques à HSC</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Basis} = S_{\\text{local}} - F_{\\text{référence}}"}</K>Pour l'éliminer : couvrir avec des forwards OTC spécifiques à HSC</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Risque de base" ruleDetail="Basis = Spot − Futures" accent={ACCENT}>Basis actuel = <K>{"\\text{HSC} - \\text{HH} = 2.70 - 2.80 = -0.10"}</K> $/MMBtu (HSC trade à discount)</DemoStep>
           <DemoStep num={2} rule="Risque de base" ruleDetail="Couverture via futures" accent={ACCENT}>Couverture : vente de 1M MMBtu de futures HH à 2.80$ → revenus de couverture = 2.80M$</DemoStep>
           <DemoStep num={3} rule="Risque de base" ruleDetail="Revenu physique réel" accent={ACCENT}>Revenus physiques réels = <K>{"\\text{HSC} \\times Q = 2.70 \\times 1\\text{M} = 2.70\\text{M\\$}"}</K></DemoStep>
-          <DemoStep num={4} rule="Risque de base" ruleDetail="P&L total avec basis" accent={ACCENT}>Total = 2.70 (physique) + (2.80 − 2.80) (futures) = 2.70M$ → le basis absorbe 0.10$/MMBtu</DemoStep>
-          <DemoStep num={5} rule="Risque de base" ruleDetail="Dégradation du basis" accent={ACCENT}>Si le basis se dégrade à −0.30$ (HSC = 2.50$, HH = 2.80$) : revenus = 2.50 + 0 = 2.50M$ → perte de 0.20M$ non couverte</DemoStep>
+          <DemoStep num={4} rule="Risque de base" ruleDetail="P&L total avec basis" accent={ACCENT}>Total = <K>{"2.70 + (2.80 - 2.80) = 2.70\\text{M\\$}"}</K> → le basis absorbe 0.10$/MMBtu</DemoStep>
+          <DemoStep num={5} rule="Risque de base" ruleDetail="Dégradation du basis" accent={ACCENT}>Si le basis se dégrade à −0.30$ (HSC = 2.50$, HH = 2.80$) : revenus = <K>{"2.50 + 0 = 2.50\\text{M\\$}"}</K> → perte de 0.20M$ non couverte</DemoStep>
         </Demonstration>
       </Accordion>
     </div>
@@ -345,15 +345,14 @@ export function ForwardCurvesTab() {
         Le prix d'un forward pétrole à 6 mois est différent du spot.
         Pourquoi ? Coût de stockage, coût de financement, mais aussi le <strong>convenience yield</strong>
         (valeur de détenir physiquement la matière première : flexibilité, éviter les ruptures).
-        En <strong>contango</strong> : F{'>'} S (stocker coûte, les stocks sont abondants).
-        En <strong>backwardation</strong> : F{'<'}S (manque de stock, prime pour livraison immédiate).
+        En <strong>contango</strong> : <K>{"F > S"}</K> (stocker coûte, les stocks sont abondants).
+        En <strong>backwardation</strong> : <K>{"F < S"}</K> (manque de stock, prime pour livraison immédiate).
         La courbe forward est la prévision implicite de marché et l'outil de base du trader énergie.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Théorie du coût de portage (Cost of Carry)">
-        F(0,T) = S₀ × e^[(r + u - y) × T]
-
-        F(0,T) = S₀ × e^(r×T) × e^(u×T) × e^(-y×T)
+        <K display>{"F(0,T) = S_0 \\times e^{(r + u - y) \\times T}"}</K>
+        <K display>{"F(0,T) = S_0 \\times e^{rT} \\times e^{uT} \\times e^{-yT}"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -365,12 +364,12 @@ export function ForwardCurvesTab() {
       ]} />
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du Cost of Carry — F = S·e^((r+u-δ)T)</div>
-        <Step num={1} accent={ACCENT}><strong>r</strong> — taux sans risque : coût de financement du stock physique. Détenir 1 000 barils de Brent immobilise du capital qui aurait pu être placé sans risque. Si r = 5%/an et S = 80$/bbl, le coût de financement pour 6 mois est 80 × (e^(0.025) - 1) ≈ 2.03$/bbl.</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du Cost of Carry — <K>{"F = S \\cdot e^{(r+u-\\delta)T}"}</K></div>
+        <Step num={1} accent={ACCENT}><strong>r</strong> — taux sans risque : coût de financement du stock physique. Détenir 1 000 barils de Brent immobilise du capital qui aurait pu être placé sans risque. Si r = 5%/an et S = 80$/bbl, le coût de financement pour 6 mois est <K>{"80 \\times (e^{0.025} - 1) \\approx 2.03\\$/\\text{bbl}"}</K>.</Step>
         <Step num={2} accent={ACCENT}><strong>u</strong> — coûts de stockage : location de tank, assurance, perte en ligne. Pour le gaz naturel : 2-5%/an de la valeur du contenu. Pour le pétrole brut en onshore : 0.3-0.6$/bbl/mois. Ces coûts poussent la courbe vers le contango.</Step>
-        <Step num={3} accent={ACCENT}><strong>-δ</strong> — convenience yield négatif : bénéfice d'avoir le physique (flexibilité opérationnelle, éviter une rupture de stock). Si δ est élevé, le marché valorise fortement le stock physique → backwardation (F {'<'} S).</Step>
+        <Step num={3} accent={ACCENT}><strong>-δ</strong> — convenience yield négatif : bénéfice d'avoir le physique (flexibilité opérationnelle, éviter une rupture de stock). Si δ est élevé, le marché valorise fortement le stock physique → backwardation (<K>{"F < S"}</K>).</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : contango = r + u {'>'} δ (offre abondante, peu de valeur marginale du physique) ; backwardation = δ {'>'} r + u (pénurie spot, prime pour livraison immédiate). En 2022, le TTF gaz a affiché une backwardation extrême δ {'>'} 50%/an reflétant la panique sur les stocks européens.
+          Synthèse : contango = <K>{"r + u > \\delta"}</K> (offre abondante, peu de valeur marginale du physique) ; backwardation = <K>{"\\delta > r + u"}</K> (pénurie spot, prime pour livraison immédiate). En 2022, le TTF gaz a affiché une backwardation extrême <K>{"\\delta > 50\\%/\\text{an}"}</K> reflétant la panique sur les stocks européens.
         </div>
       </div>
 
@@ -382,28 +381,28 @@ export function ForwardCurvesTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie du stockage (Kaldor-Working)</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            F(T) = S × e^((r + u - δ)T)<br /><br />
+            <K>{"F(T) = S \\times e^{(r + u - \\delta)T}"}</K><br /><br />
             u = coûts de stockage annualisés (location, assurance)<br />
             δ = convenience yield (valeur de détenir le physique)<br /><br />
-            <strong style={{ color: T.a5 }}>Contango</strong> si u {'>'} δ (coût de stockage élevé, peu de valeur marginale)<br />
-            <strong style={{ color: T.error }}>Backwardation</strong> si δ {'>'} u (pénurie, le physique est précieux)
+            <strong style={{ color: T.a5 }}>Contango</strong> si <K>{"u > \\delta"}</K> (coût de stockage élevé, peu de valeur marginale)<br />
+            <strong style={{ color: T.error }}>Backwardation</strong> si <K>{"\\delta > u"}</K> (pénurie, le physique est précieux)
           </div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a4}33` }}>
           <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie des hedgers (Keynes)</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Les <strong>producteurs</strong> vendent massivement des forwards pour se couvrir contre la baisse des prix → pression vendeuse sur les forwards → F(T) {'<'} E[S(T)] (backwardation normale).<br /><br />
-            Les <strong>spéculateurs</strong> achètent ces forwards en échange d'une prime de risque → ils gagnent si S(T) {'>'} F(T).<br /><br />
-            La prime de risque = E[S(T)] - F(T) = rémunération du risque pris par les spéculateurs.
+            Les <strong>producteurs</strong> vendent massivement des forwards pour se couvrir contre la baisse des prix → pression vendeuse sur les forwards → <K>{"F(T) < E[S(T)]"}</K> (backwardation normale).<br /><br />
+            Les <strong>spéculateurs</strong> achètent ces forwards en échange d'une prime de risque → ils gagnent si <K>{"S(T) > F(T)"}</K>.<br /><br />
+            La prime de risque = <K>{"E[S(T)] - F(T)"}</K> = rémunération du risque pris par les spéculateurs.
           </div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a3}33` }}>
           <div style={{ color: T.a3, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie des anticipations</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            F(T) = E^Q[S(T)] sous la mesure risque-neutre Q (no-arbitrage).<br /><br />
-            Mais sous la mesure physique P : F(T) = E^P[S(T)] - Prime de risque<br /><br />
+            <K>{"F(T) = E^{\\mathbb{Q}}[S(T)]"}</K> sous la mesure risque-neutre Q (no-arbitrage).<br /><br />
+            Mais sous la mesure physique P : <K>{"F(T) = E^{\\mathbb{P}}[S(T)] - \\text{Prime de risque}"}</K><br /><br />
             La prime de risque peut être positive (backwardation) ou négative (contango) selon la position nette des hedgers vs spéculateurs.
-            En pratique : F(T) ≠ E[S(T)] → les forwards ne sont pas de bons prédicteurs du spot futur.
+            En pratique : <K>{"F(T) \\neq E[S(T)]"}</K> → les forwards ne sont pas de bons prédicteurs du spot futur.
           </div>
         </div>
       </Grid>
@@ -419,7 +418,7 @@ export function ForwardCurvesTab() {
             Contexte : stocks faibles, demande élevée, risque de pénurie<br /><br />
             Exemple : gaz en hiver après un vague de froid inattendue<br />
             • Détenir du gaz en physique a une valeur immense (évite les ruptures d'approvisionnement)<br />
-            • δ élevé → F(T) {'<'} S (les futurs sont moins chers que le spot)<br />
+            • δ élevé → <K>{"F(T) < S"}</K> (les futurs sont moins chers que le spot)<br />
             • Signal pour les traders : "le marché paie pour une livraison immédiate"
           </div>
         </div>
@@ -429,14 +428,14 @@ export function ForwardCurvesTab() {
             Contexte : stocks abondants, demande faible, surplus de production<br /><br />
             Exemple : pétrole en avril 2020 (COVID, demande effondrée)<br />
             • Le pétrole physique encombrait les stockages → coût de stockage élevé, valeur marginale faible<br />
-            • δ très faible, u élevé → F(T) {'>'} S (fort contango, jusqu'à -37$/bbl pour le WTI !)<br />
+            • δ très faible, u élevé → <K>{"F(T) > S"}</K> (fort contango, jusqu'à -37$/bbl pour le WTI !)<br />
             • Signal pour les traders : "arbitrage cash-and-carry : acheter spot, stocker, vendre futures"
           </div>
         </div>
       </Grid>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
         <strong style={{ color: ACCENT }}>Calcul implicite de la convenience yield :</strong> On l'extrait de la courbe forward observée :
-        δ = r + u - (1/T) × ln(F(T)/S₀)
+        <K display>{"\\delta = r + u - \\frac{1}{T} \\ln\\!\\left(\\frac{F(T)}{S_0}\\right)"}</K>
         Si F(T) est observé sur le marché, on peut calculer δ implicitement — c'est l'approche "mark-to-market" de la convenience yield.
       </div>
 
@@ -495,7 +494,7 @@ export function ForwardCurvesTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a5}33` }}>
           <div style={{ color: T.a5, fontWeight: 700, marginBottom: 8 }}>📈 Contango</div>
           <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7 }}>
-            F{'>'} S → Stocker est rentable<br />
+            <K>{"F > S"}</K> → Stocker est rentable<br />
             Signal : stocks abondants, demande faible<br />
             Stratégie : acheter spot + stocker + vendre forward = cash-and-carry arbitrage<br />
             Exemple WTI : avril 2020 (COVID)
@@ -504,7 +503,7 @@ export function ForwardCurvesTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.error}33` }}>
           <div style={{ color: T.error, fontWeight: 700, marginBottom: 8 }}>📉 Backwardation</div>
           <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7 }}>
-            F{'<'} S → Prime pour livraison immédiate<br />
+            <K>{"F < S"}</K> → Prime pour livraison immédiate<br />
             Signal : stocks faibles, demande forte<br />
             Stratégie : rouler la position short futures génère un gain (roll yield positif)<br />
             Exemple Brent : 2021-2022 (post-COVID)
@@ -513,11 +512,11 @@ export function ForwardCurvesTab() {
       </Grid>
 
       <ExampleBlock title="Trader pétrole — Arbitrage cash-and-carry" accent={ACCENT}>
-        <p>S₀ = 80$/bbl, r = 5%, u = 3%/an, y = 2%/an, T = 6 mois</p>
-        <FormulaBox accent={ACCENT}>Profit = 8500 − 8328 = 172$ = 1.72$/bbl (arbitrage cash-and-carry)</FormulaBox>
+        <p><K>{"S_0 = 80"}</K>$/bbl, <K>{"r = 5\\%"}</K>, <K>{"u = 3\\%"}</K>/an, <K>{"y = 2\\%"}</K>/an, <K>{"T = 6"}</K> mois</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Profit} = 8500 - 8328 = 172\\$ = 1.72\\$/\\text{bbl}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Cost of carry" ruleDetail="F = S₀ × e^{(r+u−y)T}" accent={ACCENT}>F théorique = <K>{"80 \\times e^{(0.05 + 0.03 - 0.02) \\times 0.5} = 80 \\times e^{0.03} = 82.44"}</K> $/bbl</DemoStep>
-          <DemoStep num={2} rule="Contango" ruleDetail="F_marché > F_théorique" accent={ACCENT}>Si F marché = 85$/bbl {'>'} 82.44 → Contango excessif → arbitrage possible</DemoStep>
+          <DemoStep num={2} rule="Contango" ruleDetail="F_marché > F_théorique" accent={ACCENT}>Si F marché = <K>{"85\\$/\\text{bbl} > 82.44"}</K> → Contango excessif → arbitrage possible</DemoStep>
           <DemoStep num={3} rule="Cost of carry" ruleDetail="Stratégie cash-and-carry" accent={ACCENT}>Acheter 100 barils à 80$ (emprunt 8000$ à 5%), stocker (coût 3%), vendre forward à 85$</DemoStep>
           <DemoStep num={4} rule="Cost of carry" ruleDetail="Profit = F − S₀·e^{(r+u)T}" accent={ACCENT}>Profit = <K>{"8500 - 8000 \\times e^{0.08 \\times 0.5} = 8500 - 8328 = 172\\$ = 1.72\\$/\\text{bbl}"}</K></DemoStep>
         </Demonstration>
@@ -525,18 +524,18 @@ export function ForwardCurvesTab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice — Calculer le convenience yield implicite" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Brent spot = 85$/bbl, futures 3 mois = 84$/bbl, r = 4.5%/an, coût de stockage u = 2%/an. Calculez la convenience yield implicite.</p>
-        <FormulaBox accent={ACCENT}>Convenience yield = 11.24%/an {'>'} r + u = 6.5%/an → forte backwardation implicite (marché en tension)</FormulaBox>
+        <p style={{ color: T.text }}>Brent spot = 85$/bbl, futures 3 mois = 84$/bbl, <K>{"r = 4.5\\%"}</K>/an, coût de stockage <K>{"u = 2\\%"}</K>/an. Calculez la convenience yield implicite.</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\delta = 11.24\\%/\\text{an} > r + u = 6.5\\%/\\text{an}"}</K> → forte backwardation implicite (marché en tension)</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Convenience yield" ruleDetail="δ = r + u − (1/T)·ln(F/S₀)" accent={ACCENT}>Formule : <K>{"\\delta = r + u - \\frac{1}{T} \\ln\\!\\left(\\frac{F}{S_0}\\right)"}</K></DemoStep>
-          <DemoStep num={2} rule="Rendement de détention" ruleDetail="Conversion maturité" accent={ACCENT}>T = 3/12 = 0.25 an</DemoStep>
+          <DemoStep num={2} rule="Rendement de détention" ruleDetail="Conversion maturité" accent={ACCENT}><K>{"T = 3/12 = 0.25"}</K> an</DemoStep>
           <DemoStep num={3} rule="Rendement de détention" ruleDetail="ln(F/S₀)" accent={ACCENT}><K>{"\\ln(84/85) = \\ln(0.9882) = -0.01186"}</K></DemoStep>
           <DemoStep num={4} rule="Convenience yield" ruleDetail="δ = r + u − (1/T)·ln(F/S)" accent={ACCENT}><K>{"\\delta = 0.045 + 0.02 - \\frac{1}{0.25} \\times (-0.01186) = 0.065 + 0.04744 = 0.1124 = 11.24\\%"}</K>/an. Interprétation : une convenience yield de 11% signifie que le marché valorise énormément la détention du brut physique — tensions géopolitiques, demande élevée, ou contraintes logistiques.</DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Stratégie contango vs backwardation" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Marché gaz naturel : F(Avr) = 2.5$/MMBtu, F(Oct) = 3.2$/MMBtu, r = 5%, coût stockage = 0.30$/MMBtu pour 6 mois. Analysez et proposez une stratégie.</p>
-        <FormulaBox accent={ACCENT}>Profit de stockage = 0.34$/MMBtu {'>'} 0 → arbitrage de stockage justifié. Mais capacité de stockage limitée → prime s'érodera si trop de traders font la même stratégie</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Profit de stockage} = 0.34\\$/\\text{MMBtu} > 0"}</K>Arbitrage de stockage justifié. Capacité de stockage limitée → prime s'érodera si trop de traders font la même stratégie</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Contango" ruleDetail="Spread = F(Oct) − F(Avr)" accent={ACCENT}>Calendar spread Oct-Avr = <K>{"3.2 - 2.5 = 0.70"}</K> $/MMBtu sur 6 mois</DemoStep>
           <DemoStep num={2} rule="Cost of carry" ruleDetail="Coût financement = S·r·T" accent={ACCENT}>Coût de financement sur 6 mois = <K>{"2.5 \\times 0.05 \\times 0.5 = 0.0625"}</K> $/MMBtu</DemoStep>
@@ -552,16 +551,16 @@ export function ForwardCurvesTab() {
 // ─── Tab: Options Énergie (Black 76) ─────────────────────────────────────────
 export function OptionsTab() {
   const [F, setF] = useState(80)
-  const [K, setK] = useState(82)
+  const [strike, setStrike] = useState(82)
   const [T2, setT2] = useState(0.5)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.35)
 
-  const callPrice = black76(F, K, T2, r, sigma, 'call')
-  const putPrice = black76(F, K, T2, r, sigma, 'put')
+  const callPrice = black76(F, strike, T2, r, sigma, 'call')
+  const putPrice = black76(F, strike, T2, r, sigma, 'put')
 
   const sqrtT = Math.sqrt(T2)
-  const d1 = (Math.log(F / K) + 0.5 * sigma * sigma * T2) / (sigma * sqrtT)
+  const d1 = (Math.log(F / strike) + 0.5 * sigma * sigma * T2) / (sigma * sqrtT)
   const d2 = d1 - sigma * sqrtT
   const df = Math.exp(-r * T2)
 
@@ -569,7 +568,7 @@ export function OptionsTab() {
   const delta_put = df * (normCDF(d1) - 1)
   const gamma = df * phi(d1) / (F * sigma * sqrtT)
   const vega = F * df * phi(d1) * sqrtT / 100
-  const theta_call = -(F * df * phi(d1) * sigma / (2 * sqrtT) + r * F * df * normCDF(d1) - r * K * df * normCDF(d2)) / 365
+  const theta_call = -(F * df * phi(d1) * sigma / (2 * sqrtT) + r * F * df * normCDF(d1) - r * strike * df * normCDF(d2)) / 365
 
   // Payoff profile at expiry
   const payoffData = useMemo(() => {
@@ -577,14 +576,14 @@ export function OptionsTab() {
     for (let f = F * 0.5; f <= F * 1.7; f += F * 0.02) {
       pts.push({
         F: +f.toFixed(1),
-        callPayoff: +Math.max(f - K, 0).toFixed(2),
-        putPayoff: +Math.max(K - f, 0).toFixed(2),
-        callPnL: +(Math.max(f - K, 0) - callPrice).toFixed(2),
-        putPnL: +(Math.max(K - f, 0) - putPrice).toFixed(2),
+        callPayoff: +Math.max(f - strike, 0).toFixed(2),
+        putPayoff: +Math.max(strike - f, 0).toFixed(2),
+        callPnL: +(Math.max(f - strike, 0) - callPrice).toFixed(2),
+        putPnL: +(Math.max(strike - f, 0) - putPrice).toFixed(2),
       })
     }
     return pts
-  }, [F, K, callPrice, putPrice])
+  }, [F, strike, callPrice, putPrice])
 
   // Price vs strike
   const strikeData = useMemo(() => {
@@ -599,8 +598,8 @@ export function OptionsTab() {
     return pts
   }, [F, T2, r, sigma])
 
-  const moneyness = K < F ? 'ITM (Call)' : K > F ? 'OTM (Call)' : 'ATM'
-  const moneynessColor = K < F ? T.success : K > F ? T.error : T.a5
+  const moneyness = strike < F ? 'ITM (Call)' : strike > F ? 'OTM (Call)' : 'ATM'
+  const moneynessColor = strike < F ? T.success : strike > F ? T.error : T.a5
 
   return (
     <div>
@@ -649,16 +648,15 @@ export function OptionsTab() {
         Dans les marchés d'énergie, on trade des options sur <strong>futures</strong> (et non sur le spot).
         Le modèle de Black-Scholes classique suppose un sous-jacent spot.
         Le modèle <strong>Black 76</strong> (Fischer Black, 1976) adapte B-S pour les futures :
-        on remplace S×e^(rT) par F directement — le forward est le sous-jacent.
+        on remplace <K>{"S \\times e^{rT}"}</K> par <K>{"F"}</K> directement — le forward est le sous-jacent.
         C'est le standard industriel pour les options sur pétrole, gaz, électricité.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Black-76 — Options sur futures">
-        C = e^(-rT) × [F × N(d₁) - K × N(d₂)]
-        P = e^(-rT) × [K × N(-d₂) - F × N(-d₁)]
-
-        d₁ = [ln(F/K) + (σ²/2)×T] / (σ√T)
-        d₂ = d₁ - σ√T
+        <K display>{"C = e^{-rT}[F \\cdot N(d_1) - K \\cdot N(d_2)]"}</K>
+        <K display>{"P = e^{-rT}[K \\cdot N(-d_2) - F \\cdot N(-d_1)]"}</K>
+        <K display>{"d_1 = \\frac{\\ln(F/K) + (\\sigma^2/2)T}{\\sigma\\sqrt{T}}"}</K>
+        <K display>{"d_2 = d_1 - \\sigma\\sqrt{T}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Stratégies de couverture typiques avec des options énergie</SectionTitle>
@@ -669,7 +667,7 @@ export function OptionsTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.error}33` }}>
           <div style={{ color: T.error, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Collar (Tunnel)</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Structure : Long Put K₁ + Short Call K₂ (K₁ {'<'} K₂)<br /><br />
+            Structure : Long Put <K>{"K_1"}</K> + Short Call <K>{"K_2"}</K> (<K>{"K_1 < K_2"}</K>)<br /><br />
             <strong>Profil :</strong> protection en dessous de K₁, participation entre K₁ et K₂, capped au-delà de K₂<br /><br />
             <strong>Coût :</strong> faible ou nul si K₁ et K₂ sont choisis pour que primes s'annulent (zero-cost collar)<br /><br />
             <strong>Usage :</strong> très répandu chez les producteurs pétroliers. Garantit un corridor de prix [K₁, K₂].
@@ -687,7 +685,7 @@ export function OptionsTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a3}33` }}>
           <div style={{ color: T.a3, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Participation (3-way collar)</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Structure : Long Put K₁ + Short Put K₀ + Short Call K₂ (K₀ {'<'} K₁ {'<'} K₂)<br /><br />
+            Structure : Long Put <K>{"K_1"}</K> + Short Put <K>{"K_0"}</K> + Short Call <K>{"K_2"}</K> (<K>{"K_0 < K_1 < K_2"}</K>)<br /><br />
             <strong>Profil :</strong> protection partielle entre K₀ et K₁, pleine protection entre K₁ et K₂, participation aux hausses<br /><br />
             <strong>Coût :</strong> moins cher que le collar simple (vente du put K₀ réduit le coût)<br /><br />
             <strong>Usage :</strong> producteurs qui acceptent un risque partiel à la baisse pour réduire le coût de couverture.
@@ -700,51 +698,46 @@ export function OptionsTab() {
         Le <strong style={{ color: ACCENT }}>spark spread</strong> est la différence entre le prix de l'électricité produite et le coût du gaz naturel nécessaire pour la produire. C'est la marge brute d'une centrale à cycle combiné (CCGT).
       </div>
       <FormulaBox accent={ACCENT} label="Spark Spread">
-        Spark Spread = Prix_élec ($/MWh) - Prix_gaz ($/MMBtu) / Rendement thermique (MMBtu/MWh)
-
-        Exemple : Élec = 45$/MWh, Gaz = 3$/MMBtu, Rendement = 7 MMBtu/MWh
-        Spark Spread = 45 - 3/7×... = 45 - 3 × 7 = 45 - 21 = ... Non :
-        Spark Spread = 45 - (3 × 7) = 45 - 21 = 24$/MWh (si rendement = MWh/MMBtu = 1/7)
-        Spark Spread = Prix_élec - Heat_Rate × Prix_gaz
-        = 45 - 7 × 3 = 45 - 21 = 24$/MWh → centrale profitable
+        <K display>{"\\text{Spark Spread} = P_{\\text{élec}} - \\text{Heat Rate} \\times P_{\\text{gaz}}"}</K>
+        <K display>{"= 45 - 7 \\times 3 = 45 - 21 = 24\\$/\\text{MWh} \\;\\Rightarrow\\; \\text{centrale profitable}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
         Une <strong>option spark spread</strong> donne à son détenteur le droit de produire de l'électricité si le spark spread dépasse un seuil. C'est l'outil de valorisation des actifs de production flexibles (centrales à gaz, turbines à vapeur).
-        Si Spark Spread {'>'} 0 : la centrale produit (elle est "in the money"). Si Spark Spread {'<'} 0 : la centrale s'arrête (coûte moins cher d'acheter l'électricité sur le marché).
+        Si <K>{"\\text{Spark Spread} > 0"}</K> : la centrale produit (elle est "in the money"). Si <K>{"\\text{Spark Spread} < 0"}</K> : la centrale s'arrête (coûte moins cher d'acheter l'électricité sur le marché).
         La valorisation d'une centrale à gaz = somme des options spark spread sur toute sa durée de vie.
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie d'un spark spread option</div>
-        <Step num={1} accent={ACCENT}><strong>Heat Rate × P_gaz</strong> = coût du combustible pour produire 1 MWh d'électricité. Si Heat Rate = 7 MMBtu/MWh et P_gaz = 3$/MMBtu, le coût variable de production est 7 × 3 = 21$/MWh. Ce terme est le "strike implicite" de l'option.</Step>
-        <Step num={2} accent={ACCENT}><strong>P_élec - Heat Rate × P_gaz</strong> = marge brute de la centrale à gaz (spark spread). Si P_élec = 45$/MWh : spark spread = 45 - 21 = 24$/MWh. Ce spread est la "valeur intrinsèque" de la flexibilité de production.</Step>
-        <Step num={3} accent={ACCENT}><strong>max(spread - K, 0)</strong> = payoff de l'option sur ce spread, où K est le coût fixe de démarrage. Valorise la flexibilité de démarrage : si K = 0, l'option vaut le spread positif. La volatilité conjointe de P_élec et P_gaz détermine la valeur temps.</Step>
+        <Step num={1} accent={ACCENT}><strong><K>{"\\text{Heat Rate} \\times P_{\\text{gaz}}"}</K></strong> = coût du combustible pour produire 1 MWh d'électricité. Si Heat Rate = 7 MMBtu/MWh et P_gaz = 3$/MMBtu, le coût variable de production est <K>{"7 \\times 3 = 21\\$/\\text{MWh}"}</K>. Ce terme est le "strike implicite" de l'option.</Step>
+        <Step num={2} accent={ACCENT}><strong><K>{"P_{\\text{élec}} - \\text{Heat Rate} \\times P_{\\text{gaz}}"}</K></strong> = marge brute de la centrale à gaz (spark spread). Si P_élec = 45$/MWh : <K>{"\\text{spark spread} = 45 - 21 = 24\\$/\\text{MWh}"}</K>. Ce spread est la "valeur intrinsèque" de la flexibilité de production.</Step>
+        <Step num={3} accent={ACCENT}><strong><K>{"\\max(\\text{spread} - K,\\, 0)"}</K></strong> = payoff de l'option sur ce spread, où K est le coût fixe de démarrage. Valorise la flexibilité de démarrage : si K = 0, l'option vaut le spread positif. La volatilité conjointe de <K>{"P_{\\text{élec}}"}</K> et <K>{"P_{\\text{gaz}}"}</K> détermine la valeur temps.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : la centrale à gaz est une option réelle sur le spark spread. Sa valeur totale = somme des options spark spread sur toute sa durée de vie (approche Margrabe). Si spread {'<'} 0 → ne pas démarrer (option out-of-the-money). Les centrales ont une optionalité qui disparaît dans un monde sans flexibilité.
+          Synthèse : la centrale à gaz est une option réelle sur le spark spread. Sa valeur totale = somme des options spark spread sur toute sa durée de vie (approche Margrabe). Si <K>{"\\text{spread} < 0"}</K> → ne pas démarrer (option out-of-the-money). Les centrales ont une optionalité qui disparaît dans un monde sans flexibilité.
         </div>
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Crack spread (pétrole) :</strong> Équivalent pour les raffineries = Prix_produits_raffinés - Prix_brut. Exemple : 3-2-1 crack spread = (2 × gasoil + 1 × essence) - 3 × brut. Indicateur de marge de raffinage. Les raffineries couvrent ce spread pour sécuriser leur marge de transformation.
+        <strong style={{ color: ACCENT }}>Crack spread (pétrole) :</strong> Équivalent pour les raffineries = <K>{"P_{\\text{raffinés}} - P_{\\text{brut}}"}</K>. Exemple : <K>{"\\text{3-2-1 crack} = (2 \\times \\text{gasoil} + 1 \\times \\text{essence}) - 3 \\times \\text{brut}"}</K>. Indicateur de marge de raffinage. Les raffineries couvrent ce spread pour sécuriser leur marge de transformation.
       </div>
 
       <ExampleBlock title="Producteur pétrolier — Mise en place d'un collar" accent={ACCENT}>
-        <p>Producteur WTI : production 1M bbl dans 6 mois, F = 80$/bbl, σ = 35%. Objectif : protéger les revenus en dessous de 70$/bbl, accepter de plafonner à 95$/bbl pour financer la protection.</p>
-        <FormulaBox accent={ACCENT}>Collar zero-cost [70$, 97$] : revenus garantis entre 70M$ et 97M$ quel que soit le prix du WTI</FormulaBox>
+        <p>Producteur WTI : production 1M bbl dans 6 mois, <K>{"F = 80"}</K>$/bbl, <K>{"\\sigma = 35\\%"}</K>. Objectif : protéger les revenus en dessous de 70$/bbl, accepter de plafonner à 95$/bbl pour financer la protection.</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Collar zero-cost } [70\\$,\\; 97\\$]"}</K>Revenus garantis entre 70M$ et 97M$ quel que soit le prix du WTI</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Collar" ruleDetail="Long Put K₁ + Short Call K₂" accent={ACCENT}>Besoin : Long Put K₁=70 + Short Call K₂=95 (collar zero-cost si possible)</DemoStep>
-          <DemoStep num={2} rule="Black-76" ruleDetail="Put = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}>Put K=70, F=80, T=0.5, σ=35%, r=5% : Put B76 = e^(−0.025)[70×N(0.58) − 80×N(0.33)] ≈ 2.8$/bbl</DemoStep>
-          <DemoStep num={3} rule="Black-76" ruleDetail="Call = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}>Call K=95, F=80, T=0.5, σ=35%, r=5% : Call B76 = e^(−0.025)[80×N(−0.64) − 95×N(−0.89)] ≈ 2.3$/bbl</DemoStep>
-          <DemoStep num={4} rule="Collar" ruleDetail="Coût net = Put − Call" accent={ACCENT}>Coût net du collar = Prix put − Prix call = 2.8 − 2.3 = 0.5$/bbl</DemoStep>
+          <DemoStep num={2} rule="Black-76" ruleDetail="Put = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}>Put K=70, F=80, T=0.5, σ=35%, r=5% : <K>{"\\text{Put B76} = e^{-0.025}[70 N(0.58) - 80 N(0.33)] \\approx 2.8\\$/\\text{bbl}"}</K></DemoStep>
+          <DemoStep num={3} rule="Black-76" ruleDetail="Call = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}>Call K=95, F=80, T=0.5, σ=35%, r=5% : <K>{"\\text{Call B76} = e^{-0.025}[80 N(-0.64) - 95 N(-0.89)] \\approx 2.3\\$/\\text{bbl}"}</K></DemoStep>
+          <DemoStep num={4} rule="Collar" ruleDetail="Coût net = Put − Call" accent={ACCENT}>Coût net du collar = <K>{"\\text{Put} - \\text{Call} = 2.8 - 2.3 = 0.5\\$/\\text{bbl}"}</K></DemoStep>
           <DemoStep num={5} rule="Cap + Floor" ruleDetail="Ajustement zero-cost" accent={ACCENT}>Pour zero-cost : ajuster K₂ à 97$/bbl (call légèrement plus OTM → prime plus faible ≈ 2.8$)</DemoStep>
-          <DemoStep num={6} rule="Collar" ruleDetail="Corridor de prix garanti" accent={ACCENT}>Résultat : plancher de revenus = 70$/bbl × 1M = 70M$, plafond = 97M$, coût = zéro</DemoStep>
+          <DemoStep num={6} rule="Collar" ruleDetail="Corridor de prix garanti" accent={ACCENT}>Résultat : plancher de revenus = <K>{"70\\$/\\text{bbl} \\times 1\\text{M} = 70\\text{M\\$}"}</K>, plafond = 97M$, coût = zéro</DemoStep>
         </Demonstration>
       </ExampleBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '12px 0', fontSize: 13, color: T.muted, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Différence clé vs Black-Scholes :</strong> pas de terme e^(rT) devant F.
+        <strong style={{ color: ACCENT }}>Différence clé vs Black-Scholes :</strong> pas de terme <K>{"e^{rT}"}</K> devant F.
         Le futures trade à son prix d'équilibre sans coût de financement dans la formule.
-        F a déjà intégré le coût de portage (r + u - y). On actualise seulement le payoff.
+        F a déjà intégré le coût de portage (<K>{"r + u - y"}</K>). On actualise seulement le payoff.
       </div>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -759,7 +752,7 @@ export function OptionsTab() {
       <SectionTitle accent={ACCENT}>Pricer Black 76 interactif</SectionTitle>
       <Grid cols={3} gap="10px">
         <Slider label="F — Prix futures ($/bbl)" value={F} min={30} max={150} step={0.5} onChange={setF} accent={ACCENT} format={v => `${v}$`} />
-        <Slider label="K — Strike ($/bbl)" value={K} min={30} max={150} step={0.5} onChange={setK} accent={T.a5} format={v => `${v}$`} />
+        <Slider label="K — Strike ($/bbl)" value={strike} min={30} max={150} step={0.5} onChange={setStrike} accent={T.a5} format={v => `${v}$`} />
         <Slider label="T — Maturité (années)" value={T2} min={0.05} max={2} step={0.05} onChange={setT2} accent={T.a4} format={v => `${v.toFixed(2)}a`} />
         <Slider label="r — Taux sans risque" value={r} min={0.01} max={0.1} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ — Volatilité implicite" value={sigma} min={0.05} max={1.2} step={0.01} onChange={setSigma} accent={T.a3} format={v => `${(v * 100).toFixed(0)}%`} />
@@ -798,7 +791,7 @@ export function OptionsTab() {
               <XAxis dataKey="F" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} label={{ value: 'F_T', fill: T.muted, fontSize: 10 }} />
               <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
               <ReferenceLine y={0} stroke={T.border} />
-              <ReferenceLine x={K} stroke={T.a5} strokeDasharray="4 3" label={{ value: `K=${K}`, fill: T.a5, fontSize: 10 }} />
+              <ReferenceLine x={strike} stroke={T.a5} strokeDasharray="4 3" label={{ value: `K=${strike}`, fill: T.a5, fontSize: 10 }} />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
               <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
               <Line type="monotone" dataKey="callPnL" stroke={T.success} strokeWidth={2} dot={false} name="P&L Call" />
@@ -824,45 +817,45 @@ export function OptionsTab() {
 
       <ExampleBlock title="Option call sur WTI Futures — Couverture producteur" accent={ACCENT}>
         <p>Producteur pétrole vend sa production à terme. F = 80$/bbl, veut se protéger contre hausse K=85$.</p>
-        <FormulaBox accent={ACCENT}>Call ≈ 5.75$/bbl (option OTM sur futures WTI, Black-76)</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Call} \\approx 5.75\\$/\\text{bbl}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Black-76" ruleDetail="Paramètres de l'option" accent={ACCENT}>Call OTM : K=85, F=80, T=0.5, σ=35%, r=5%</DemoStep>
-          <DemoStep num={2} rule="Black-76" ruleDetail="d₁ = [ln(F/K) + σ²T/2] / (σ√T)" accent={ACCENT}>d₁ = [ln(80/85) + 0.5×0.35²×0.5]/(0.35×√0.5) = [−0.0606 + 0.0306]/0.2475 = −0.1212</DemoStep>
-          <DemoStep num={3} rule="Black-76" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = −0.1212 − 0.2475 = −0.3687</DemoStep>
-          <DemoStep num={4} rule="Pricing futures options" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}>Call = e^(−0.025)[80×N(−0.12) − 85×N(−0.37)] = 0.9753×[80×0.452 − 85×0.356]</DemoStep>
-          <DemoStep num={5} rule="Pricing futures options" ruleDetail="Résultat final" accent={ACCENT}>= 0.9753 × [36.16 − 30.26] = 0.9753 × 5.90 ≈ 5.75$/bbl</DemoStep>
+          <DemoStep num={2} rule="Black-76" ruleDetail="d₁ = [ln(F/K) + σ²T/2] / (σ√T)" accent={ACCENT}><K>{"d_1 = \\frac{\\ln(80/85) + 0.5 \\times 0.35^2 \\times 0.5}{0.35 \\times \\sqrt{0.5}} = \\frac{-0.0606 + 0.0306}{0.2475} = -0.1212"}</K></DemoStep>
+          <DemoStep num={3} rule="Black-76" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}><K>{"d_2 = -0.1212 - 0.2475 = -0.3687"}</K></DemoStep>
+          <DemoStep num={4} rule="Pricing futures options" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}><K>{"\\text{Call} = e^{-0.025}[80 N(-0.12) - 85 N(-0.37)] = 0.9753 \\times [80 \\times 0.452 - 85 \\times 0.356]"}</K></DemoStep>
+          <DemoStep num={5} rule="Pricing futures options" ruleDetail="Résultat final" accent={ACCENT}><K>{"= 0.9753 \\times [36.16 - 30.26] = 0.9753 \\times 5.90 \\approx 5.75\\$/\\text{bbl}"}</K></DemoStep>
         </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Call gaz naturel sur futures" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>F = 3$/MMBtu, K = 3.5$, T = 3 mois, σ = 60%, r = 5%. Calculez Call Black 76.</p>
-        <FormulaBox accent={ACCENT}>Call ≈ 0.9876 × 0.188 ≈ 0.186$/MMBtu</FormulaBox>
+        <p style={{ color: T.text }}><K>{"F = 3"}</K>$/MMBtu, <K>{"K = 3.5"}</K>$, <K>{"T = 3"}</K> mois, <K>{"\\sigma = 60\\%"}</K>, <K>{"r = 5\\%"}</K>. Calculez Call Black 76.</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Call} \\approx 0.9876 \\times 0.188 \\approx 0.186\\$/\\text{MMBtu}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Black-76" ruleDetail="d₁ = [ln(F/K) + σ²T/2] / (σ√T)" accent={ACCENT}>d₁ = [ln(3/3.5) + 0.5×0.36×0.25]/(0.6×0.5) = [−0.1542 + 0.045]/0.3 = −0.364</DemoStep>
-          <DemoStep num={2} rule="Black-76" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = −0.364 − 0.3 = −0.664</DemoStep>
-          <DemoStep num={3} rule="Pricing futures options" ruleDetail="Lecture table N(·)" accent={ACCENT}>N(d₁) = N(−0.364) ≈ 0.358 ; N(d₂) = N(−0.664) ≈ 0.253</DemoStep>
-          <DemoStep num={4} rule="Pricing futures options" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}>Call = e^(−0.0125) × [3×0.358 − 3.5×0.253] = 0.9876 × [1.074 − 0.886] ≈ 0.186$/MMBtu</DemoStep>
+          <DemoStep num={1} rule="Black-76" ruleDetail="d₁ = [ln(F/K) + σ²T/2] / (σ√T)" accent={ACCENT}><K>{"d_1 = \\frac{\\ln(3/3.5) + 0.5 \\times 0.36 \\times 0.25}{0.6 \\times 0.5} = \\frac{-0.1542 + 0.045}{0.3} = -0.364"}</K></DemoStep>
+          <DemoStep num={2} rule="Black-76" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}><K>{"d_2 = -0.364 - 0.3 = -0.664"}</K></DemoStep>
+          <DemoStep num={3} rule="Pricing futures options" ruleDetail="Lecture table N(·)" accent={ACCENT}><K>{"N(d_1) = N(-0.364) \\approx 0.358"}</K> ; <K>{"N(d_2) = N(-0.664) \\approx 0.253"}</K></DemoStep>
+          <DemoStep num={4} rule="Pricing futures options" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}><K>{"\\text{Call} = e^{-0.0125} \\times [3 \\times 0.358 - 3.5 \\times 0.253] = 0.9876 \\times [1.074 - 0.886] \\approx 0.186\\$/\\text{MMBtu}"}</K></DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Calculer le coût d'un collar pétrole" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Producteur pétrole. F = 75$/bbl, T = 1 an, σ = 40%, r = 5%. Calculez le coût d'un collar [60$, 90$] et déterminez le strike K₂ pour un collar zero-cost.</p>
-        <FormulaBox accent={ACCENT}>Pour zero-cost : réduire K₂ vers ~83$ pour que Call ≈ Put ≈ 4.56$/bbl. Collar final : [60$, 83$] à coût nul</FormulaBox>
+        <p style={{ color: T.text }}>Producteur pétrole. <K>{"F = 75"}</K>$/bbl, <K>{"T = 1"}</K> an, <K>{"\\sigma = 40\\%"}</K>, <K>{"r = 5\\%"}</K>. Calculez le coût d'un collar <K>{"[60\\$,\\; 90\\$]"}</K> et déterminez le strike <K>{"K_2"}</K> pour un collar zero-cost.</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Zero-cost : } \\text{Call} \\approx \\text{Put} \\approx 4.56\\$/\\text{bbl}"}</K>Collar final : [60$, 83$] à coût nul</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Black-76" ruleDetail="d₁, d₂ pour Put K=60" accent={ACCENT}>Put K=60 : d₁ = [ln(75/60) + 0.5×0.16×1]/(0.4×1) = [0.2231 + 0.08]/0.4 = 0.758 ; d₂ = 0.758 − 0.4 = 0.358</DemoStep>
-          <DemoStep num={2} rule="Black-76" ruleDetail="P = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}>Put = e^(−0.05)[60×N(−0.358) − 75×N(−0.758)] = 0.9512×[60×0.360 − 75×0.224] = 0.9512×[21.6 − 16.8] = 4.56$/bbl</DemoStep>
-          <DemoStep num={3} rule="Black-76" ruleDetail="d₁, d₂ pour Call K=90" accent={ACCENT}>Call K=90 : d₁ = [ln(75/90) + 0.5×0.16×1]/0.4 = [−0.182 + 0.08]/0.4 = −0.255 ; d₂ = −0.655</DemoStep>
-          <DemoStep num={4} rule="Black-76" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}>Call = e^(−0.05)[75×N(−0.255) − 90×N(−0.655)] = 0.9512×[75×0.399 − 90×0.256] = 0.9512×[29.9 − 23.1] = 6.47$/bbl</DemoStep>
-          <DemoStep num={5} rule="Collar" ruleDetail="Coût net = Put − Call" accent={ACCENT}>Coût net = Put − Call = 4.56 − 6.47 = −1.91$/bbl (crédit ! Le call vaut plus que le put → K₂ trop bas)</DemoStep>
+          <DemoStep num={1} rule="Black-76" ruleDetail="d₁, d₂ pour Put K=60" accent={ACCENT}>Put K=60 : <K>{"d_1 = \\frac{\\ln(75/60) + 0.5 \\times 0.16}{0.4} = \\frac{0.2231 + 0.08}{0.4} = 0.758"}</K> ; <K>{"d_2 = 0.758 - 0.4 = 0.358"}</K></DemoStep>
+          <DemoStep num={2} rule="Black-76" ruleDetail="P = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}><K>{"\\text{Put} = e^{-0.05}[60 N(-0.358) - 75 N(-0.758)] = 0.9512 \\times [21.6 - 16.8] = 4.56\\$/\\text{bbl}"}</K></DemoStep>
+          <DemoStep num={3} rule="Black-76" ruleDetail="d₁, d₂ pour Call K=90" accent={ACCENT}>Call K=90 : <K>{"d_1 = \\frac{\\ln(75/90) + 0.08}{0.4} = \\frac{-0.182 + 0.08}{0.4} = -0.255"}</K> ; <K>{"d_2 = -0.655"}</K></DemoStep>
+          <DemoStep num={4} rule="Black-76" ruleDetail="C = e^{−rT}[F·N(d₁) − K·N(d₂)]" accent={ACCENT}><K>{"\\text{Call} = e^{-0.05}[75 N(-0.255) - 90 N(-0.655)] = 0.9512 \\times [29.9 - 23.1] = 6.47\\$/\\text{bbl}"}</K></DemoStep>
+          <DemoStep num={5} rule="Collar" ruleDetail="Coût net = Put − Call" accent={ACCENT}>Coût net = <K>{"\\text{Put} - \\text{Call} = 4.56 - 6.47 = -1.91\\$/\\text{bbl}"}</K> (crédit ! Le call vaut plus que le put → K₂ trop bas)</DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Valoriser un swap de prix fixe avec Black-76" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Un industriel achète 100,000 MMBtu de gaz/mois pendant 12 mois. Il signe un swap : il paie prix fixe K = 3.2$/MMBtu, reçoit Henry Hub spot mensuel. F_mois = 3.0 à 3.5$/MMBtu selon la maturité. Calculez la valeur du swap.</p>
-        <FormulaBox accent={ACCENT}>Valeur totale du swap = Σ (F_m − K) × Q × DF_m sur 12 mois = dépend de la courbe forward entière</FormulaBox>
+        <p style={{ color: T.text }}>Un industriel achète 100,000 MMBtu de gaz/mois pendant 12 mois. Il signe un swap : il paie prix fixe <K>{"K = 3.2"}</K>$/MMBtu, reçoit Henry Hub spot mensuel. <K>{"F_{\\text{mois}} = 3.0"}</K> à <K>{"3.5"}</K>$/MMBtu selon la maturité. Calculez la valeur du swap.</p>
+        <FormulaBox accent={ACCENT}><K display>{"V_{\\text{swap}} = \\sum_{m=1}^{12} (F_m - K) \\times Q \\times DF_m"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Swap valuation" ruleDetail="V = Σ (Fₘ − K) × Q × DFₘ" accent={ACCENT}>Le swap = somme de 12 forwards mensuels. Valeur de chaque forward = (F_m − K) × Volume × DF_m</DemoStep>
-          <DemoStep num={2} rule="Valeur mark-to-market" ruleDetail="Forward mois 1" accent={ACCENT}>Mois 1 : F₁=3.0$, (3.0−3.2) × 100,000 × e^(−0.05/12) = −0.2 × 100,000 × 0.996 = −19,920$</DemoStep>
-          <DemoStep num={3} rule="Valeur mark-to-market" ruleDetail="Forward mois 6" accent={ACCENT}>Mois 6 : F₆=3.25$, (3.25−3.2) × 100,000 × e^(−0.025) = +0.05 × 100,000 × 0.975 = +4,875$</DemoStep>
-          <DemoStep num={4} rule="Valeur mark-to-market" ruleDetail="Forward mois 12" accent={ACCENT}>Mois 12 : F₁₂=3.5$, (3.5−3.2) × 100,000 × e^(−0.05) = +0.3 × 100,000 × 0.951 = +28,530$. Point clé : la valeur d'un swap de commodités à prix fixe est simplement la somme actualisée des forwards implicites. Si la courbe est en backwardation, le swap aura une valeur positive pour l'acheteur sur les premières maturités et négative sur les dernières.</DemoStep>
+          <DemoStep num={1} rule="Swap valuation" ruleDetail="V = Σ (Fₘ − K) × Q × DFₘ" accent={ACCENT}>Le swap = somme de 12 forwards mensuels. Valeur de chaque forward = <K>{"(F_m - K) \\times \\text{Volume} \\times DF_m"}</K></DemoStep>
+          <DemoStep num={2} rule="Valeur mark-to-market" ruleDetail="Forward mois 1" accent={ACCENT}>Mois 1 : F₁=3.0$, <K>{"(3.0 - 3.2) \\times 100{,}000 \\times e^{-0.05/12} = -0.2 \\times 100{,}000 \\times 0.996 = -19{,}920\\$"}</K></DemoStep>
+          <DemoStep num={3} rule="Valeur mark-to-market" ruleDetail="Forward mois 6" accent={ACCENT}>Mois 6 : F₆=3.25$, <K>{"(3.25 - 3.2) \\times 100{,}000 \\times e^{-0.025} = +0.05 \\times 100{,}000 \\times 0.975 = +4{,}875\\$"}</K></DemoStep>
+          <DemoStep num={4} rule="Valeur mark-to-market" ruleDetail="Forward mois 12" accent={ACCENT}>Mois 12 : F₁₂=3.5$, <K>{"(3.5 - 3.2) \\times 100{,}000 \\times e^{-0.05} = +0.3 \\times 100{,}000 \\times 0.951 = +28{,}530\\$"}</K>. Point clé : la valeur d'un swap de commodités à prix fixe est simplement la somme actualisée des forwards implicites. Si la courbe est en backwardation, le swap aura une valeur positive pour l'acheteur sur les premières maturités et négative sur les dernières.</DemoStep>
         </Demonstration>
       </Accordion>
     </div>
@@ -886,67 +879,43 @@ export function CasIntegrateurTab() {
   const stepContent = [
     {
       num: 1, module: 'M1', color: T.a1, title: 'Modélisation mathématique',
-      content: `Les rendements log-quotidiens du WTI : rᵢ = ln(Sᵢ/Sᵢ₋₁) ~ N(µ, σ²).
-        Delta de la couverture : ∂V/∂S — on dérive le P&L par rapport au prix du pétrole.
-        Vega : ∂V/∂σ — sensibilité aux changements de volatilité.`,
-      formula: 'r_log = ln(S_t / S_{t-1}) ; Delta = ∂V/∂S ; Vega = ∂V/∂σ',
+      content: <>{"Les rendements log-quotidiens du WTI : "}<K>{"r_i = \\ln(S_i/S_{i-1}) \\sim \\mathcal{N}(\\mu, \\sigma^2)"}</K>{".\n        Delta de la couverture : "}<K>{"\\partial V / \\partial S"}</K>{" \u2014 on d\u00e9rive le P&L par rapport au prix du p\u00e9trole.\n        Vega : "}<K>{"\\partial V / \\partial \\sigma"}</K>{" \u2014 sensibilit\u00e9 aux changements de volatilit\u00e9."}</>,
+      formula: <K display>{"r_{\\log} = \\ln\\!\\left(\\frac{S_t}{S_{t-1}}\\right) ; \\quad \\Delta = \\frac{\\partial V}{\\partial S} ; \\quad \\nu = \\frac{\\partial V}{\\partial \\sigma}"}</K>,
     },
     {
       num: 2, module: 'M2', color: T.a2, title: 'Distribution des prix',
-      content: `Le prix du WTI suit (en première approximation) une distribution log-normale.
-        E[S_T] = S₀ × e^(µT) = 80 × e^(0.08×1) = 86.6$/bbl
-        P(S_T < 60$) = N[(ln(60/80) - 0.055×1)/(0.35×1)] = N(-1.10) ≈ 13.6%`,
-      formula: 'ln(S_T/S₀) ~ N((µ-σ²/2)T, σ²T) → P(S_T < K) = N(d₂)',
+      content: <>{"Le prix du WTI suit (en premi\u00e8re approximation) une distribution log-normale.\n        "}<K>{"E[S_T] = S_0 \\times e^{\\mu T} = 80 \\times e^{0.08} = 86.6\\$/\\text{bbl}"}</K>{"\n        "}<K>{"P(S_T < 60\\$) = N\\!\\left[\\frac{\\ln(60/80) - 0.055}{0.35}\\right] = N(-1.10) \\approx 13.6\\%"}</K></>,
+      formula: <K display>{"\\ln(S_T/S_0) \\sim \\mathcal{N}\\!\\left((\\mu - \\sigma^2/2)T,\\; \\sigma^2 T\\right) \\;\\Rightarrow\\; P(S_T < K) = N(d_2)"}</K>,
     },
     {
       num: 3, module: 'M3', color: T.a3, title: 'Processus stochastique',
-      content: `Le WTI suit un GBM (avec correction possible pour mean-reversion à long terme).
-        dS = µS dt + σS dW ; µ = 8%/an, σ = 35%/an.
-        Simulation de 1000 trajectoires → distribution de prix à 1 an.`,
-      formula: 'dS = µS dt + σS dW → S_T = 80 × exp[(0.08-0.35²/2)×T + 0.35×√T×Z]',
+      content: <>{"Le WTI suit un GBM (avec correction possible pour mean-reversion \u00e0 long terme).\n        "}<K>{"dS = \\mu S\\, dt + \\sigma S\\, dW"}</K>{"; \u00b5 = 8%/an, \u03c3 = 35%/an.\n        Simulation de 1000 trajectoires \u2192 distribution de prix \u00e0 1 an."}</>,
+      formula: <K display>{"dS = \\mu S\\, dt + \\sigma S\\, dW \\;\\Rightarrow\\; S_T = 80 \\times \\exp\\!\\left[(0.08 - 0.35^2/2)T + 0.35\\sqrt{T}\\,Z\\right]"}</K>,
     },
     {
       num: 4, module: 'M4', color: T.a4, title: 'Pricing des options',
-      content: `Put de protection sur futures WTI : K=75$/bbl, T=6 mois, σ=35%.
-        Black 76 : F = S × e^[(r+u-y)T] ≈ 80.8$/bbl (légère contango).
-        Put B76 = 0.9753 × [75×N(0.214) - 80.8×N(-0.034)] ≈ 4.2$/bbl`,
-      formula: 'P₇₅ = e^(-rT)[K×N(-d₂) - F×N(-d₁)] ≈ 4.2$/bbl = 42,000$ pour 10,000 bbl',
+      content: <>{"Put de protection sur futures WTI : K=75$/bbl, T=6 mois, \u03c3=35%.\n        Black 76 : "}<K>{"F = S \\times e^{(r+u-y)T} \\approx 80.8\\$/\\text{bbl}"}</K>{" (l\u00e9g\u00e8re contango).\n        "}<K>{"\\text{Put B76} = 0.9753 \\times [75 N(0.214) - 80.8 N(-0.034)] \\approx 4.2\\$/\\text{bbl}"}</K></>,
+      formula: <K display>{"P_{75} = e^{-rT}[K \\cdot N(-d_2) - F \\cdot N(-d_1)] \\approx 4.2\\$/\\text{bbl} = 42{,}000\\$"}</K>,
     },
     {
       num: 5, module: 'M5', color: T.a5, title: 'Volatilité & smile',
-      content: `Vol implicite du marché : σ_impl(K=70) = 42% > σ_impl(ATM) = 35%.
-        Skew négatif : les options OTM puts coûtent plus cher (protection contre crash).
-        Vol historique 30j : σ_hist = std(rlog) × √252 ≈ 32%
-        Vol implicite > vol historique → prime de risque positive.`,
-      formula: 'σ_impl(K) extraite : C_marché = B76(F,K,T,r,σ_impl) → σ_impl par Newton-Raphson',
+      content: <>{"Vol implicite du march\u00e9 : "}<K>{"\\sigma_{\\text{impl}}(K{=}70) = 42\\% > \\sigma_{\\text{impl}}(\\text{ATM}) = 35\\%"}</K>{".\n        Skew n\u00e9gatif : les options OTM puts co\u00fbtent plus cher (protection contre crash).\n        Vol historique 30j : "}<K>{"\\sigma_{\\text{hist}} = \\text{std}(r_{\\log}) \\times \\sqrt{252} \\approx 32\\%"}</K>{"\n        Vol implicite > vol historique \u2192 prime de risque positive."}</>,
+      formula: <K display>{"\\sigma_{\\text{impl}}(K) \\text{ extraite : } C_{\\text{march\u00e9}} = B76(F,K,T,r,\\sigma_{\\text{impl}}) \\;\\Rightarrow\\; \\sigma_{\\text{impl}} \\text{ par Newton-Raphson}"}</K>,
     },
     {
       num: 6, module: 'M6', color: T.a6, title: 'VaR du portefeuille',
-      content: `Portfolio : 10M barils, σ=35%. VaR 99% sur 1 jour :
-        σ_daily = 80 × 0.35/√252 = 1.77$/bbl
-        VaR_99 = 2.326 × 1.77 × 10M = 41.2M$
-        Avec couverture put K=75 (Δ=-0.35) :
-        σ_hedged = σ × |1-0.35| = 35% × 0.65 = 22.75%
-        VaR_hedged = 2.326 × (80×0.2275/√252) × 10M = 26.8M$ (-35%)`,
-      formula: 'VaR_99 = 2.326 × σ × S × N ; VaR_hedged = VaR × (1 - Δ_hedge)',
+      content: <>{"Portfolio : 10M barils, \u03c3=35%. VaR 99% sur 1 jour :\n        "}<K>{"\\sigma_{\\text{daily}} = 80 \\times 0.35 / \\sqrt{252} = 1.77\\$/\\text{bbl}"}</K>{"\n        "}<K>{"\\text{VaR}_{99} = 2.326 \\times 1.77 \\times 10\\text{M} = 41.2\\text{M\\$}"}</K>{"\n        Avec couverture put K=75 (\u0394=-0.35) :\n        "}<K>{"\\sigma_{\\text{hedged}} = \\sigma \\times |1-0.35| = 35\\% \\times 0.65 = 22.75\\%"}</K>{"\n        "}<K>{"\\text{VaR}_{\\text{hedged}} = 2.326 \\times (80 \\times 0.2275/\\sqrt{252}) \\times 10\\text{M} = 26.8\\text{M\\$}\\;(-35\\%)"}</K></>,
+      formula: <K display>{"\\text{VaR}_{99} = 2.326 \\times \\sigma \\times S \\times N \\;; \\quad \\text{VaR}_{\\text{hedged}} = \\text{VaR} \\times (1 - \\Delta_{\\text{hedge}})"}</K>,
     },
     {
       num: 7, module: 'M7', color: T.a7, title: 'Risk management',
-      content: `CFaR annuel : σ_CF = 10M bbl × 80$ × 35% = 280M$ de vol sur revenus.
-        CFaR 95% = 1.645 × 280M$ = 460M$ → revenus plancher = 800M$ - 460M$ = 340M$.
-        Après couverture (70% produit hedgé) : σ_hedged = 30% × 280M$ = 84M$.
-        CFaR_hedged = 1.645 × 84M$ = 138M$ → plancher = 662M$ (vs 340M$ sans couverture).`,
-      formula: 'CFaR = z_95% × σ_CF × (1 - hedge_ratio) = 1.645 × 280 × 0.3 = 138M$',
+      content: <>{"CFaR annuel : "}<K>{"\\sigma_{CF} = 10\\text{M bbl} \\times 80\\$ \\times 35\\% = 280\\text{M\\$}"}</K>{" de vol sur revenus.\n        "}<K>{"\\text{CFaR}_{95\\%} = 1.645 \\times 280\\text{M\\$} = 460\\text{M\\$}"}</K>{" \u2192 revenus plancher = "}<K>{"800 - 460 = 340\\text{M\\$}"}</K>{".\n        Apr\u00e8s couverture (70% produit hedg\u00e9) : "}<K>{"\\sigma_{\\text{hedged}} = 30\\% \\times 280\\text{M\\$} = 84\\text{M\\$}"}</K>{".\n        "}<K>{"\\text{CFaR}_{\\text{hedged}} = 1.645 \\times 84\\text{M\\$} = 138\\text{M\\$}"}</K>{" \u2192 plancher = 662M$ (vs 340M$ sans couverture)."}</>,
+      formula: <K display>{"\\text{CFaR} = z_{95\\%} \\times \\sigma_{CF} \\times (1 - h) = 1.645 \\times 280 \\times 0.3 = 138\\text{M\\$}"}</K>,
     },
     {
       num: 8, module: 'M8', color: T.a8, title: 'Stratégie de couverture intégrée',
-      content: `Stratégie recommandée pour EnergyCo SA :
-        1. Vendre 7M bbl de futures WTI à 12 mois → fixe le prix sur 70% de la production
-        2. Acheter puts K=70$ sur le solde non couvert → protection catastrophe
-        3. Vendre calls K=95$ → capez les gains sur partie couverte (collar), réduit coût
-        Résultat : plancher = 71$/bbl, plafond = 95$/bbl sur 70% de la prod.
-        Prime nette = Prix put - Prix call ≈ 3.5$ - 1.8$ = 1.7$/bbl → coût acceptable.`,
-      formula: 'Collar : Long put K=70 + Short call K=95 + Short futures → corridor [70$, 95$]',
+      content: <>{"Strat\u00e9gie recommand\u00e9e pour EnergyCo SA :\n        1. Vendre 7M bbl de futures WTI \u00e0 12 mois \u2192 fixe le prix sur 70% de la production\n        2. Acheter puts K=70$ sur le solde non couvert \u2192 protection catastrophe\n        3. Vendre calls K=95$ \u2192 capez les gains sur partie couverte (collar), r\u00e9duit co\u00fbt\n        R\u00e9sultat : plancher = 71$/bbl, plafond = 95$/bbl sur 70% de la prod.\n        Prime nette = "}<K>{"\\text{Put} - \\text{Call} \\approx 3.5 - 1.8 = 1.7\\$/\\text{bbl}"}</K>{" \u2192 co\u00fbt acceptable."}</>,
+      formula: <K display>{"\\text{Collar : Long put } K{=}70 + \\text{Short call } K{=}95 + \\text{Short futures} \\;\\Rightarrow\\; [70\\$,\\; 95\\$]"}</K>,
     },
   ]
 
@@ -974,7 +943,7 @@ export function CasIntegrateurTab() {
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7, marginBottom: 14 }}>
         <strong style={{ color: ACCENT }}>Comment les modules s'articulent :</strong><br />
         <strong style={{ color: T.a3 }}>M1 (Maths)</strong> → dérivées partielles, sensibilités (Greeks)<br />
-        <strong style={{ color: T.a3 }}>M1→M2 :</strong> Les fonctions differentiables (M1) permettent de calculer E[S_T] via les distributions (M2)<br />
+        <strong style={{ color: T.a3 }}>M1→M2 :</strong> Les fonctions differentiables (M1) permettent de calculer <K>{"E[S_T]"}</K> via les distributions (M2)<br />
         <strong style={{ color: T.a3 }}>M2→M3 :</strong> La loi log-normale (M2) découle du GBM (M3) via le lemme d'Itô<br />
         <strong style={{ color: T.a4 }}>M3→M4 :</strong> Le lemme d'Itô (M3) est l'outil qui permet de dériver Black-Scholes (M4)<br />
         <strong style={{ color: T.a5 }}>M4→M5 :</strong> Black-76 (M4) pricer → volatilité implicite extraite des prix de marché (M5)<br />
@@ -1158,19 +1127,19 @@ export function CasIntegrateurTab() {
       <Accordion title="Étude de cas — Producteur de gaz naturel qui couvre sa production annuelle" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>
           GasCo SA produit 100 Bcf de gaz naturel par an (≈ 8.33 Bcf/mois). Prix Henry Hub spot = 3.0$/MMBtu.
-          Coût de production = 1.8$/MMBtu. Volatilité implicite ATM = 55%/an. r = 5%.
+          Coût de production = 1.8$/MMBtu. Volatilité implicite ATM = <K>{"\\sigma = 55\\%"}</K>/an. <K>{"r = 5\\%"}</K>.
           La direction veut couvrir 70% de la production pour les 12 prochains mois avec un budget de couverture limité.
         </p>
-        <FormulaBox accent={ACCENT}>Résultat : Collar [2.5$, 3.8$] sur 70% de la production. Revenus garantis : 175M$ min (vs 20M$ sans couverture). Coût net ≈ 4.9M$/an = 2.3% des revenus. CFaR réduit de 190M$ à 57M$.</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Collar } [2.5\\$,\\; 3.8\\$] \\text{ sur 70\\% de la production}"}</K>Revenus garantis : 175M$ min (vs 20M$ sans couverture). Coût net ≈ 4.9M$/an = 2.3% des revenus. CFaR réduit de 190M$ à 57M$.</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Black-76" ruleDetail="P(S < coût prod) via N(d₂)" accent={ACCENT}>M2/M3 — Profil de risque sans couverture : <K>{"P(\\text{Prix} < 1.8) = N\\!\\left[\\frac{\\ln(1.8/3.0)+(0.05-0.5 \\times 0.55^2)}{0.55}\\right] = N[-0.756] \\approx 22.5\\%"}</K> → risque élevé !</DemoStep>
           <DemoStep num={2} rule="Backwardation" ruleDetail="Lecture courbe forward" accent={ACCENT}>M8 — Lecture de la courbe forward : F(3M)=3.1$, F(6M)=3.2$, F(9M)=3.0$, F(12M)=2.9$ (légère backwardation hivernale)</DemoStep>
-          <DemoStep num={3} rule="Collar" ruleDetail="CFaR = z × σ_CF" accent={ACCENT}>M7 — CFaR sans couverture : <K>{"\\sigma_{CF} = 70 \\times 3.0 \\times 0.55 = 115.5\\text{M\\$}"}</K>, CFaR 95% = 1.645 × 115.5 = 190M$ → revenus plancher = 210M$ − 190M$ = 20M$ !</DemoStep>
+          <DemoStep num={3} rule="Collar" ruleDetail="CFaR = z × σ_CF" accent={ACCENT}>M7 — CFaR sans couverture : <K>{"\\sigma_{CF} = 70 \\times 3.0 \\times 0.55 = 115.5\\text{M\\$}"}</K>, <K>{"\\text{CFaR}_{95\\%} = 1.645 \\times 115.5 = 190\\text{M\\$}"}</K> → revenus plancher = <K>{"210 - 190 = 20\\text{M\\$}"}</K> !</DemoStep>
           <DemoStep num={4} rule="Collar" ruleDetail="Long Put K₁ + Short Call K₂" accent={ACCENT}>M8 — Stratégie collar sur 70% prod (70 Bcf) : Long put K=2.5$ + Short call K=3.8$</DemoStep>
-          <DemoStep num={5} rule="Black-76" ruleDetail="Put = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}>M4 — Pricing put K=2.5$, F=3.0$, T=6M, σ=55% : d₁=0.663, d₂=−0.326, Put = e^(−0.025)[2.5×N(0.326)−3.0×N(−0.663)] = 0.9753×[1.57−0.762] = 0.788$/MMBtu</DemoStep>
+          <DemoStep num={5} rule="Black-76" ruleDetail="Put = e^{−rT}[K·N(−d₂) − F·N(−d₁)]" accent={ACCENT}>M4 — Pricing put K=2.5$, F=3.0$, T=6M, σ=55% : <K>{"d_1 = 0.663,\\; d_2 = -0.326"}</K>, <K>{"\\text{Put} = e^{-0.025}[2.5 N(0.326) - 3.0 N(-0.663)] = 0.9753 \\times [1.57 - 0.762] = 0.788\\$/\\text{MMBtu}"}</K></DemoStep>
           <DemoStep num={6} rule="Black-76" ruleDetail="Call OTM pricing" accent={ACCENT}>M4 — Pricing call K=3.8$ : OTM call, prix ≈ 0.72$/MMBtu (similaire au put pour zero-cost collar)</DemoStep>
-          <DemoStep num={7} rule="Cap + Floor" ruleDetail="CFaR hedged = CFaR × (1−h)" accent={ACCENT}>M7 — CFaR après couverture : <K>{"\\sigma_{CF,\\text{résid}} = 0.30 \\times 115.5 = 34.65\\text{M\\$}"}</K>, CFaR_hedged = 1.645 × 34.65 = 57M$ vs 190M$ (−70% !)</DemoStep>
-          <DemoStep num={8} rule="Collar" ruleDetail="RAROC = valeur créée / capital" accent={ACCENT}>M7 — RAROC de la couverture : Valeur créée (réduction risque) = 190−57=133M$. Coût net collar ≈ 0.07$/MMBtu × 70Bcf = 4.9M$/an. Synthèse des modules mobilisés : M2 (probas) → P(ruine) | M3 (GBM) → scénarios | M4 (Black-76) → pricing | M5 (vol) → surface de vol | M6 (VaR) → risque résiduel | M7 (CFaR/RAROC) → perspective corporate | M8 → courbe forward et exécution.</DemoStep>
+          <DemoStep num={7} rule="Cap + Floor" ruleDetail="CFaR hedged = CFaR × (1−h)" accent={ACCENT}>M7 — CFaR après couverture : <K>{"\\sigma_{CF,\\text{résid}} = 0.30 \\times 115.5 = 34.65\\text{M\\$}"}</K>, <K>{"\\text{CFaR}_{\\text{hedged}} = 1.645 \\times 34.65 = 57\\text{M\\$}"}</K> vs 190M$ (−70% !)</DemoStep>
+          <DemoStep num={8} rule="Collar" ruleDetail="RAROC = valeur créée / capital" accent={ACCENT}>M7 — RAROC de la couverture : Valeur créée (réduction risque) = <K>{"190 - 57 = 133\\text{M\\$}"}</K>. Coût net collar ≈ <K>{"0.07\\$/\\text{MMBtu} \\times 70\\text{Bcf} = 4.9\\text{M\\$/an}"}</K>. Synthèse des modules mobilisés : M2 (probas) → P(ruine) | M3 (GBM) → scénarios | M4 (Black-76) → pricing | M5 (vol) → surface de vol | M6 (VaR) → risque résiduel | M7 (CFaR/RAROC) → perspective corporate | M8 → courbe forward et exécution.</DemoStep>
         </Demonstration>
       </Accordion>
 
@@ -1189,10 +1158,10 @@ export function CasIntegrateurTab() {
           • <strong style={{ color: T.a8 }}>Énergie (M8)</strong> : structurer le collar sur la forward curve réelle
         </div>
         <FormulaBox accent={ACCENT} label="Résultat final">
-          Collar [70$, 95$] sur 70% production + 30% exposition non couverte
-          → Revenus garantis : 700M$ (min) — 950M$ (max)
-          → Coût net = 1.7$/bbl × 10Mbbl × 70% = 11.9M$ (1.5% des revenus)
-          → RAROC de la couverture : 25% (valeur créée / capital mobilisé)
+          <K display>{"\\text{Collar } [70\\$,\\; 95\\$] \\text{ sur 70\\% production} + 30\\% \\text{ exposition non couverte}"}</K>
+          <K display>{"\\text{Revenus garantis : } 700\\text{M\\$ (min)} \\text{ \u2014 } 950\\text{M\\$ (max)}"}</K>
+          <K display>{"\\text{Co\u00fbt net} = 1.7\\$/\\text{bbl} \\times 10\\text{Mbbl} \\times 70\\% = 11.9\\text{M\\$}\\;(1.5\\%\\text{ des revenus})"}</K>
+          <K display>{"\\text{RAROC de la couverture : } 25\\%"}</K>
         </FormulaBox>
       </div>
     </div>

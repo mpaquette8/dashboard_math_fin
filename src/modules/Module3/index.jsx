@@ -57,61 +57,60 @@ export function RandomWalkTab() {
         Sa position après n pas = somme de n variables aléatoires.
         Par le Théorème Central Limite, cette somme converge vers une distribution normale.
         En finance : le prix d'un actif = cumul de petits chocs aléatoires quotidiens.
-        Le <strong>mouvement brownien</strong> W(t) est la limite continue de cette marche aléatoire.
+        Le <strong>mouvement brownien</strong> <K>{"W(t)"}</K> est la limite continue de cette marche aléatoire.
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
         <strong style={{ color: ACCENT }}>Les 4 axiomes du Brownien standard — à connaître par cœur :</strong>
         <div style={{ marginTop: 8 }}>
-          <div style={{ marginBottom: 6 }}><strong>1. W(0) = 0</strong> — Le processus démarre à zéro. C'est une convention de normalisation : on part d'un état connu à t=0.</div>
-          <div style={{ marginBottom: 6 }}><strong>2. Accroissements indépendants</strong> — W(t) - W(s) est indépendant de W(s) - W(u) pour u {'<'} s {'<'} t. Ce qui se passe dans le futur ne dépend pas du passé : c'est la propriété markovienne. Le marché ne "se souvient" pas de son chemin.</div>
-          <div style={{ marginBottom: 6 }}><strong>3. Accroissements stationnaires gaussiens</strong> — W(t) - W(s) ~ N(0, t-s). La loi de l'incrément ne dépend que de la durée t-s, pas du moment absolu. Et sa variance est exactement t-s : plus l'horizon est long, plus l'incertitude grandit.</div>
+          <div style={{ marginBottom: 6 }}><strong>1. <K>{"W(0) = 0"}</K></strong> — Le processus démarre à zéro. C'est une convention de normalisation : on part d'un état connu à <K>{"t=0"}</K>.</div>
+          <div style={{ marginBottom: 6 }}><strong>2. Accroissements indépendants</strong> — <K>{"W(t) - W(s)"}</K> est indépendant de <K>{"W(s) - W(u)"}</K> pour <K>{"u < s < t"}</K>. Ce qui se passe dans le futur ne dépend pas du passé : c'est la propriété markovienne. Le marché ne "se souvient" pas de son chemin.</div>
+          <div style={{ marginBottom: 6 }}><strong>3. Accroissements stationnaires gaussiens</strong> — <K>{"W(t) - W(s) \\sim \\mathcal{N}(0,\\, t-s)"}</K>. La loi de l'incrément ne dépend que de la durée <K>{"t-s"}</K>, pas du moment absolu. Et sa variance est exactement <K>{"t-s"}</K> : plus l'horizon est long, plus l'incertitude grandit.</div>
           <div><strong>4. Trajectoires continues</strong> — Pas de saut. Mais (paradoxe !) nulle part dérivable : la trajectoire est infiniment irrégulière, elle zigzague à toutes les échelles de temps.</div>
         </div>
       </div>
 
       <FormulaBox accent={ACCENT} label="Propriétés du Mouvement Brownien W(t)">
-        1. W(0) = 0
-        2. Accroissements indépendants : W(t) - W(s) ⊥ W(s) - W(u) pour u{'<'}s{'<'}t
-        3. Accroissements stationnaires : W(t) - W(s) ~ N(0, t-s)
-        4. Trajectoires continues (mais nulle part dérivables !)
+        <K display>{"1.\\; W(0) = 0"}</K>
+        <K display>{"2.\\; \\text{Accroissements indépendants : } W(t) - W(s) \\perp W(s) - W(u) \\text{ pour } u < s < t"}</K>
+        <K display>{"3.\\; \\text{Accroissements stationnaires : } W(t) - W(s) \\sim \\mathcal{N}(0,\\, t-s)"}</K>
+        <K display>{"4.\\; \\text{Trajectoires continues (mais nulle part dérivables !)}"}</K>
       </FormulaBox>
 
       <FormulaBox accent={ACCENT} label="Propriété clé">
-        dW(t) ~ N(0, dt)   i.e.   E[dW] = 0,  E[dW²] = dt
+        <K display>{"dW(t) \\sim \\mathcal{N}(0,\\, dt) \\quad\\text{i.e.}\\quad E[dW] = 0,\\; E[dW^2] = dt"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Construction rigoureuse : convergence vers le brownien</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Comment passe-t-on d'une marche discrète (±1 à chaque pas) à un processus continu ? On subdivise [0,1] en n intervalles de taille Δt = 1/n.
-        À chaque pas, on ajoute un incrément ξᵢ = ±√Δt (pour que la variance soit Δt).
-        Après k pas : W_k = ξ₁ + ... + ξₖ, somme de k variables iid de variance Δt.
+        Comment passe-t-on d'une marche discrète (±1 à chaque pas) à un processus continu ? On subdivise [0,1] en n intervalles de taille <K>{"\\Delta t = 1/n"}</K>.
+        À chaque pas, on ajoute un incrément <K>{"\\xi_i = \\pm\\sqrt{\\Delta t}"}</K> (pour que la variance soit <K>{"\\Delta t"}</K>).
+        Après k pas : <K>{"W_k = \\xi_1 + \\cdots + \\xi_k"}</K>, somme de k variables iid de variance <K>{"\\Delta t"}</K>.
       </div>
-      <Step num={1} accent={ACCENT}>E[W_k] = 0  (symétrie),  Var[W_k] = k × Δt = k/n</Step>
-      <Step num={2} accent={ACCENT}>Quand n → ∞ : Var[W(t)] → t car k/n → t (les k pas couvrent le temps t)</Step>
-      <Step num={3} accent={ACCENT}>Théorème Central Limite : la somme de n variables iid (Var=Δt) → N(0, t) quand n→∞</Step>
-      <Step num={4} accent={ACCENT}>Résultat : W(t) ~ N(0, t) — le brownien est la limite du discrète quand Δt → 0</Step>
+      <Step num={1} accent={ACCENT}><K>{"E[W_k] = 0"}</K> (symétrie), <K>{"\\mathrm{Var}[W_k] = k \\times \\Delta t = k/n"}</K></Step>
+      <Step num={2} accent={ACCENT}>Quand <K>{"n \\to \\infty"}</K> : <K>{"\\mathrm{Var}[W(t)] \\to t"}</K> car <K>{"k/n \\to t"}</K> (les k pas couvrent le temps t)</Step>
+      <Step num={3} accent={ACCENT}>Théorème Central Limite : la somme de n variables iid (<K>{"\\mathrm{Var}=\\Delta t"}</K>) <K>{"\\to \\mathcal{N}(0, t)"}</K> quand <K>{"n \\to \\infty"}</K></Step>
+      <Step num={4} accent={ACCENT}>Résultat : <K>{"W(t) \\sim \\mathcal{N}(0, t)"}</K> — le brownien est la limite du discret quand <K>{"\\Delta t \\to 0"}</K></Step>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Ce résultat justifie pourquoi on simule toujours le brownien avec √Δt × Z où Z ~ N(0,1) :
-        c'est exactement la limite du schéma discret, valide pour tout Δt petit.
+        Ce résultat justifie pourquoi on simule toujours le brownien avec <K>{"\\sqrt{\\Delta t} \\times Z"}</K> où <K>{"Z \\sim \\mathcal{N}(0,1)"}</K> :
+        c'est exactement la limite du schéma discret, valide pour tout <K>{"\\Delta t"}</K> petit.
       </div>
 
       <SectionTitle accent={ACCENT}>Variation quadratique : la signature de l'irrégularité</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Pour une fonction dérivable ordinaire f(t), la variation quadratique est nulle :
-        Σ [f(tᵢ₊₁) - f(tᵢ)]² → 0 quand Δt → 0 (les carrés de petits incréments s'écrasent).
+        Pour une fonction dérivable ordinaire <K>{"f(t)"}</K>, la variation quadratique est nulle :
+        <K>{"\\sum [f(t_{i+1}) - f(t_i)]^2 \\to 0"}</K> quand <K>{"\\Delta t \\to 0"}</K> (les carrés de petits incréments s'écrasent).
         Pour le brownien, c'est fondamentalement différent :
       </div>
       <FormulaBox accent={ACCENT} label="Variation quadratique du brownien [W,W]_t = t">
-        Σᵢ [W(tᵢ₊₁) - W(tᵢ)]² → t  (en probabilité, quand max Δtᵢ → 0)
-
-        En notation différentielle : dW² = dt  (et non 0 comme en calcul classique)
+        <K display>{"\\sum_i \\big[W(t_{i+1}) - W(t_i)\\big]^2 \\;\\xrightarrow{\\;P\\;}\\; t \\quad (\\text{quand } \\max \\Delta t_i \\to 0)"}</K>
+        <K display>{"\\text{En notation différentielle : } dW^2 = dt \\;\\text{ (et non 0 comme en calcul classique)}"}</K>
       </FormulaBox>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
         <strong style={{ color: ACCENT }}>Intuition :</strong> Le brownien est tellement irrégulier que ses petits incréments, même au carré, s'accumulent.
-        Dans le calcul classique : (dx)² ~ (dt)² → 0. Dans le calcul stochastique : (dW)² ~ dt → fini.
-        C'est précisément cette propriété qui fait apparaître le terme supplémentaire σ²/2 dans le lemme d'Itô (onglet suivant).
-        Sans [W,W]_t = t, Black-Scholes n'existerait pas.
+        Dans le calcul classique : <K>{"(dx)^2 \\sim (dt)^2 \\to 0"}</K>. Dans le calcul stochastique : <K>{"(dW)^2 \\sim dt \\to \\text{fini}"}</K>.
+        C'est précisément cette propriété qui fait apparaître le terme supplémentaire <K>{"\\sigma^2/2"}</K> dans le lemme d'Itô (onglet suivant).
+        Sans <K>{"[W,W]_t = t"}</K>, Black-Scholes n'existerait pas.
       </div>
 
       <Grid cols={2} gap="10px">
@@ -140,14 +139,14 @@ export function RandomWalkTab() {
 
       <div style={{ color: T.muted, fontSize: 13, marginTop: 8, lineHeight: 1.7 }}>
         Observations : les trajectoires sont continues mais très irrégulières — elles zigzaguent à toutes les échelles.
-        E[W(t)] = 0 et Var[W(t)] = t → la dispersion croît comme √t.
+        <K>{"E[W(t)] = 0"}</K> et <K>{"\\mathrm{Var}[W(t)] = t"}</K> → la dispersion croît comme <K>{"\\sqrt{t}"}</K>.
       </div>
 
       <Accordion title="Exercice — Propriétés du brownien" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Soit W(t) un brownien standard. Calculez E[W(3)], Var[W(3)-W(1)], et P(W(1) {'>'} 1).</p>
         <FormulaBox accent={ACCENT}><K>{"E[W(t)] = 0,\\; \\mathrm{Var}[W(t)] = t,\\; \\mathrm{Cov}[W(s),W(t)] = \\min(s,t)"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Propriétés du brownien" ruleDetail="E[W(t)] = 0, Var[W(t)] = t" accent={ACCENT}>E[W(3)] = 0 (propriété fondamentale : espérance nulle à tout instant)</DemoStep>
+          <DemoStep num={1} rule="Propriétés du brownien" ruleDetail="E[W(t)] = 0, Var[W(t)] = t" accent={ACCENT}><K>{"E[W(3)] = 0"}</K> (propriété fondamentale : espérance nulle à tout instant)</DemoStep>
           <DemoStep num={2} rule="Propriétés du brownien" ruleDetail="W(t)-W(s) ~ N(0, t-s)" accent={ACCENT}><K>{"W(3) - W(1) \\sim N(0,\\, 3-1) = N(0,2)"}</K> → <K>{"\\mathrm{Var}[W(3)-W(1)] = 2"}</K></DemoStep>
           <DemoStep num={3} rule="Propriétés du brownien" ruleDetail="W(1) ~ N(0,1)" accent={ACCENT}><K>{"W(1) \\sim N(0,1)"}</K> → <K>{"P(W(1)>1) = 1 - \\Phi(1) \\approx 15.87\\%"}</K></DemoStep>
           <DemoStep num={4} rule="Propriétés du brownien" ruleDetail="Cov[W(s),W(t)] = min(s,t)" accent={ACCENT}>Bonus : <K>{"\\mathrm{Cov}[W(2), W(5)] = \\min(2,5) = 2"}</K></DemoStep>
@@ -202,52 +201,52 @@ export function GBMTab() {
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
         <strong style={{ color: ACCENT }}>La logique du GBM :</strong> Plutôt que de modéliser directement le prix S (qui peut être très grand ou très petit),
-        on modélise les <strong>rendements</strong> log dS/S. L'idée fondamentale est que chaque petit rendement relatif
-        dR = dS/S est gaussien : dR = µdt + σdW. Si on cumule ces petits rendements sur [0,T], le prix final est :
-        S(T) = S₀ × exp(∫₀ᵀ dR) = S₀ × exp(log-normal). C'est pourquoi les <em>prix</em> GBM suivent une loi log-normale
+        on modélise les <strong>rendements</strong> log <K>{"dS/S"}</K>. L'idée fondamentale est que chaque petit rendement relatif
+        <K>{"dR = dS/S"}</K> est gaussien : <K>{"dR = \\mu\\,dt + \\sigma\\,dW"}</K>. Si on cumule ces petits rendements sur <K>{"[0,T]"}</K>, le prix final est :
+        <K>{"S(T) = S_0 \\times \\exp\\!\\big(\\int_0^T dR\\big)"}</K> = <K>{"S_0 \\times \\exp(\\text{log-normal})"}</K>. C'est pourquoi les <em>prix</em> GBM suivent une loi log-normale
         (toujours positifs, asymétriques à droite) — une propriété essentielle pour les actifs financiers.
       </div>
 
       <IntuitionBlock emoji="📈" title="GBM : le modèle standard des prix financiers" accent={ACCENT}>
         Le Geometric Brownian Motion (GBM) est la brique de base de Black-Scholes.
-        L'idée : le <strong>rendement</strong> instantané suit une loi normale avec une composante drift (µ)
-        et une composante aléatoire (σ × bruit). Cela implique que les <em>prix</em> suivent une
+        L'idée : le <strong>rendement</strong> instantané suit une loi normale avec une composante drift (<K>{"\\mu"}</K>)
+        et une composante aléatoire (<K>{"\\sigma \\times \\text{bruit}"}</K>). Cela implique que les <em>prix</em> suivent une
         distribution log-normale : ils ne peuvent jamais être négatifs.
         En énergie : le pétrole, le gaz, les forward d'électricité sont souvent modélisés par GBM en première approximation.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Équation différentielle stochastique (EDS)">
-        dS = µ·S·dt + σ·S·dW
+        <K display>{"dS = \\mu\\, S\\, dt + \\sigma\\, S\\, dW"}</K>
       </FormulaBox>
 
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        <strong style={{ color: ACCENT }}>Décomposition terme à terme de dS = µS dt + σS dW :</strong>
+        <strong style={{ color: ACCENT }}>Décomposition terme à terme de <K>{"dS = \\mu S\\,dt + \\sigma S\\,dW"}</K> :</strong>
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '0 0 14px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
         <div style={{ marginBottom: 8 }}>
-          <strong style={{ color: ACCENT }}>µS dt — composante déterministe (drift) :</strong> Le prix "tend" à croître à taux µ par an.
-          Si σ=0, on aurait dS = µS dt, c'est-à-dire S(t) = S₀ × e^(µt) — une croissance exponentielle pure.
-          µ représente le rendement espéré annuel : pour les actions µ ≈ 8-12%, pour les commodités µ dépend du modèle de pricing.
+          <strong style={{ color: ACCENT }}><K>{"\\mu S\\,dt"}</K> — composante déterministe (drift) :</strong> Le prix "tend" à croître à taux <K>{"\\mu"}</K> par an.
+          Si <K>{"\\sigma=0"}</K>, on aurait <K>{"dS = \\mu S\\,dt"}</K>, c'est-à-dire <K>{"S(t) = S_0 \\times e^{\\mu t}"}</K> — une croissance exponentielle pure.
+          <K>{"\\mu"}</K> représente le rendement espéré annuel : pour les actions <K>{"\\mu \\approx 8\\text{-}12\\%"}</K>, pour les commodités <K>{"\\mu"}</K> dépend du modèle de pricing.
         </div>
         <div style={{ marginBottom: 8 }}>
-          <strong style={{ color: ACCENT }}>σS dW — composante aléatoire (diffusion) :</strong> L'amplitude du choc est <em>proportionnelle au prix</em>.
-          Si S double, la volatilité absolue double aussi. C'est ce qui garantit que la <em>volatilité relative</em> (σ = σS/S) reste constante.
-          Un prix de 100€ avec σ=30% fluctue de ±30€/an, un prix de 200€ fluctue de ±60€/an — même 30% relatif.
+          <strong style={{ color: ACCENT }}><K>{"\\sigma S\\,dW"}</K> — composante aléatoire (diffusion) :</strong> L'amplitude du choc est <em>proportionnelle au prix</em>.
+          Si S double, la volatilité absolue double aussi. C'est ce qui garantit que la <em>volatilité relative</em> (<K>{"\\sigma = \\sigma S / S"}</K>) reste constante.
+          Un prix de 100€ avec <K>{"\\sigma=30\\%"}</K> fluctue de <K>{"\\pm 30"}</K>€/an, un prix de 200€ fluctue de <K>{"\\pm 60"}</K>€/an — même 30% relatif.
         </div>
         <div>
-          <strong style={{ color: ACCENT }}>Conséquence :</strong> dS/S = µ dt + σ dW → les rendements relatifs sont normaux, les prix sont log-normaux.
+          <strong style={{ color: ACCENT }}>Conséquence :</strong> <K>{"dS/S = \\mu\\,dt + \\sigma\\,dW"}</K> → les rendements relatifs sont normaux, les prix sont log-normaux.
           C'est cohérent avec l'observation empirique : on ne modélise pas les prix en absolu, on modélise les rendements.
         </div>
       </div>
 
       <FormulaBox accent={ACCENT} label="Solution exacte (par lemme d'Itô)">
-        S(t) = S₀ × exp[(µ - σ²/2)·t + σ·W(t)]
+        <K display>{"S(t) = S_0 \\times \\exp\\!\\Big[\\Big(\\mu - \\frac{\\sigma^2}{2}\\Big)t + \\sigma\\, W(t)\\Big]"}</K>
       </FormulaBox>
 
       <IntuitionBlock emoji="📊" title="Loi log-normale de S_T : quantiles et probabilités" accent={ACCENT}>
-        S_T suit une loi log-normale : ln(S_T/S₀) ~ N((µ - σ²/2)T, σ²T).
-        La médiane de S_T est S₀ × exp((µ - σ²/2)T) — inférieure à l'espérance S₀ × exp(µT).
-        P(S_T {'>'} K) = N(d₂) sous la mesure risque-neutre (avec µ remplacé par r) — c'est le d₂ de Black-Scholes !
+        <K>{"S_T"}</K> suit une loi log-normale : <K>{"\\ln(S_T/S_0) \\sim \\mathcal{N}\\!\\big((\\mu - \\sigma^2/2)T,\\; \\sigma^2 T\\big)"}</K>.
+        La médiane de <K>{"S_T"}</K> est <K>{"S_0 \\times \\exp\\!\\big((\\mu - \\sigma^2/2)T\\big)"}</K> — inférieure à l'espérance <K>{"S_0 \\times e^{\\mu T}"}</K>.
+        <K>{"P(S_T > K) = N(d_2)"}</K> sous la mesure risque-neutre (avec <K>{"\\mu"}</K> remplacé par <K>{"r"}</K>) — c'est le <K>{"d_2"}</K> de Black-Scholes !
         Les queues sont asymétriques : les grandes hausses (right tail) sont plus probables que dans une loi normale.
       </IntuitionBlock>
 
@@ -379,43 +378,42 @@ export function MeanRevTab() {
         Les prix de l'énergie ne dérivent pas infiniment comme un GBM.
         Le gaz naturel revient vers un niveau "d'équilibre" (coût marginal de production).
         Le modèle Ornstein-Uhlenbeck (OU) capture cette <strong>force de rappel</strong> :
-        plus le prix s'éloigne de θ, plus il est "tiré" vers θ avec force κ.
+        plus le prix s'éloigne de <K>{"\\theta"}</K>, plus il est "tiré" vers <K>{"\\theta"}</K> avec force <K>{"\\kappa"}</K>.
         C'est le modèle de base pour les taux d'intérêt (Vasicek) et les commodités.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Processus Ornstein-Uhlenbeck (OU)">
-        dX = κ(θ - X)dt + σ dW
+        <K display>{"dX = \\kappa(\\theta - X)\\,dt + \\sigma\\, dW"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Solution analytique du processus OU</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
         Contrairement au GBM, le processus OU admet une solution analytique exacte obtenue par le lemme d'Itô
-        appliqué à f(X,t) = X × e^(κt) :
+        appliqué à <K>{"f(X,t) = X \\times e^{\\kappa t}"}</K> :
       </div>
       <FormulaBox accent={ACCENT} label="Solution exacte du processus OU">
-        X(t) = X₀·e^(-κt) + θ(1 - e^(-κt)) + σ∫₀ᵗ e^(-κ(t-s)) dW(s)
-
-        E[X(t)] = θ + (X₀ - θ)·e^(-κt)
-        Var[X(t)] = σ²(1 - e^(-2κt)) / (2κ)
-        Var[X(∞)] = σ²/(2κ)  [variance stationnaire]
+        <K display>{"X(t) = X_0\\, e^{-\\kappa t} + \\theta\\big(1 - e^{-\\kappa t}\\big) + \\sigma\\!\\int_0^t e^{-\\kappa(t-s)}\\,dW(s)"}</K>
+        <K display>{"E[X(t)] = \\theta + (X_0 - \\theta)\\, e^{-\\kappa t}"}</K>
+        <K display>{"\\mathrm{Var}[X(t)] = \\frac{\\sigma^2(1 - e^{-2\\kappa t})}{2\\kappa}"}</K>
+        <K display>{"\\mathrm{Var}[X(\\infty)] = \\frac{\\sigma^2}{2\\kappa} \\quad\\text{[variance stationnaire]}"}</K>
       </FormulaBox>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
         <strong style={{ color: ACCENT }}>Lecture de la solution :</strong>
         <div style={{ marginTop: 6 }}>
-          Le terme <strong>X₀·e^(-κt)</strong> représente la mémoire du point de départ — qui s'efface exponentiellement.
-          Le terme <strong>θ(1 - e^(-κt))</strong> représente l'attraction vers la moyenne — qui monte de 0 à θ.
-          Le terme <strong>σ∫e^(-κ(t-s))dW(s)</strong> est la composante aléatoire — bruits passés filtrés exponentiellement.
-          À l'équilibre (t→∞) : X(∞) ~ N(θ, σ²/2κ) — le processus est <strong>stationnaire</strong> (sa distribution ne change plus).
+          Le terme <strong><K>{"X_0 \\cdot e^{-\\kappa t}"}</K></strong> représente la mémoire du point de départ — qui s'efface exponentiellement.
+          Le terme <strong><K>{"\\theta(1 - e^{-\\kappa t})"}</K></strong> représente l'attraction vers la moyenne — qui monte de 0 à <K>{"\\theta"}</K>.
+          Le terme <strong><K>{"\\sigma\\!\\int e^{-\\kappa(t-s)}dW(s)"}</K></strong> est la composante aléatoire — bruits passés filtrés exponentiellement.
+          À l'équilibre (<K>{"t \\to \\infty"}</K>) : <K>{"X(\\infty) \\sim \\mathcal{N}(\\theta,\\, \\sigma^2/2\\kappa)"}</K> — le processus est <strong>stationnaire</strong> (sa distribution ne change plus).
         </div>
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la solution OU — E[X(t)] = θ + (X₀ − θ)·e^(−κt)</div>
-        <Step num={1} accent={ACCENT}>θ — le niveau d'équilibre à long terme : la "valeur fondamentale" du pétrole, le coût marginal de production. C'est l'attracteur du processus — là où il revient toujours.</Step>
-        <Step num={2} accent={ACCENT}>(X₀ − θ) — l'écart initial par rapport à l'équilibre : si X₀ {'>'} θ (prix trop élevé), cet écart est positif ; si X₀ {'<'} θ (prix trop bas), il est négatif. C'est la "déviation" actuelle par rapport au fondamental.</Step>
-        <Step num={3} accent={ACCENT}>e^(−κt) — le facteur de décroissance exponentielle : la fraction de l'écart qui reste après t. À t=0 : e⁰=1 (tout l'écart est là). À t=t₁/₂=ln(2)/κ : e^(-κt)=½ (la moitié a disparu). À t→∞ : e^(-κt)→0 (tout l'écart a disparu).</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la solution OU — <K>{"E[X(t)] = \\theta + (X_0 - \\theta)\\cdot e^{-\\kappa t}"}</K></div>
+        <Step num={1} accent={ACCENT}><K>{"\\theta"}</K> — le niveau d'équilibre à long terme : la "valeur fondamentale" du pétrole, le coût marginal de production. C'est l'attracteur du processus — là où il revient toujours.</Step>
+        <Step num={2} accent={ACCENT}><K>{"(X_0 - \\theta)"}</K> — l'écart initial par rapport à l'équilibre : si <K>{"X_0 > \\theta"}</K> (prix trop élevé), cet écart est positif ; si <K>{"X_0 < \\theta"}</K> (prix trop bas), il est négatif. C'est la "déviation" actuelle par rapport au fondamental.</Step>
+        <Step num={3} accent={ACCENT}><K>{"e^{-\\kappa t}"}</K> — le facteur de décroissance exponentielle : la fraction de l'écart qui reste après t. À <K>{"t=0"}</K> : <K>{"e^0=1"}</K> (tout l'écart est là). À <K>{"t=t_{1/2}=\\ln(2)/\\kappa"}</K> : <K>{"e^{-\\kappa t}=1/2"}</K> (la moitié a disparu). À <K>{"t \\to \\infty"}</K> : <K>{"e^{-\\kappa t} \\to 0"}</K> (tout l'écart a disparu).</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
-          Synthèse : E[X(t)] = [équilibre LT] + [déviation initiale] × [facteur de décroissance]. Cas limites : si t→∞, E[X(∞)]=θ (convergence vers l'équilibre). Si κ=0 (GBM), e^0=1 → X reste indéfiniment à X₀ (pas d'ancrage).
+          Synthèse : <K>{"E[X(t)]"}</K> = [équilibre LT] + [déviation initiale] × [facteur de décroissance]. Cas limites : si <K>{"t \\to \\infty"}</K>, <K>{"E[X(\\infty)] = \\theta"}</K> (convergence vers l'équilibre). Si <K>{"\\kappa = 0"}</K> (GBM), <K>{"e^0 = 1"}</K> → X reste indéfiniment à <K>{"X_0"}</K> (pas d'ancrage).
         </div>
       </div>
 
@@ -439,12 +437,12 @@ export function MeanRevTab() {
 
       <SectionTitle accent={ACCENT}>Exemples d'application du processus OU</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        <strong style={{ color: ACCENT }}>Modèle de Vasicek (1977) — Taux d'intérêt :</strong> dr = κ(θ - r)dt + σ dW.
-        Le taux court r revient vers sa moyenne à long terme θ. Avantage : solution analytique pour les prix d'obligations.
-        Limite : r peut devenir négatif (ce qui s'est révélé... réel, avec les taux négatifs post-2008 !).
+        <strong style={{ color: ACCENT }}>Modèle de Vasicek (1977) — Taux d'intérêt :</strong> <K>{"dr = \\kappa(\\theta - r)\\,dt + \\sigma\\,dW"}</K>.
+        Le taux court <K>{"r"}</K> revient vers sa moyenne à long terme <K>{"\\theta"}</K>. Avantage : solution analytique pour les prix d'obligations.
+        Limite : <K>{"r"}</K> peut devenir négatif (ce qui s'est révélé... réel, avec les taux négatifs post-2008 !).
       </div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 16 }}>
-        <strong style={{ color: ACCENT }}>Modèle de Schwartz (1997) — Commodités :</strong> dS = κ(θ - ln S)S dt + σS dW.
+        <strong style={{ color: ACCENT }}>Modèle de Schwartz (1997) — Commodités :</strong> <K>{"dS = \\kappa(\\theta - \\ln S)\\,S\\,dt + \\sigma S\\,dW"}</K>.
         C'est un GBM avec mean-reversion sur le logarithme du prix. Plus réaliste que l'OU pur car S reste positif.
         Calibré sur les données historiques de pétrole, gaz, électricité.
         Le modèle à 2 facteurs de Schwartz-Smith (2000) est le standard industriel pour les options sur commodités.
@@ -458,7 +456,7 @@ export function MeanRevTab() {
       ]} />
 
       <FormulaBox accent={ACCENT} label="Demi-vie (half-life)">
-        t₁/₂ = ln(2) / κ — temps pour réduire l'écart à la moyenne de moitié
+        <K display>{"t_{1/2} = \\frac{\\ln 2}{\\kappa} \\quad\\text{— temps pour réduire l'écart à la moyenne de moitié}"}</K>
       </FormulaBox>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
@@ -521,20 +519,20 @@ export function ItoTab() {
       </div>
 
       <IntuitionBlock emoji="🔬" title="Le lemme d'Itô : la règle de la chaîne stochastique" accent={ACCENT}>
-        En calcul ordinaire : si y = f(x) et x change, alors dy = f'(x) dx.
+        En calcul ordinaire : si <K>{"y = f(x)"}</K> et x change, alors <K>{"dy = f'(x)\\,dx"}</K>.
         En calcul stochastique, une correction apparaît à cause de la non-dérivabilité du brownien.
-        dW² = dt (et non 0 comme dans le calcul classique). Le lemme d'Itô corrige cette subtilité
-        avec un terme supplémentaire en σ² — c'est la <strong>correction d'Itô</strong>.
+        <K>{"dW^2 = dt"}</K> (et non 0 comme dans le calcul classique). Le lemme d'Itô corrige cette subtilité
+        avec un terme supplémentaire en <K>{"\\sigma^2"}</K> — c'est la <strong>correction d'Itô</strong>.
       </IntuitionBlock>
 
       <SectionTitle accent={ACCENT}>Calcul classique vs Calcul d'Itô : tableau comparatif</SectionTitle>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { label: 'Règle de la chaîne', classic: 'df = f\'(x) dx', ito: 'df = f\'(X)dX + ½f\'\'(X)dX²', c: ACCENT },
-          { label: 'dx²', classic: '(dx)² ≈ 0 (ordre dt²)', ito: '(dW)² = dt (ordre dt !)', c: T.a5 },
-          { label: 'dx × dt', classic: '= 0', ito: 'dW × dt = 0', c: T.a4 },
-          { label: 'Terme Itô', classic: 'Absent', ito: '+ ½σ²∂²f/∂X² dt', c: ACCENT },
-          { label: 'Exemple : f = X²', classic: 'df = 2X dX', ito: 'df = 2X dX + dX² = 2X dX + σ²dt', c: T.a5 },
+          { label: 'Règle de la chaîne', classic: <K>{"df = f'(x)\\,dx"}</K>, ito: <K>{"df = f'(X)\\,dX + \\tfrac{1}{2}f''(X)(dX)^2"}</K>, c: ACCENT },
+          { label: 'dx²', classic: <><K>{"(dx)^2 \\approx 0"}</K> (ordre <K>{"dt^2"}</K>)</>, ito: <><K>{"(dW)^2 = dt"}</K> (ordre <K>{"dt"}</K> !)</>, c: T.a5 },
+          { label: 'dx × dt', classic: '= 0', ito: <><K>{"dW \\times dt = 0"}</K></>, c: T.a4 },
+          { label: 'Terme Itô', classic: 'Absent', ito: <><K>{"+ \\tfrac{1}{2}\\sigma^2 \\frac{\\partial^2 f}{\\partial X^2}\\,dt"}</K></>, c: ACCENT },
+          { label: 'Exemple : f = X²', classic: <K>{"df = 2X\\,dX"}</K>, ito: <><K>{"df = 2X\\,dX + (dX)^2 = 2X\\,dX + \\sigma^2 dt"}</K></>, c: T.a5 },
           { label: 'Application BS', classic: 'Règle chaîne classique → fausse !', ito: 'Lemme d\'Itô → formule BS ✓', c: ACCENT },
         ].map((r, i) => (
           <div key={i} style={{ background: T.panel2, borderRadius: 7, padding: '10px 12px', border: `1px solid ${r.c}22`, fontSize: 12 }}>
@@ -546,96 +544,95 @@ export function ItoTab() {
       </div>
 
       <FormulaBox accent={ACCENT} label="Lemme d'Itô — Forme générale">
-        Si dX = µ(X,t)dt + σ(X,t)dW et f = f(X,t), alors :
-
-        df = [∂f/∂t + µ·∂f/∂X + (1/2)σ²·∂²f/∂X²]dt + σ·∂f/∂X·dW
+        <K display>{"\\text{Si } dX = \\mu(X,t)\\,dt + \\sigma(X,t)\\,dW \\text{ et } f = f(X,t) \\text{, alors :}"}</K>
+        <K display>{"df = \\Big[\\frac{\\partial f}{\\partial t} + \\mu\\,\\frac{\\partial f}{\\partial X} + \\frac{1}{2}\\sigma^2\\,\\frac{\\partial^2 f}{\\partial X^2}\\Big]dt + \\sigma\\,\\frac{\\partial f}{\\partial X}\\,dW"}</K>
       </FormulaBox>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du Lemme d'Itô — chaque terme expliqué</div>
-        <Step num={1} accent={ACCENT}>∂f/∂t · dt — dérive pure du temps : même si X ne bouge pas (dW=0), f change avec le temps. Exemple : le Theta d'une option — la valeur temps s'érode chaque instant même si S est immobile.</Step>
-        <Step num={2} accent={ACCENT}>µ · ∂f/∂X · dt — effet du drift déterministe : comment le drift de X se propage à f via la pente ∂f/∂X. Si f est une option call et S tend à monter (µ{'>'} 0), f monte aussi, à vitesse µ × Delta.</Step>
-        <Step num={3} accent={ACCENT}>½σ² · ∂²f/∂X² · dt — LE TERME CLÉ D'ITÔ — la correction de convexité. Si f est convexe (f''{'>'} 0), le bruit crée un gain net positif (inégalité de Jensen). C'est exactement le terme Gamma dans la PDE de Black-Scholes. Sans ce terme, l'arbitrage serait possible.</Step>
-        <Step num={4} accent={ACCENT}>σ · ∂f/∂X · dW — la partie aléatoire : le bruit de X (amplitude σ) amplifié par la pente de f (le Delta). C'est la source de risque résiduelle — le seul terme stochastique.</Step>
+        <Step num={1} accent={ACCENT}><K>{"\\frac{\\partial f}{\\partial t} \\cdot dt"}</K> — dérive pure du temps : même si X ne bouge pas (<K>{"dW=0"}</K>), f change avec le temps. Exemple : le Theta d'une option — la valeur temps s'érode chaque instant même si S est immobile.</Step>
+        <Step num={2} accent={ACCENT}><K>{"\\mu \\cdot \\frac{\\partial f}{\\partial X} \\cdot dt"}</K> — effet du drift déterministe : comment le drift de X se propage à f via la pente <K>{"\\partial f/\\partial X"}</K>. Si f est une option call et S tend à monter (<K>{"\\mu > 0"}</K>), f monte aussi, à vitesse <K>{"\\mu \\times \\Delta"}</K>.</Step>
+        <Step num={3} accent={ACCENT}><K>{"\\tfrac{1}{2}\\sigma^2 \\cdot \\frac{\\partial^2 f}{\\partial X^2} \\cdot dt"}</K> — LE TERME CLÉ D'ITÔ — la correction de convexité. Si f est convexe (<K>{"f'' > 0"}</K>), le bruit crée un gain net positif (inégalité de Jensen). C'est exactement le terme Gamma dans la PDE de Black-Scholes. Sans ce terme, l'arbitrage serait possible.</Step>
+        <Step num={4} accent={ACCENT}><K>{"\\sigma \\cdot \\frac{\\partial f}{\\partial X} \\cdot dW"}</K> — la partie aléatoire : le bruit de X (amplitude <K>{"\\sigma"}</K>) amplifié par la pente de f (le Delta). C'est la source de risque résiduelle — le seul terme stochastique.</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10 }}>
-          Structure : df = [dérive temporelle + dérive de X + correction de convexité] dt + [bruit amplifié par la pente] dW
+          Structure : <K>{"df = [\\text{dérive temporelle + dérive de X + correction de convexité}]\\,dt + [\\text{bruit amplifié par la pente}]\\,dW"}</K>
         </div>
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '0 0 16px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
-        <strong style={{ color: ACCENT }}>Point clé — Jensen dans le temps continu :</strong> La correction ½σ²f'' est la manifestation mathématique de l'inégalité de Jensen dans le temps continu. E[f(X)] {'>'} f(E[X]) si f est convexe → le bruit génère un gain net quand on est convexe (long Gamma). C'est pourquoi un acheteur d'option est long Gamma : il profite de la convexité, mais en paie le prix via Theta.
+        <strong style={{ color: ACCENT }}>Point clé — Jensen dans le temps continu :</strong> La correction <K>{"\\tfrac{1}{2}\\sigma^2 f''"}</K> est la manifestation mathématique de l'inégalité de Jensen dans le temps continu. <K>{"E[f(X)] > f(E[X])"}</K> si f est convexe → le bruit génère un gain net quand on est convexe (long Gamma). C'est pourquoi un acheteur d'option est long Gamma : il profite de la convexité, mais en paie le prix via Theta.
       </div>
 
       <SectionTitle accent={ACCENT}>Application 1 : GBM → solution explicite</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 8 }}>
-        On pose f(S) = ln(S). On veut trouver df si dS = µS dt + σS dW.
+        On pose <K>{"f(S) = \\ln(S)"}</K>. On veut trouver <K>{"df"}</K> si <K>{"dS = \\mu S\\,dt + \\sigma S\\,dW"}</K>.
       </div>
 
-      <Step num={1} accent={ACCENT}>∂f/∂S = 1/S, ∂²f/∂S² = -1/S², ∂f/∂t = 0</Step>
-      <Step num={2} accent={ACCENT}>df = [0 + µS × (1/S) + (1/2)σ²S² × (-1/S²)]dt + σS × (1/S) dW</Step>
-      <Step num={3} accent={ACCENT}>df = [µ - σ²/2]dt + σ dW</Step>
-      <Step num={4} accent={ACCENT}>Intégration : ln(S_T/S₀) = (µ - σ²/2)T + σW(T)</Step>
+      <Step num={1} accent={ACCENT}><K>{"\\partial f/\\partial S = 1/S,\\; \\partial^2 f/\\partial S^2 = -1/S^2,\\; \\partial f/\\partial t = 0"}</K></Step>
+      <Step num={2} accent={ACCENT}><K>{"df = [0 + \\mu S \\times (1/S) + (1/2)\\sigma^2 S^2 \\times (-1/S^2)]\\,dt + \\sigma S \\times (1/S)\\,dW"}</K></Step>
+      <Step num={3} accent={ACCENT}><K>{"df = [\\mu - \\sigma^2/2]\\,dt + \\sigma\\,dW"}</K></Step>
+      <Step num={4} accent={ACCENT}>Intégration : <K>{"\\ln(S_T/S_0) = (\\mu - \\sigma^2/2)T + \\sigma W(T)"}</K></Step>
 
       <FormulaBox accent={ACCENT} label="Solution exacte du GBM">
-        S_T = S₀ × exp[(µ - σ²/2)T + σ√T × Z]   Z ~ N(0,1)
+        <K display>{"S_T = S_0 \\times \\exp\\!\\Big[\\Big(\\mu - \\frac{\\sigma^2}{2}\\Big)T + \\sigma\\sqrt{T}\\, Z\\Big] \\quad Z \\sim \\mathcal{N}(0,1)"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Pourquoi le terme σ²/2 apparaît-il ? — Développement de Taylor stochastique</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        En calcul classique, le développement de Taylor de df s'arrête à l'ordre 1 car dx² ≈ (dt)² → 0.
-        En calcul stochastique, le terme dx² = σ²dW² = σ²dt ne peut pas être négligé — c'est un terme d'ordre dt.
+        En calcul classique, le développement de Taylor de <K>{"df"}</K> s'arrête à l'ordre 1 car <K>{"dx^2 \\approx (dt)^2 \\to 0"}</K>.
+        En calcul stochastique, le terme <K>{"dx^2 = \\sigma^2 dW^2 = \\sigma^2 dt"}</K> ne peut pas être négligé — c'est un terme d'ordre <K>{"dt"}</K>.
       </div>
-      <Step num={1} accent={ACCENT}>Taylor stochastique : df ≈ ∂f/∂t dt + ∂f/∂X dX + ½ ∂²f/∂X² (dX)² + ...</Step>
-      <Step num={2} accent={ACCENT}>(dX)² = (µdt + σdW)² = µ²(dt)² + 2µσ dt·dW + σ²(dW)² ≈ σ²dt</Step>
-      <Step num={3} accent={ACCENT}>Car : (dt)² → 0, dt·dW → 0, et (dW)² = dt (variation quadratique !)</Step>
-      <Step num={4} accent={ACCENT}>Résultat : df = [∂f/∂t + µ∂f/∂X + ½σ²∂²f/∂X²]dt + σ∂f/∂X dW</Step>
+      <Step num={1} accent={ACCENT}>Taylor stochastique : <K>{"df \\approx \\frac{\\partial f}{\\partial t}\\,dt + \\frac{\\partial f}{\\partial X}\\,dX + \\frac{1}{2}\\frac{\\partial^2 f}{\\partial X^2}(dX)^2 + \\cdots"}</K></Step>
+      <Step num={2} accent={ACCENT}><K>{"(dX)^2 = (\\mu\\,dt + \\sigma\\,dW)^2 = \\mu^2(dt)^2 + 2\\mu\\sigma\\,dt{\\cdot}dW + \\sigma^2(dW)^2 \\approx \\sigma^2 dt"}</K></Step>
+      <Step num={3} accent={ACCENT}>Car : <K>{"(dt)^2 \\to 0"}</K>, <K>{"dt{\\cdot}dW \\to 0"}</K>, et <K>{"(dW)^2 = dt"}</K> (variation quadratique !)</Step>
+      <Step num={4} accent={ACCENT}>Résultat : <K>{"df = \\Big[\\frac{\\partial f}{\\partial t} + \\mu\\frac{\\partial f}{\\partial X} + \\frac{1}{2}\\sigma^2\\frac{\\partial^2 f}{\\partial X^2}\\Big]dt + \\sigma\\frac{\\partial f}{\\partial X}\\,dW"}</K></Step>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Point clé :</strong> Le terme σ²/2 vient du terme quadratique de Taylor (½ × ∂²f/∂X² × σ²dt)
-        qui normalement disparaît en calcul classique mais <em>survit</em> en calcul stochastique car dW² = dt.
+        <strong style={{ color: ACCENT }}>Point clé :</strong> Le terme <K>{"\\sigma^2/2"}</K> vient du terme quadratique de Taylor (<K>{"\\tfrac{1}{2} \\cdot \\frac{\\partial^2 f}{\\partial X^2} \\cdot \\sigma^2 dt"}</K>)
+        qui normalement disparaît en calcul classique mais <em>survit</em> en calcul stochastique car <K>{"dW^2 = dt"}</K>.
         C'est la convexité de f qui crée ce terme — c'est l'inégalité de Jensen rendue explicite.
-        Pour f(S) = ln(S) : f''(S) = -1/S² {'<'} 0 → la correction est négative → -σ²/2.
+        Pour <K>{"f(S) = \\ln(S)"}</K> : <K>{"f''(S) = -1/S^2 < 0"}</K> → la correction est négative → <K>{"-\\sigma^2/2"}</K>.
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 8 }}>Pourquoi (µ - σ²/2) et pas µ ?</div>
+        <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 8 }}>Pourquoi <K>{"(\\mu - \\sigma^2/2)"}</K> et pas <K>{"\\mu"}</K> ?</div>
         <div style={{ color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          E[S_T] = S₀ × e^(µT) → le drift espéré est µ. ✓<br />
+          <K>{"E[S_T] = S_0 \\times e^{\\mu T}"}</K> → le drift espéré est <K>{"\\mu"}</K>. ✓<br />
           Mais la moyenne géométrique ≠ moyenne arithmétique.<br />
-          La correction -σ²/2 vient de la convexité de l'exponentielle (inégalité de Jensen).<br />
-          Sans correction : E[ln(S_T/S₀)] = µT → FAUX.<br />
-          Avec correction : E[ln(S_T/S₀)] = (µ - σ²/2)T → VRAI. ✓
+          La correction <K>{"-\\sigma^2/2"}</K> vient de la convexité de l'exponentielle (inégalité de Jensen).<br />
+          Sans correction : <K>{"E[\\ln(S_T/S_0)] = \\mu T"}</K> → FAUX.<br />
+          Avec correction : <K>{"E[\\ln(S_T/S_0)] = (\\mu - \\sigma^2/2)T"}</K> → VRAI. ✓
         </div>
       </div>
 
       <SectionTitle accent={ACCENT}>Application 2 : Équation de Black-Scholes et l'argument de réplication</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 8, lineHeight: 1.8 }}>
-        En appliquant le lemme d'Itô à C(S,t) où S suit un GBM, on obtient l'EDS de C. L'astuce de Black-Scholes
+        En appliquant le lemme d'Itô à <K>{"C(S,t)"}</K> où S suit un GBM, on obtient l'EDS de C. L'astuce de Black-Scholes
         est de construire un <strong>portefeuille Δ-neutre</strong> qui élimine toute source de risque.
       </div>
-      <Step num={1} accent={ACCENT}>Portefeuille : Π = C - Δ × S (acheter le call, vendre Δ actions)</Step>
-      <Step num={2} accent={ACCENT}>Appliquer Itô à C(S,t) : dC = [∂C/∂t + µS∂C/∂S + ½σ²S²∂²C/∂S²]dt + σS∂C/∂S dW</Step>
-      <Step num={3} accent={ACCENT}>dΠ = dC - Δ dS = [∂C/∂t + µS∂C/∂S + ½σ²S²∂²C/∂S² - Δ µS]dt + [σS∂C/∂S - Δ σS]dW</Step>
-      <Step num={4} accent={ACCENT}>Choisir Δ = ∂C/∂S → le terme en dW s'annule exactement ! Le portefeuille devient sans risque.</Step>
-      <Step num={5} accent={ACCENT}>Sans risque → dΠ = rΠ dt (taux sans risque) → r(C - Δ S)dt = [∂C/∂t + ½σ²S²∂²C/∂S²]dt</Step>
+      <Step num={1} accent={ACCENT}>Portefeuille : <K>{"\\Pi = C - \\Delta \\times S"}</K> (acheter le call, vendre <K>{"\\Delta"}</K> actions)</Step>
+      <Step num={2} accent={ACCENT}>Appliquer Itô à <K>{"C(S,t)"}</K> : <K>{"dC = \\Big[\\frac{\\partial C}{\\partial t} + \\mu S\\frac{\\partial C}{\\partial S} + \\tfrac{1}{2}\\sigma^2 S^2\\frac{\\partial^2 C}{\\partial S^2}\\Big]dt + \\sigma S\\frac{\\partial C}{\\partial S}\\,dW"}</K></Step>
+      <Step num={3} accent={ACCENT}><K>{"d\\Pi = dC - \\Delta\\,dS = \\Big[\\frac{\\partial C}{\\partial t} + \\mu S\\frac{\\partial C}{\\partial S} + \\tfrac{1}{2}\\sigma^2 S^2\\frac{\\partial^2 C}{\\partial S^2} - \\Delta\\mu S\\Big]dt + \\Big[\\sigma S\\frac{\\partial C}{\\partial S} - \\Delta\\sigma S\\Big]dW"}</K></Step>
+      <Step num={4} accent={ACCENT}>Choisir <K>{"\\Delta = \\frac{\\partial C}{\\partial S}"}</K> → le terme en <K>{"dW"}</K> s'annule exactement ! Le portefeuille devient sans risque.</Step>
+      <Step num={5} accent={ACCENT}>Sans risque → <K>{"d\\Pi = r\\Pi\\,dt"}</K> (taux sans risque) → <K>{"r(C - \\Delta S)\\,dt = \\Big[\\frac{\\partial C}{\\partial t} + \\tfrac{1}{2}\\sigma^2 S^2\\frac{\\partial^2 C}{\\partial S^2}\\Big]dt"}</K></Step>
       <FormulaBox accent={ACCENT} label="PDE de Black-Scholes">
-        ∂C/∂t + rS·∂C/∂S + (1/2)σ²S²·∂²C/∂S² - rC = 0
+        <K display>{"\\frac{\\partial C}{\\partial t} + rS\\,\\frac{\\partial C}{\\partial S} + \\frac{1}{2}\\sigma^2 S^2\\,\\frac{\\partial^2 C}{\\partial S^2} - rC = 0"}</K>
       </FormulaBox>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
-        <strong style={{ color: ACCENT }}>L'argument de réplication :</strong> En choisissant Δ = ∂C/∂S (le Delta de l'option), on élimine le terme stochastique dW.
-        Le portefeuille résultant est <em>instantanément sans risque</em> → il doit rapporter exactement r (sinon arbitrage).
+        <strong style={{ color: ACCENT }}>L'argument de réplication :</strong> En choisissant <K>{"\\Delta = \\partial C/\\partial S"}</K> (le Delta de l'option), on élimine le terme stochastique <K>{"dW"}</K>.
+        Le portefeuille résultant est <em>instantanément sans risque</em> → il doit rapporter exactement <K>{"r"}</K> (sinon arbitrage).
         Cette contrainte donne la PDE de B-S. Les termes ont une interprétation directe :<br />
-        • ∂C/∂t = Theta (dégradation temporelle)<br />
-        • rS∂C/∂S = drift risque-neutre (Delta × taux)<br />
-        • ½σ²S²∂²C/∂S² = terme de convexité (Gamma)<br />
-        • -rC = actualisation de la valeur du call
+        • <K>{"\\partial C/\\partial t"}</K> = Theta (dégradation temporelle)<br />
+        • <K>{"rS\\,\\partial C/\\partial S"}</K> = drift risque-neutre (Delta × taux)<br />
+        • <K>{"\\tfrac{1}{2}\\sigma^2 S^2\\,\\partial^2 C/\\partial S^2"}</K> = terme de convexité (Gamma)<br />
+        • <K>{"-rC"}</K> = actualisation de la valeur du call
       </div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, marginBottom: 14 }}>
         Cette EDP a pour solution la formule de Black-Scholes que nous verrons au Module 4.
-        Le prix B-S est la <strong>seule fonction</strong> C(S,t) qui satisfait cette PDE avec la condition terminale C(S,T) = max(S-K, 0).
+        Le prix B-S est la <strong>seule fonction</strong> <K>{"C(S,t)"}</K> qui satisfait cette PDE avec la condition terminale <K>{"C(S,T) = \\max(S-K,\\, 0)"}</K>.
       </div>
 
       <Accordion title="Exercice — Lemme d'Itô appliqué à f(S) = S²" accent={ACCENT} badge="Entraînement">
-        <p style={{ color: T.text }}>Si dS = µS dt + σS dW, trouvez df où f(S) = S²</p>
+        <p style={{ color: T.text }}>Si <K>{"dS = \\mu S\\,dt + \\sigma S\\,dW"}</K>, trouvez <K>{"df"}</K> où <K>{"f(S) = S^2"}</K></p>
         <FormulaBox accent={ACCENT}><K>{"df = S^2(2\\mu + \\sigma^2)\\,dt + 2\\sigma S^2\\,dW"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="f(S) expansion" accent={ACCENT}>Dérivées : <K>{"\\partial f/\\partial S = 2S,\\; \\partial^2 f/\\partial S^2 = 2,\\; \\partial f/\\partial t = 0"}</K></DemoStep>
@@ -645,7 +642,7 @@ export function ItoTab() {
       </Accordion>
 
       <Accordion title="Exercice — Lemme d'Itô appliqué à f(S) = √S" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Si dS = µS dt + σS dW (GBM), trouvez l'EDS de Y = √S = S^(1/2).</p>
+        <p style={{ color: T.text }}>Si <K>{"dS = \\mu S\\,dt + \\sigma S\\,dW"}</K> (GBM), trouvez l'EDS de <K>{"Y = \\sqrt{S} = S^{1/2}"}</K>.</p>
         <FormulaBox accent={ACCENT}><K>{"dY = Y\\Big(\\frac{\\mu}{2} - \\frac{\\sigma^2}{8}\\Big)dt + \\frac{\\sigma}{2}Y\\,dW"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="f(S) expansion" accent={ACCENT}>Dérivées : <K>{"f(S)=S^{1/2},\\; f'(S)=\\tfrac{1}{2}S^{-1/2},\\; f''(S)=-\\tfrac{1}{4}S^{-3/2}"}</K></DemoStep>
@@ -656,7 +653,7 @@ export function ItoTab() {
       </Accordion>
 
       <Accordion title="Exercice — Processus OU via le lemme d'Itô" accent={ACCENT} badge="Difficile">
-        <p style={{ color: T.text }}>Montrez que la solution du processus OU dX = κ(θ - X)dt + σdW est X(t) = X₀e^(-κt) + θ(1-e^(-κt)) + σ∫₀ᵗ e^(-κ(t-s))dW(s).</p>
+        <p style={{ color: T.text }}>Montrez que la solution du processus OU <K>{"dX = \\kappa(\\theta - X)\\,dt + \\sigma\\,dW"}</K> est <K>{"X(t) = X_0 e^{-\\kappa t} + \\theta(1-e^{-\\kappa t}) + \\sigma\\!\\int_0^t e^{-\\kappa(t-s)}dW(s)"}</K>.</p>
         <FormulaBox accent={ACCENT}><K>{"X(t) = X_0 e^{-\\kappa t} + \\theta(1-e^{-\\kappa t}) + \\sigma\\!\\int_0^t e^{-\\kappa(t-s)}dW(s)"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="changement de variable" accent={ACCENT}>Posons <K>{"Z(t) = X(t)\\,e^{\\kappa t}"}</K> (changement de variable). Cherchons dZ.</DemoStep>
@@ -708,17 +705,16 @@ export function SimulTab() {
       </div>
 
       <IntuitionBlock emoji="🔗" title="Simulation de 2 actifs corrélés par Cholesky" accent={ACCENT}>
-        Pour simuler un portefeuille pétrole + gaz avec corrélation ρ :
-        On génère Z₁, Z₂ ~ N(0,1) indépendants, puis on "corèle" avec Cholesky :
-        W₁ = Z₁ et W₂ = ρ·Z₁ + √(1-ρ²)·Z₂.
-        Cela garantit Cor(W₁, W₂) = ρ tout en préservant la marginalité normale de chaque actif.
+        Pour simuler un portefeuille pétrole + gaz avec corrélation <K>{"\\rho"}</K> :
+        On génère <K>{"Z_1, Z_2 \\sim \\mathcal{N}(0,1)"}</K> indépendants, puis on "corèle" avec Cholesky :
+        <K>{"W_1 = Z_1"}</K> et <K>{"W_2 = \\rho\\, Z_1 + \\sqrt{1-\\rho^2}\\, Z_2"}</K>.
+        Cela garantit <K>{"\\mathrm{Cor}(W_1, W_2) = \\rho"}</K> tout en préservant la marginalité normale de chaque actif.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Cholesky — 2 actifs corrélés">
-        W₁ = Z₁
-        W₂ = ρ·Z₁ + √(1-ρ²)·Z₂   où Z₁, Z₂ ~ N(0,1) iid
-
-        Alors : Cov(W₁, W₂) = E[W₁·W₂] = ρ × Var(Z₁) = ρ ✓
+        <K display>{"W_1 = Z_1"}</K>
+        <K display>{"W_2 = \\rho\\, Z_1 + \\sqrt{1-\\rho^2}\\, Z_2 \\quad\\text{où } Z_1, Z_2 \\sim \\mathcal{N}(0,1) \\text{ iid}"}</K>
+        <K display>{"\\mathrm{Cov}(W_1, W_2) = E[W_1 \\cdot W_2] = \\rho \\times \\mathrm{Var}(Z_1) = \\rho \\;\\checkmark"}</K>
       </FormulaBox>
 
       <Grid cols={3} gap="8px">
@@ -750,23 +746,23 @@ export function SimulTab() {
 
       <SectionTitle accent={ACCENT}>Précision de Monte Carlo et réduction de variance</SectionTitle>
       <FormulaBox accent={ACCENT} label="Erreur standard de Monte Carlo">
-        Erreur standard = σ_payoff / √N
-        Intervalle de confiance 95% : Prix_MC ± 1.96 × σ_payoff / √N
-        Doubler la précision → multiplier N par 4 (coût quadratique !)
+        <K display>{"\\text{Erreur standard} = \\frac{\\sigma_{\\text{payoff}}}{\\sqrt{N}}"}</K>
+        <K display>{"\\text{IC}_{95\\%} :\\; \\text{Prix}_{\\text{MC}} \\pm 1.96 \\times \\frac{\\sigma_{\\text{payoff}}}{\\sqrt{N}}"}</K>
+        <K display>{"\\text{Doubler la précision} \\Rightarrow \\text{multiplier } N \\text{ par 4 (coût quadratique !)}"}</K>
       </FormulaBox>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
         <strong style={{ color: ACCENT }}>Techniques de réduction de variance — indispensables en pratique :</strong>
         <div style={{ marginTop: 8 }}>
           <div style={{ marginBottom: 8 }}>
             <strong>1. Variables antithétiques :</strong> Pour chaque Z ~ N(0,1) utilisé, ajouter aussi -Z.
-            On simule N/2 paires (Z, -Z) au lieu de N variables indépendantes.
+            On simule <K>{"N/2"}</K> paires <K>{"(Z, -Z)"}</K> au lieu de N variables indépendantes.
             Cela exploite la symétrie de la loi normale. Réduction typique de variance : 30-70%.
-            Formule : C_MC = ½[payoff(Z) + payoff(-Z)] pour chaque paire.
+            Formule : <K>{"C_{\\text{MC}} = \\tfrac{1}{2}[\\text{payoff}(Z) + \\text{payoff}(-Z)]"}</K> pour chaque paire.
           </div>
           <div style={{ marginBottom: 8 }}>
             <strong>2. Variables de contrôle :</strong> On utilise un actif dont on connaît le vrai prix (ex: le call B-S)
             pour corriger l'estimateur MC. Si payoff_BS_MC ≠ prix_BS_vrai, on ajuste proportionnellement.
-            C_ajusté = C_MC + b × (prix_BS_vrai - payoff_BS_MC). Réduction typique : 80-95% de variance.
+            <K>{"C_{\\text{ajusté}} = C_{\\text{MC}} + b \\times (\\text{prix}_{\\text{BS,vrai}} - \\text{payoff}_{\\text{BS,MC}})"}</K>. Réduction typique : 80-95% de variance.
           </div>
           <div>
             <strong>3. Stratification :</strong> Diviser l'espace [0,1] en N tranches égales et tirer exactement
@@ -777,7 +773,7 @@ export function SimulTab() {
       </div>
 
       <Accordion title="Exercice — Nombre de simulations nécessaires" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Un call vaut 5€ avec σ_payoff ≈ 20€. Combien de simulations pour une précision de ±0.10€ (95%) ? De ±0.01€ ?</p>
+        <p style={{ color: T.text }}>Un call vaut 5€ avec <K>{"\\sigma_{\\text{payoff}} \\approx 20"}</K>€. Combien de simulations pour une précision de <K>{"\\pm 0.10"}</K>€ (95%) ? De <K>{"\\pm 0.01"}</K>€ ?</p>
         <FormulaBox accent={ACCENT}><K>{"N = \\Big(\\frac{1.96\\,\\sigma}{\\varepsilon}\\Big)^{\\!2}"}</K> — précision ×10 → N ×100</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Erreur standard" ruleDetail="N = (1.96·σ/ε)²" accent={ACCENT}>Formule : <K>{"N = \\Big(\\frac{1.96 \\times \\sigma_{\\text{payoff}}}{\\varepsilon}\\Big)^{\\!2}"}</K> où ε est la demi-largeur souhaitée</DemoStep>
@@ -788,7 +784,7 @@ export function SimulTab() {
       </Accordion>
 
       <ExampleBlock title="Cas concret : portefeuille énergie à 1 an" accent={ACCENT}>
-        <p>100M$ en WTI (σ=30%) + 50M$ en Gaz Nat (σ=25%), ρ=0.5</p>
+        <p>100M$ en WTI (<K>{"\\sigma=30\\%"}</K>) + 50M$ en Gaz Nat (<K>{"\\sigma=25\\%"}</K>), <K>{"\\rho=0.5"}</K></p>
         <FormulaBox accent={ACCENT}><K>{"\\sigma_p = 25.2\\%,\\; \\text{VaR}_{95\\%} = 62.1\\text{M\\$}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Loi des grands nombres" ruleDetail="poids du portefeuille" accent={ACCENT}><K>{"w_1 = 2/3,\\; w_2 = 1/3"}</K> (portefeuille total 150M$)</DemoStep>
@@ -881,9 +877,9 @@ export function JumpTab() {
 
       <SectionTitle accent={ACCENT}>1. Processus de Poisson — Modèle des arrivées de sauts</SectionTitle>
       <FormulaBox accent={ACCENT} label="Processus de Poisson N(t)">
-        P(N(t) = k) = e^(-λt) × (λt)^k / k!
-        E[N(t)] = λt     Var[N(t)] = λt
-        Temps inter-arrivées : τ ~ Exp(λ),  E[τ] = 1/λ
+        <K display>{"P(N(t) = k) = e^{-\\lambda t} \\cdot \\frac{(\\lambda t)^k}{k!}"}</K>
+        <K display>{"E[N(t)] = \\lambda t \\qquad \\mathrm{Var}[N(t)] = \\lambda t"}</K>
+        <K display>{"\\text{Temps inter-arrivées : } \\tau \\sim \\mathrm{Exp}(\\lambda),\\; E[\\tau] = \\frac{1}{\\lambda}"}</K>
       </FormulaBox>
       <SymbolLegend accent={ACCENT} symbols={[
         ['λ', "Intensité : nombre moyen de sauts par an (ex: λ=5 → 1 saut tous les 73j)"],
@@ -894,19 +890,19 @@ export function JumpTab() {
 
       <SectionTitle accent={ACCENT}>2. Merton Jump Diffusion (1976) — Actifs financiers</SectionTitle>
       <FormulaBox accent={ACCENT} label="EDS — Merton">
-        dS/S = (µ - λk̄) dt + σ dW + (e^Y - 1) dN
-        Y ~ N(µ_J, σ_J²),    k̄ = e^(µ_J + σ_J²/2) - 1  (correction drift)
+        <K display>{"\\frac{dS}{S} = (\\mu - \\lambda\\bar{k})\\,dt + \\sigma\\,dW + (e^Y - 1)\\,dN"}</K>
+        <K display>{"Y \\sim \\mathcal{N}(\\mu_J,\\, \\sigma_J^2), \\quad \\bar{k} = e^{\\mu_J + \\sigma_J^2/2} - 1 \\;\\text{ (correction drift)}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 14, lineHeight: 1.7 }}>
-        La correction <strong>-λk̄</strong> garantit E[S(t)] = S₀e^(µt) malgré les sauts.
-        µ_J {'<'} 0 : sauts baissiers dominants (choc négatif type crash).
-        µ_J = 0 : sauts symétriques (perturbations neutres en espérance).
+        La correction <strong><K>{"-\\lambda\\bar{k}"}</K></strong> garantit <K>{"E[S(t)] = S_0 e^{\\mu t}"}</K> malgré les sauts.
+        <K>{"\\mu_J < 0"}</K> : sauts baissiers dominants (choc négatif type crash).
+        <K>{"\\mu_J = 0"}</K> : sauts symétriques (perturbations neutres en espérance).
       </div>
 
       <SectionTitle accent={ACCENT}>3. MRJD — Mean-Reverting Jump Diffusion (cours DPH3V)</SectionTitle>
       <FormulaBox accent={ACCENT} label="MRJD — Modèle énergie explicitement au programme">
-        dX = κ(θ - X)dt + σX dW + X(e^Y - 1) dN
-        Y ~ N(µ_J, σ_J²)
+        <K display>{"dX = \\kappa(\\theta - X)\\,dt + \\sigma X\\,dW + X(e^Y - 1)\\,dN"}</K>
+        <K display>{"Y \\sim \\mathcal{N}(\\mu_J,\\, \\sigma_J^2)"}</K>
       </FormulaBox>
       <SymbolLegend accent={ACCENT} symbols={[
         ['κ(θ-X)dt', 'Force de rappel vers θ (mean-reversion OU)'],
@@ -978,18 +974,18 @@ export function JumpTab() {
       </ChartWrapper>
 
       <ExampleBlock title="Spike de gaz naturel — Rupture d'approvisionnement" accent={ACCENT}>
-        <p>Gaz naturel : θ=3$/MMBtu, κ=4, σ=35%, λ=6 sauts/an, µ_J=0%, σ_J=25%</p>
+        <p>Gaz naturel : <K>{"\\theta=3"}</K>$/MMBtu, <K>{"\\kappa=4"}</K>, <K>{"\\sigma=35\\%"}</K>, <K>{"\\lambda=6"}</K> sauts/an, <K>{"\\mu_J=0\\%"}</K>, <K>{"\\sigma_J=25\\%"}</K></p>
         <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 71\\%\\text{ (vs 35% sans sauts)}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Processus de Poisson" ruleDetail="P(N≥1) = 1−e^{−λt}" accent={ACCENT}><K>{"P(\\geq 1\\text{ saut/trimestre}) = 1 - e^{-6 \\times 0.25} = 1 - e^{-1.5} = 77.7\\%"}</K></DemoStep>
-          <DemoStep num={2} rule="MRJD" ruleDetail="saut multiplicatif e^Y−1" accent={ACCENT}>Saut haussier typique (+1σ_J) : <K>{"e^{0.25} - 1 = +28\\%"}</K> sur le prix courant</DemoStep>
-          <DemoStep num={3} rule="Demi-vie" ruleDetail="t₁/₂ = ln(2)/κ" accent={ACCENT}><K>{"t_{1/2} = \\ln(2)/4 = 63\\text{ jours}"}</K> → retour vers θ après ~2 mois</DemoStep>
+          <DemoStep num={2} rule="MRJD" ruleDetail="saut multiplicatif e^Y−1" accent={ACCENT}>Saut haussier typique (<K>{"+1\\sigma_J"}</K>) : <K>{"e^{0.25} - 1 = +28\\%"}</K> sur le prix courant</DemoStep>
+          <DemoStep num={3} rule="Demi-vie" ruleDetail="t₁/₂ = ln(2)/κ" accent={ACCENT}><K>{"t_{1/2} = \\ln(2)/4 = 63\\text{ jours}"}</K> → retour vers <K>{"\\theta"}</K> après ~2 mois</DemoStep>
           <DemoStep num={4} rule="MRJD" ruleDetail="σ_total = √(σ²+λ(µ²_J+σ²_J))" accent={ACCENT}><K>{"\\sigma_{\\text{tot}} = \\sqrt{0.1225 + 6 \\times 0.0625} = \\sqrt{0.4975} \\approx 71\\%"}</K> (vs 35% sans sauts !)</DemoStep>
         </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Probabilité de saut (Poisson)" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Le pétrole subit λ=4 sauts/an. Quelle est la probabilité d'avoir ≥2 sauts en 6 mois ?</p>
+        <p style={{ color: T.text }}>Le pétrole subit <K>{"\\lambda=4"}</K> sauts/an. Quelle est la probabilité d'avoir <K>{"\\geq 2"}</K> sauts en 6 mois ?</p>
         <FormulaBox accent={ACCENT}><K>{"P(N \\geq 2) = 59.4\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Processus de Poisson" ruleDetail="λt = intensité × durée" accent={ACCENT}><K>{"t = 0.5\\text{ an} \\Rightarrow \\lambda t = 4 \\times 0.5 = 2"}</K></DemoStep>
@@ -997,7 +993,7 @@ export function JumpTab() {
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Vol totale MRJD" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>σ=20%, λ=8, µ_J=0, σ_J=15%. Calculez la volatilité totale effective.</p>
+        <p style={{ color: T.text }}><K>{"\\sigma=20\\%"}</K>, <K>{"\\lambda=8"}</K>, <K>{"\\mu_J=0"}</K>, <K>{"\\sigma_J=15\\%"}</K>. Calculez la volatilité totale effective.</p>
         <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 46.9\\%\\text{ (vs 20% sans sauts)}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="MRJD" ruleDetail="σ² diffusion" accent={ACCENT}>Variance diffusion : <K>{"\\sigma^2 = 0.04"}</K></DemoStep>

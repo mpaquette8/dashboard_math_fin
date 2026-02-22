@@ -75,11 +75,11 @@ function black76(F, K, T, r, sigma, type = 'call') {
 // ─── Tab: No-Arbitrage ────────────────────────────────────────────────────────
 export function NoArbTab() {
   const [S, setS] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [r, setR] = useState(0.05)
   const [T2, setT2] = useState(1)
 
-  const PV_K = K * Math.exp(-r * T2)
+  const PV_K = strike * Math.exp(-r * T2)
   const lowerBound = Math.max(S - PV_K, 0)
   const putCallParity = `C - P = S - K·e^(-rT) = ${(S - PV_K).toFixed(2)}`
 
@@ -118,7 +118,7 @@ export function NoArbTab() {
           (théorème de Girsanov) qui rend le pricing trivial : le prix d'un dérivé est l'espérance sous Q de son payoff actualisé.
         </div>
         <div style={{ marginTop: 8 }}>
-          <strong>Formule fondamentale :</strong> Prix(t) = e^(-r(T-t)) × E^Q[Payoff(T) | F_t]
+          <strong>Formule fondamentale :</strong> <K>{"\\text{Prix}(t) = e^{-r(T-t)} \\times \\mathbb{E}^Q[\\text{Payoff}(T) \\mid \\mathcal{F}_t]"}</K>
         </div>
         <div style={{ marginTop: 8 }}>
           Conséquence pratique : on n'a pas besoin de connaître µ (le vrai rendement attendu de l'actif) pour pricer un dérivé.
@@ -130,14 +130,14 @@ export function NoArbTab() {
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
         Construisons deux portefeuilles et montrons qu'ils ont le même payoff à maturité :
       </div>
-      <Step num={1} accent={ACCENT}>Portefeuille A : acheter 1 call (prix C) + investir K·e^(-rT) au taux sans risque</Step>
+      <Step num={1} accent={ACCENT}>Portefeuille A : acheter 1 call (prix C) + investir <K>{"Ke^{-rT}"}</K> au taux sans risque</Step>
       <Step num={2} accent={ACCENT}>Portefeuille B : acheter 1 put (prix P) + acheter 1 action (prix S)</Step>
-      <Step num={3} accent={ACCENT}>À maturité T, si S_T {'>'} K : A = (S_T - K) + K = S_T ; B = 0 + S_T = S_T ✓</Step>
-      <Step num={4} accent={ACCENT}>À maturité T, si S_T {'<'} K : A = 0 + K = K ; B = (K - S_T) + S_T = K ✓</Step>
-      <Step num={5} accent={ACCENT}>Mêmes payoffs dans tous les cas → même prix → C + K·e^(-rT) = P + S</Step>
+      <Step num={3} accent={ACCENT}>À maturité T, si <K>{"S_T > K"}</K> : <K>{"A = (S_T - K) + K = S_T"}</K> ; <K>{"B = 0 + S_T = S_T"}</K> ✓</Step>
+      <Step num={4} accent={ACCENT}>À maturité T, si <K>{"S_T < K"}</K> : <K>{"A = 0 + K = K"}</K> ; <K>{"B = (K - S_T) + S_T = K"}</K> ✓</Step>
+      <Step num={5} accent={ACCENT}>Mêmes payoffs dans tous les cas → même prix → <K>{"C + Ke^{-rT} = P + S"}</K></Step>
 
       <FormulaBox accent={ACCENT} label="Parité Put-Call (portefeuille de réplication)">
-        C - P = S - K·e^(-rT)
+        <K display>{"C - P = S - Ke^{-rT}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Bornes no-arbitrage sur le prix d'un call</SectionTitle>
@@ -145,13 +145,13 @@ export function NoArbTab() {
         Sans hypothèse sur la distribution de S, on peut établir des bornes universelles :
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '0 0 14px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
-        <div style={{ marginBottom: 8 }}><strong style={{ color: ACCENT }}>C ≥ max(S - K·e^(-rT), 0) :</strong> Si C {'<'} S - K·e^(-rT), acheter le call, vendre l'action et emprunter K·e^(-rT) → profit immédiat garanti. Absurde.</div>
-        <div style={{ marginBottom: 8 }}><strong style={{ color: ACCENT }}>C ≤ S :</strong> Le call ne peut valoir plus que l'actif lui-même (le call donne le <em>droit</em> d'acheter S, pas S directement).</div>
-        <div><strong style={{ color: ACCENT }}>0 ≤ C :</strong> Le call ne peut pas avoir une valeur négative — on ne peut jamais être <em>obligé</em> d'exercer.</div>
+        <div style={{ marginBottom: 8 }}><strong style={{ color: ACCENT }}><K>{"C \\geq \\max(S - Ke^{-rT},\\, 0)"}</K> :</strong> Si <K>{"C < S - Ke^{-rT}"}</K>, acheter le call, vendre l'action et emprunter <K>{"Ke^{-rT}"}</K> → profit immédiat garanti. Absurde.</div>
+        <div style={{ marginBottom: 8 }}><strong style={{ color: ACCENT }}><K>{"C \\leq S"}</K> :</strong> Le call ne peut valoir plus que l'actif lui-même (le call donne le <em>droit</em> d'acheter S, pas S directement).</div>
+        <div><strong style={{ color: ACCENT }}><K>{"0 \\leq C"}</K> :</strong> Le call ne peut pas avoir une valeur négative — on ne peut jamais être <em>obligé</em> d'exercer.</div>
       </div>
 
       <FormulaBox accent={ACCENT} label="Bornes no-arbitrage pour un call européen">
-        max(S - K·e^(-rT), 0) ≤ C ≤ S
+        <K display>{"\\max\\bigl(S - Ke^{-rT},\\; 0\\bigr) \\leq C \\leq S"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -164,7 +164,7 @@ export function NoArbTab() {
 
       <Grid cols={2} gap="10px">
         <Slider label="S (prix spot)" value={S} min={50} max={200} step={1} onChange={setS} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K (strike)" value={K} min={50} max={200} step={1} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K (strike)" value={strike} min={50} max={200} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="r (taux)" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="T (maturité)" value={T2} min={0.1} max={3} step={0.1} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(1)}a`} />
       </Grid>
@@ -177,7 +177,7 @@ export function NoArbTab() {
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 8 }}>Parité Put-Call :</div>
-        <code style={{ color: T.text, fontFamily: 'monospace', fontSize: 14 }}>{putCallParity}</code>
+        <K>{`C - P = S - Ke^{-rT} = ${(S - PV_K).toFixed(2)}`}</K>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
           → Si vous connaissez le prix du call, vous pouvez déduire le prix du put sans autre hypothèse.
         </div>
@@ -187,9 +187,9 @@ export function NoArbTab() {
         <p style={{ color: T.text }}>Situation : Call ATM = 8€, Put ATM = 6€, S = 100€, K = 100€, r = 4%, T = 0.5 an. Y a-t-il arbitrage ?</p>
         <FormulaBox accent={ACCENT}>Profit = 0.02€ pour 100€ de notionnel → 2 points de base de profit sans risque</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Parité put-call" ruleDetail="K·e^(−rT)" accent={ACCENT}>Calculer K·e^(-rT) = 100 × e^(-0.04 × 0.5) = 100 × e^(-0.02) = 100 × 0.9802 = 98.02€</DemoStep>
-          <DemoStep num={2} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité théorique : C - P = S - K·e^(-rT) = 100 - 98.02 = 1.98€</DemoStep>
-          <DemoStep num={3} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : C - P = 8 - 6 = 2€ ≠ 1.98€ → écart de 0.02€ → ARBITRAGE !</DemoStep>
+          <DemoStep num={1} rule="Parité put-call" ruleDetail="K·e^(−rT)" accent={ACCENT}>Calculer <K>{"Ke^{-rT} = 100 \\times e^{-0.04 \\times 0.5} = 100 \\times e^{-0.02} = 100 \\times 0.9802 = 98.02"}</K>€</DemoStep>
+          <DemoStep num={2} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité théorique : <K>{"C - P = S - Ke^{-rT} = 100 - 98.02 = 1.98"}</K>€</DemoStep>
+          <DemoStep num={3} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : <K>{"C - P = 8 - 6 = 2"}</K>€ <K>{"\\neq"}</K> 1.98€ → écart de 0.02€ → ARBITRAGE !</DemoStep>
           <DemoStep num={4} rule="No-arbitrage" ruleDetail="Stratégie de réplication" accent={ACCENT}>Stratégie : vendre le call (recevoir 8€), acheter le put (payer 6€), acheter l'action (payer 100€), emprunter 98.02€</DemoStep>
           <DemoStep num={5} rule="No-arbitrage" ruleDetail="Profit sans risque" accent={ACCENT}>Cash initial : -8 + 6 - 100 + 98.02 + 0 = -3.98€. À maturité, le portefeuille vaut exactement 0 dans tous les cas. Profit = 0.02€ à exploiter en taille !</DemoStep>
         </Demonstration>
@@ -199,8 +199,8 @@ export function NoArbTab() {
         <p>Call ATM C=12€, Put ATM P=8€, S=100€, K=100€, r=5%, T=1an</p>
         <FormulaBox accent={ACCENT}>Profit d'arbitrage = +0.88€ sans risque</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité : C - P = S - K×e^(-rT) = 100 - 100×e^(-0.05) = 100 - 95.12 = 4.88€</DemoStep>
-          <DemoStep num={2} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : C - P = 12 - 8 = 4€ ≠ 4.88€ → ARBITRAGE !</DemoStep>
+          <DemoStep num={1} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité : <K>{"C - P = S - Ke^{-rT} = 100 - 100 \\times e^{-0.05} = 100 - 95.12 = 4.88"}</K>€</DemoStep>
+          <DemoStep num={2} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : <K>{"C - P = 12 - 8 = 4"}</K>€ <K>{"\\neq"}</K> 4.88€ → ARBITRAGE !</DemoStep>
           <DemoStep num={3} rule="No-arbitrage" ruleDetail="Stratégie de réplication" accent={ACCENT}>Stratégie : Acheter call (payer 12€), Vendre put (recevoir 8€), Vendre S (recevoir 100€), Investir 95.12€ à r=5%</DemoStep>
           <DemoStep num={4} rule="No-arbitrage" ruleDetail="Profit sans risque" accent={ACCENT}>Profit initial = -12 + 8 + 100 - 95.12 = +0.88€ sans risque !</DemoStep>
         </Demonstration>
@@ -212,28 +212,28 @@ export function NoArbTab() {
 // ─── Tab: Black-Scholes ───────────────────────────────────────────────────────
 export function BSTab() {
   const [S, setS] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [T2, setT2] = useState(1)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.2)
 
-  const call = bs(S, K, T2, r, sigma, 'call')
-  const put = bs(S, K, T2, r, sigma, 'put')
-  const g = bsGreeks(S, K, T2, r, sigma)
+  const call = bs(S, strike, T2, r, sigma, 'call')
+  const put = bs(S, strike, T2, r, sigma, 'put')
+  const g = bsGreeks(S, strike, T2, r, sigma)
 
   const profileData = useMemo(() => {
     const pts = []
-    for (let s = Math.max(50, K * 0.5); s <= K * 1.8; s += K * 0.02) {
+    for (let s = Math.max(50, strike * 0.5); s <= strike * 1.8; s += strike * 0.02) {
       pts.push({
         S: +s.toFixed(1),
-        call: +bs(s, K, T2, r, sigma, 'call').toFixed(3),
-        put: +bs(s, K, T2, r, sigma, 'put').toFixed(3),
-        intrinsicCall: +Math.max(s - K, 0).toFixed(3),
-        intrinsicPut: +Math.max(K - s, 0).toFixed(3),
+        call: +bs(s, strike, T2, r, sigma, 'call').toFixed(3),
+        put: +bs(s, strike, T2, r, sigma, 'put').toFixed(3),
+        intrinsicCall: +Math.max(s - strike, 0).toFixed(3),
+        intrinsicPut: +Math.max(strike - s, 0).toFixed(3),
       })
     }
     return pts
-  }, [K, T2, r, sigma])
+  }, [strike, T2, r, sigma])
 
   return (
     <div>
@@ -250,59 +250,59 @@ export function BSTab() {
       <IntuitionBlock emoji="🧮" title="Black-Scholes : le prix risque-neutre de l'option" accent={ACCENT}>
         Black-Scholes répond à la question : "Quel est le juste prix d'une option, si on peut
         se hedger parfaitement en rebalançant en continu ?"
-        N(d₁) et N(d₂) sont des probabilités sous la mesure risque-neutre.
-        Le call = valeur espérée actualisée du payoff max(S_T - K, 0) sous Q.
+        <K>{"N(d_1)"}</K> et <K>{"N(d_2)"}</K> sont des probabilités sous la mesure risque-neutre.
+        Le call = valeur espérée actualisée du payoff <K>{"\\max(S_T - K,\\, 0)"}</K> sous Q.
       </IntuitionBlock>
 
       <Grid cols={2} gap="12px">
         <FormulaBox accent={ACCENT} label="Call Européen — Black-Scholes (1973)">
-          C = S·N(d₁) - K·e^(-rT)·N(d₂)
+          <K display>{"C = S \\cdot N(d_1) - Ke^{-rT} \\cdot N(d_2)"}</K>
         </FormulaBox>
         <FormulaBox accent={ACCENT} label="Put Européen">
-          P = K·e^(-rT)·N(-d₂) - S·N(-d₁)
+          <K display>{"P = Ke^{-rT} \\cdot N(-d_2) - S \\cdot N(-d_1)"}</K>
         </FormulaBox>
       </Grid>
 
       <SectionTitle accent={ACCENT}>Anatomie de la formule : ce qu'on reçoit vs ce qu'on paie</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 12 }}>
-        La formule <code style={{ color: ACCENT }}>C = S·N(d₁) − K·e^(−rT)·N(d₂)</code> a une structure profondément intuitive :
+        La formule <K>{"C = S \\cdot N(d_1) - Ke^{-rT} \\cdot N(d_2)"}</K> a une structure profondément intuitive :
         c'est la différence entre <strong>ce que vous recevez</strong> (l'actif) et <strong>ce que vous payez</strong> (le strike),
         le tout pondéré par les probabilités d'exercice respectives.
       </div>
 
       <Grid cols={2} gap="12px">
         <div style={{ background: `${ACCENT}11`, border: `1px solid ${ACCENT}44`, borderRadius: 10, padding: 16 }}>
-          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 15, marginBottom: 8 }}>S · N(d₁) — "La jambe actif"</div>
+          <div style={{ color: ACCENT, fontWeight: 800, fontSize: 15, marginBottom: 8 }}><K>{"S \\cdot N(d_1)"}</K> — "La jambe actif"</div>
           <div style={{ color: T.text, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-            C'est la valeur espérée actualisée de <strong>recevoir l'actif S_T</strong>, conditionnellement à l'exercice.
-            Mathématiquement : <code>S·N(d₁) = e^(−rT) × E^Q[S_T × 1(S_T {'>'} K)]</code>
+            C'est la valeur espérée actualisée de <strong>recevoir l'actif <K>{"S_T"}</K></strong>, conditionnellement à l'exercice.
+            Mathématiquement : <K>{"S \\cdot N(d_1) = e^{-rT} \\times \\mathbb{E}^Q[S_T \\cdot \\mathbf{1}_{(S_T > K)}]"}</K>
           </div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            N(d₁) est la probabilité d'exercice sous la <strong>mesure "actif" Q^S</strong> (où l'actif lui-même sert de numéraire).
-            Sous Q^S, l'actif a tendance à être plus élevé en cas d'exercice → N(d₁) {'>'} N(d₂).
-            En pratique, N(d₁) ≈ Delta du call — la fraction de l'actif à détenir pour se hedger.
+            <K>{"N(d_1)"}</K> est la probabilité d'exercice sous la <strong>mesure "actif" <K>{"Q^S"}</K></strong> (où l'actif lui-même sert de numéraire).
+            Sous <K>{"Q^S"}</K>, l'actif a tendance à être plus élevé en cas d'exercice → <K>{"N(d_1) > N(d_2)"}</K>.
+            En pratique, <K>{"N(d_1) \\approx \\Delta"}</K> du call — la fraction de l'actif à détenir pour se hedger.
           </div>
         </div>
         <div style={{ background: `${T.a5}11`, border: `1px solid ${T.a5}44`, borderRadius: 10, padding: 16 }}>
-          <div style={{ color: T.a5, fontWeight: 800, fontSize: 15, marginBottom: 8 }}>K·e^(−rT) · N(d₂) — "La jambe strike"</div>
+          <div style={{ color: T.a5, fontWeight: 800, fontSize: 15, marginBottom: 8 }}><K>{"Ke^{-rT} \\cdot N(d_2)"}</K> — "La jambe strike"</div>
           <div style={{ color: T.text, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
             C'est la valeur actuelle du <strong>paiement du strike K</strong>, pondéré par la probabilité de l'exercer.
-            Mathématiquement : <code>K·e^(−rT)·N(d₂) = e^(−rT) × K × P^Q(S_T {'>'} K)</code>
+            Mathématiquement : <K>{"Ke^{-rT} \\cdot N(d_2) = e^{-rT} \\times K \\times P^Q(S_T > K)"}</K>
           </div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            N(d₂) est la probabilité d'exercice sous la <strong>mesure risque-neutre Q standard</strong>.
-            K·e^(−rT) est simplement la valeur actuelle du strike (actualisé au taux r).
+            <K>{"N(d_2)"}</K> est la probabilité d'exercice sous la <strong>mesure risque-neutre Q standard</strong>.
+            <K>{"Ke^{-rT}"}</K> est simplement la valeur actuelle du strike (actualisé au taux r).
             C'est le montant que vous vous engagez à payer si vous exercez.
           </div>
         </div>
       </Grid>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>La preuve par la définition : C = e^(−rT) × E^Q[max(S_T − K, 0)]</div>
-        <Step num={1} accent={ACCENT}>Le payoff du call vaut (S_T − K) si S_T {'>'} K, et 0 sinon → max(S_T − K, 0) = (S_T − K) × 1(S_T {'>'} K)</Step>
-        <Step num={2} accent={ACCENT}>E^Q[max(S_T−K, 0)] = E^Q[S_T × 1(S_T {'>'} K)] − K × P^Q(S_T {'>'} K)</Step>
-        <Step num={3} accent={ACCENT}>On peut montrer : e^(−rT) × E^Q[S_T × 1(S_T {'>'} K)] = S × N(d₁) [changement de numéraire vers Q^S]</Step>
-        <Step num={4} accent={ACCENT}>Et : e^(−rT) × K × P^Q(S_T {'>'} K) = K·e^(−rT) × N(d₂) [sous Q standard, P^Q(S_T {'>'} K) = N(d₂)]</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>La preuve par la définition : <K>{"C = e^{-rT} \\times \\mathbb{E}^Q[\\max(S_T - K,\\, 0)]"}</K></div>
+        <Step num={1} accent={ACCENT}>Le payoff du call vaut <K>{"(S_T - K)"}</K> si <K>{"S_T > K"}</K>, et 0 sinon → <K>{"\\max(S_T - K,\\, 0) = (S_T - K) \\cdot \\mathbf{1}_{(S_T > K)}"}</K></Step>
+        <Step num={2} accent={ACCENT}><K>{"\\mathbb{E}^Q[\\max(S_T - K,\\, 0)] = \\mathbb{E}^Q[S_T \\cdot \\mathbf{1}_{(S_T > K)}] - K \\cdot P^Q(S_T > K)"}</K></Step>
+        <Step num={3} accent={ACCENT}>On peut montrer : <K>{"e^{-rT} \\times \\mathbb{E}^Q[S_T \\cdot \\mathbf{1}_{(S_T > K)}] = S \\cdot N(d_1)"}</K> [changement de numéraire vers <K>{"Q^S"}</K>]</Step>
+        <Step num={4} accent={ACCENT}>Et : <K>{"e^{-rT} \\times K \\times P^Q(S_T > K) = Ke^{-rT} \\cdot N(d_2)"}</K> [sous Q standard, <K>{"P^Q(S_T > K) = N(d_2)"}</K>]</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, padding: '8px 12px', background: `${ACCENT}0a`, borderRadius: 6 }}>
           <strong style={{ color: ACCENT }}>C = [Valeur espérée de recevoir S_T si exercé] − [Valeur espérée de payer K si exercé]</strong>
           <br />C'est exactement la logique économique : l'option est la différence entre ce qu'on gagne (l'actif) et ce qu'on paie (le strike), en espérance actualisée.
@@ -311,42 +311,41 @@ export function BSTab() {
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}22`, borderRadius: 8, padding: 14, margin: '0 0 16px 0', fontSize: 13, color: T.text, lineHeight: 1.8 }}>
         <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 8 }}>Pourquoi N(d₁) ≠ N(d₂) ? Les deux probabilités</div>
-        <div style={{ marginBottom: 6 }}>• <strong>N(d₂)</strong> = probabilité sous <strong>Q</strong> (monde risque-neutre, numéraire = argent) que S_T {'>'} K. C'est la probabilité "pure" d'exercice.</div>
-        <div style={{ marginBottom: 6 }}>• <strong>N(d₁)</strong> = probabilité sous <strong>Q^S</strong> (monde "actif", numéraire = l'actif S) que S_T {'>'} K. Sous Q^S, l'actif a un drift plus élevé de σ² par an → plus de chances d'être ITM vu du point de vue de l'actif.</div>
-        <div style={{ marginBottom: 6 }}>• L'écart : d₁ = d₂ + σ√T → N(d₁) {'>'} N(d₂). Plus σ et T sont grands, plus les deux probabilités divergent.</div>
-        <div style={{ color: T.muted, fontSize: 12 }}>Exemple ATM (S=K) : N(d₂) = prob que S_T {'>'} K sous Q ≈ 50% − σ√T/2 × φ(0). N(d₁) ≈ 50% + σ√T/2 × φ(0). Avec σ=20%, T=1 : N(d₂)≈0.46, N(d₁)≈0.54 — écart de 8 points !</div>
+        <div style={{ marginBottom: 6 }}>• <strong><K>{"N(d_2)"}</K></strong> = probabilité sous <strong>Q</strong> (monde risque-neutre, numéraire = argent) que <K>{"S_T > K"}</K>. C'est la probabilité "pure" d'exercice.</div>
+        <div style={{ marginBottom: 6 }}>• <strong><K>{"N(d_1)"}</K></strong> = probabilité sous <strong><K>{"Q^S"}</K></strong> (monde "actif", numéraire = l'actif S) que <K>{"S_T > K"}</K>. Sous <K>{"Q^S"}</K>, l'actif a un drift plus élevé de <K>{"\\sigma^2"}</K> par an → plus de chances d'être ITM vu du point de vue de l'actif.</div>
+        <div style={{ marginBottom: 6 }}>• L'écart : <K>{"d_1 = d_2 + \\sigma\\sqrt{T}"}</K> → <K>{"N(d_1) > N(d_2)"}</K>. Plus <K>{"\\sigma"}</K> et T sont grands, plus les deux probabilités divergent.</div>
+        <div style={{ color: T.muted, fontSize: 12 }}>Exemple ATM (S=K) : <K>{"N(d_2) \\approx 50\\% - \\tfrac{\\sigma\\sqrt{T}}{2} \\cdot \\varphi(0)"}</K>. <K>{"N(d_1) \\approx 50\\% + \\tfrac{\\sigma\\sqrt{T}}{2} \\cdot \\varphi(0)"}</K>. Avec <K>{"\\sigma{=}20\\%,\\, T{=}1"}</K> : <K>{"N(d_2) \\approx 0.46,\\; N(d_1) \\approx 0.54"}</K> — écart de 8 points !</div>
       </div>
 
       <FormulaBox accent={ACCENT} label="d₁ et d₂ — formules">
-        d₁ = [ln(S/K) + (r + σ²/2)·T] / (σ·√T)
-        d₂ = d₁ - σ·√T
-
-        N(d₂) = P^Q(S_T {'>'} K)   [prob. d'exercice sous Q]
-        N(d₁) = P^{'Q^S'}(S_T {'>'} K)  [prob. d'exercice sous Q^S, le Delta]
+        <K display>{"d_1 = \\frac{\\ln(S/K) + (r + \\sigma^2/2)\\,T}{\\sigma\\sqrt{T}}"}</K>
+        <K display>{"d_2 = d_1 - \\sigma\\sqrt{T}"}</K>
+        <K display>{"N(d_2) = P^Q(S_T > K) \\quad \\text{[prob. d'exercice sous Q]}"}</K>
+        <K display>{"N(d_1) = P^{Q^S}(S_T > K) \\quad \\text{[prob. d'exercice sous } Q^S \\text{, le Delta]}"}</K>
       </FormulaBox>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>La PDE Black-Scholes — le sens économique de chaque terme</div>
-        <div style={{ color: T.muted, fontSize: 13, marginBottom: 10 }}>PDE : ∂C/∂t + rS·∂C/∂S + ½σ²S²·∂²C/∂S² = rC</div>
-        <Step num={1} accent={ACCENT}>∂C/∂t = Theta (négatif) : érosion temporelle — l'option perd de la valeur chaque instant qui passe. Pour un acheteur, c'est un coût quotidien inévitable même si S ne bouge pas.</Step>
-        <Step num={2} accent={ACCENT}>rS · ∂C/∂S = r × Delta × S : le drift risque-neutre de S. Sous la mesure Q, S croît à r (et non µ). Ce terme représente le drift attendu du call dû au mouvement risque-neutre de S, pondéré par Delta.</Step>
-        <Step num={3} accent={ACCENT}>½σ²S² · ∂²C/∂S² = ½σ²S² × Gamma : le gain de convexité — Gamma mesure la courbure de C en S, et σ²S² est la "récolte" stochastique sur cette courbure. C'est le terme d'Itô qui génère un gain positif pour tout long Gamma.</Step>
-        <Step num={4} accent={ACCENT}>rC à droite : le coût de financement du portefeuille de réplication. Pour construire le hedge, on emprunte/prête au taux r — ce terme représente le rendement requis du portefeuille sans risque.</Step>
+        <div style={{ color: T.muted, fontSize: 13, marginBottom: 10 }}>PDE : <K>{"\\frac{\\partial C}{\\partial t} + rS\\frac{\\partial C}{\\partial S} + \\tfrac{1}{2}\\sigma^2 S^2 \\frac{\\partial^2 C}{\\partial S^2} = rC"}</K></div>
+        <Step num={1} accent={ACCENT}><K>{"\\frac{\\partial C}{\\partial t} = \\Theta"}</K> (négatif) : érosion temporelle — l'option perd de la valeur chaque instant qui passe. Pour un acheteur, c'est un coût quotidien inévitable même si S ne bouge pas.</Step>
+        <Step num={2} accent={ACCENT}><K>{"rS \\cdot \\frac{\\partial C}{\\partial S} = r \\cdot \\Delta \\cdot S"}</K> : le drift risque-neutre de S. Sous la mesure Q, S croît à r (et non µ). Ce terme représente le drift attendu du call dû au mouvement risque-neutre de S, pondéré par Delta.</Step>
+        <Step num={3} accent={ACCENT}><K>{"\\tfrac{1}{2}\\sigma^2 S^2 \\cdot \\frac{\\partial^2 C}{\\partial S^2} = \\tfrac{1}{2}\\sigma^2 S^2 \\cdot \\Gamma"}</K> : le gain de convexité — Gamma mesure la courbure de C en S, et <K>{"\\sigma^2 S^2"}</K> est la "récolte" stochastique sur cette courbure. C'est le terme d'Itô qui génère un gain positif pour tout long Gamma.</Step>
+        <Step num={4} accent={ACCENT}><K>{"rC"}</K> à droite : le coût de financement du portefeuille de réplication. Pour construire le hedge, on emprunte/prête au taux r — ce terme représente le rendement requis du portefeuille sans risque.</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
-          Lecture : Theta + Gain_Gamma = rV − r × Delta × S. Un portefeuille delta-hedgé (Π = C − ΔS) évolue à exactement dΠ = rΠ dt. La dégradation temporelle (Theta négatif) est exactement compensée par le gain de convexité (Gamma positif × σ²S²/2).
+          Lecture : <K>{"\\Theta + \\tfrac{1}{2}\\Gamma\\sigma^2 S^2 = rV - r \\cdot \\Delta \\cdot S"}</K>. Un portefeuille delta-hedgé (<K>{"\\Pi = C - \\Delta S"}</K>) évolue à exactement <K>{"d\\Pi = r\\Pi\\, dt"}</K>. La dégradation temporelle (Theta négatif) est exactement compensée par le gain de convexité (<K>{"\\Gamma > 0 \\times \\sigma^2 S^2/2"}</K>).
         </div>
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}22`, borderRadius: 8, padding: 14, margin: '0 0 16px 0', fontSize: 13, color: T.text, lineHeight: 1.8 }}>
         <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6 }}>Theta-Gamma tradeoff fondamental</div>
-        Θ = −½Γσ²S² + rV − rS·Δ. Pour un call ATM delta-neutre : Theta ≈ −½Γσ²S². Être long Gamma = être short Theta. Chaque jour, vous payez le Theta pour avoir la convexité. La vol implicite σ est exactement le "prix" de ce tradeoff fixé par le marché.
+        <K>{"\\Theta = -\\tfrac{1}{2}\\Gamma\\sigma^2 S^2 + rV - rS\\Delta"}</K>. Pour un call ATM delta-neutre : <K>{"\\Theta \\approx -\\tfrac{1}{2}\\Gamma\\sigma^2 S^2"}</K>. Être long Gamma = être short Theta. Chaque jour, vous payez le Theta pour avoir la convexité. La vol implicite <K>{"\\sigma"}</K> est exactement le "prix" de ce tradeoff fixé par le marché.
       </div>
 
       <SectionTitle accent={ACCENT}>Les 6 hypothèses de Black-Scholes</SectionTitle>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
         {[
-          { hyp: 'S suit un GBM (dS = µS dt + σS dW)', limite: 'Sauts de prix (crises), mean-reversion énergie → MRJD', c: ACCENT },
-          { hyp: 'Volatilité σ constante', limite: 'Smile/skew de vol implicite observé sur le marché → modèles stoch. vol', c: T.a5 },
+          { hyp: <><K>{"dS = \\mu S\\, dt + \\sigma S\\, dW"}</K> (GBM)</>, limite: 'Sauts de prix (crises), mean-reversion énergie → MRJD', c: ACCENT },
+          { hyp: <>σ constante</>, limite: 'Smile/skew de vol implicite observé sur le marché → modèles stoch. vol', c: T.a5 },
           { hyp: 'Taux d\'intérêt r constant', limite: 'Structure par terme des taux → modèles HJM, Hull-White', c: T.a4 },
           { hyp: 'Pas de dividendes', limite: 'Dividendes discrets (actions) ou convenience yield (commodités)', c: T.a3 },
           { hyp: 'Marchés continus, sans friction', limite: 'Microstructure, gaps overnight, illiquidité', c: T.a6 },
@@ -374,24 +373,24 @@ export function BSTab() {
       <SectionTitle accent={ACCENT}>Interprétation de d₁ et d₂</SectionTitle>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '0 0 16px 0', color: T.text, fontSize: 13, lineHeight: 1.8 }}>
         <div style={{ marginBottom: 8 }}>
-          <strong style={{ color: ACCENT }}>N(d₂) — Probabilité risque-neutre d'exercice :</strong> C'est P^Q(S_T {'>'} K), la probabilité sous la mesure risque-neutre
-          que le call finisse dans la monnaie à maturité. Si d₂ est grand et positif, l'option est très probablement exercée.
+          <strong style={{ color: ACCENT }}>N(d₂) — Probabilité risque-neutre d'exercice :</strong> C'est <K>{"P^Q(S_T > K)"}</K>, la probabilité sous la mesure risque-neutre
+          que le call finisse dans la monnaie à maturité. Si <K>{"d_2"}</K> est grand et positif, l'option est très probablement exercée.
         </div>
         <div style={{ marginBottom: 8 }}>
-          <strong style={{ color: ACCENT }}>N(d₁) — Delta du call :</strong> C'est la sensibilité du prix du call au prix spot. Delta = ∂C/∂S = N(d₁).
+          <strong style={{ color: ACCENT }}>N(d₁) — Delta du call :</strong> C'est la sensibilité du prix du call au prix spot. <K>{"\\Delta = \\frac{\\partial C}{\\partial S} = N(d_1)"}</K>.
           Il représente aussi (approximativement) la probabilité d'exercice sous la mesure physique P (corrigée de la prime de risque).
-          En pratique : Delta ≈ 0.5 pour une option ATM, ≈ 1 pour une option ITM profonde, ≈ 0 pour une option OTM profonde.
+          En pratique : <K>{"\\Delta \\approx 0.5"}</K> pour une option ATM, <K>{"\\approx 1"}</K> pour une option ITM profonde, <K>{"\\approx 0"}</K> pour une option OTM profonde.
         </div>
         <div>
-          <strong style={{ color: ACCENT }}>d₂ = d₁ - σ√T — la différence :</strong> Vient du changement de numéraire entre mesure Q (pour actualiser)
-          et mesure forward Q^T (pour calculer P(S_T {'>'} K)). σ√T est la "distance" entre les deux probabilités.
-          Plus σ et T sont grands, plus l'écart entre N(d₁) et N(d₂) est important.
+          <strong style={{ color: ACCENT }}><K>{"d_2 = d_1 - \\sigma\\sqrt{T}"}</K> — la différence :</strong> Vient du changement de numéraire entre mesure Q (pour actualiser)
+          et mesure forward <K>{"Q^T"}</K> (pour calculer <K>{"P(S_T > K)"}</K>). <K>{"\\sigma\\sqrt{T}"}</K> est la "distance" entre les deux probabilités.
+          Plus <K>{"\\sigma"}</K> et T sont grands, plus l'écart entre <K>{"N(d_1)"}</K> et <K>{"N(d_2)"}</K> est important.
         </div>
       </div>
 
       <Grid cols={3} gap="8px">
         <Slider label="S (spot)" value={S} min={50} max={200} step={1} onChange={setS} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K (strike)" value={K} min={50} max={200} step={1} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K (strike)" value={strike} min={50} max={200} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="T (maturité)" value={T2} min={0.05} max={3} step={0.05} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(2)}a`} />
         <Slider label="r (taux)" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ (volatilité)" value={sigma} min={0.05} max={0.8} step={0.01} onChange={setSigma} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
@@ -412,7 +411,7 @@ export function BSTab() {
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
             <XAxis dataKey="S" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix spot S', fill: T.muted, fontSize: 11 }} />
             <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-            <ReferenceLine x={K} stroke={T.border} strokeWidth={1.5} label={{ value: `K=${K}`, fill: T.muted, fontSize: 10 }} />
+            <ReferenceLine x={strike} stroke={T.border} strokeWidth={1.5} label={{ value: `K=${strike}`, fill: T.muted, fontSize: 10 }} />
             <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
             <Legend wrapperStyle={{ color: T.muted, fontSize: 12 }} />
             <Line type="monotone" dataKey="call" stroke={ACCENT} strokeWidth={2.5} dot={false} name="Call BS" />
@@ -427,11 +426,11 @@ export function BSTab() {
         <p style={{ color: T.text }}>S = 100€, K = 100€, r = 5%, σ = 25%. Calculez le prix du call pour T = 3, 2, 1, 0.5, 0 mois.</p>
         <FormulaBox accent={ACCENT}>La valeur temps disparaît non-linéairement — elle s'accélère près de la maturité (Theta plus négatif)</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>T = 3 mois = 0.25 an : d₁ = [0 + (0.05 + 0.03125)×0.25]/(0.25×0.5) = 0.025/0.125 = 0.2 → C ≈ 5.00€</DemoStep>
-          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 2 mois ≈ 0.167 an : d₁ ≈ 0.163 → C ≈ 4.06€</DemoStep>
-          <DemoStep num={3} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 1 mois ≈ 0.083 an : d₁ ≈ 0.115 → C ≈ 2.87€</DemoStep>
-          <DemoStep num={4} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 0.5 mois ≈ 0.042 an : d₁ ≈ 0.082 → C ≈ 2.03€</DemoStep>
-          <DemoStep num={5} rule="Formule de Black-Scholes" ruleDetail="Payoff à maturité" accent={ACCENT}>T = 0 : C = max(100-100, 0) = 0€ (l'option expire sans valeur si ATM). C'est le "time decay" (Theta) : un vendeur d'option profite de cette érosion, un acheteur la subit.</DemoStep>
+          <DemoStep num={1} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>T = 3 mois = 0.25 an : <K>{"d_1 = \\frac{0 + (0.05 + 0.03125) \\times 0.25}{0.25 \\times 0.5} = \\frac{0.025}{0.125} = 0.2"}</K> → C ≈ 5.00€</DemoStep>
+          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 2 mois ≈ 0.167 an : <K>{"d_1 \\approx 0.163"}</K> → C ≈ 4.06€</DemoStep>
+          <DemoStep num={3} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 1 mois ≈ 0.083 an : <K>{"d_1 \\approx 0.115"}</K> → C ≈ 2.87€</DemoStep>
+          <DemoStep num={4} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 0.5 mois ≈ 0.042 an : <K>{"d_1 \\approx 0.082"}</K> → C ≈ 2.03€</DemoStep>
+          <DemoStep num={5} rule="Formule de Black-Scholes" ruleDetail="Payoff à maturité" accent={ACCENT}>T = 0 : <K>{"C = \\max(100 - 100,\\, 0) = 0"}</K>€ (l'option expire sans valeur si ATM). C'est le "time decay" (Theta) : un vendeur d'option profite de cette érosion, un acheteur la subit.</DemoStep>
         </Demonstration>
       </Accordion>
 
@@ -439,10 +438,10 @@ export function BSTab() {
         <p>F=80$/bbl, K=85, T=0.25a, r=4%, σ=32%</p>
         <FormulaBox accent={ACCENT}>C = 3.43 $/bbl</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="d₁ et d₂" ruleDetail="[ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>d₁ = [ln(80/85) + (0.04+0.0512)×0.25] / (0.32×√0.25) = (-0.0606+0.023)/0.16 = -0.237</DemoStep>
-          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = -0.237 - 0.16 = -0.397</DemoStep>
-          <DemoStep num={3} rule="Formule de Black-Scholes" ruleDetail="N(·) = CDF normale" accent={ACCENT}>N(d₁) = N(-0.237) ≈ 0.4063 ; N(d₂) = N(-0.397) ≈ 0.3457</DemoStep>
-          <DemoStep num={4} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>C = 80×0.4063 - 85×e^(-0.04×0.25)×0.3457 = 32.50 - 85×0.9900×0.3457 = 32.50 - 29.07 = 3.43$/bbl</DemoStep>
+          <DemoStep num={1} rule="d₁ et d₂" ruleDetail="[ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}><K>{"d_1 = \\frac{\\ln(80/85) + (0.04 + 0.0512) \\times 0.25}{0.32 \\times \\sqrt{0.25}} = \\frac{-0.0606 + 0.023}{0.16} = -0.237"}</K></DemoStep>
+          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}><K>{"d_2 = -0.237 - 0.16 = -0.397"}</K></DemoStep>
+          <DemoStep num={3} rule="Formule de Black-Scholes" ruleDetail="N(·) = CDF normale" accent={ACCENT}><K>{"N(d_1) = N(-0.237) \\approx 0.4063"}</K> ; <K>{"N(d_2) = N(-0.397) \\approx 0.3457"}</K></DemoStep>
+          <DemoStep num={4} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}><K>{"C = 80 \\times 0.4063 - 85 \\times e^{-0.04 \\times 0.25} \\times 0.3457 = 32.50 - 29.07 = 3.43"}</K> $/bbl</DemoStep>
         </Demonstration>
       </ExampleBlock>
     </div>
@@ -452,15 +451,15 @@ export function BSTab() {
 // ─── Tab: Black-76 ────────────────────────────────────────────────────────────
 export function Black76Tab() {
   const [F, setF] = useState(80)
-  const [K, setK] = useState(80)
+  const [strike, setStrike] = useState(80)
   const [T2, setT2] = useState(0.5)
   const [r, setR] = useState(0.04)
   const [sigma, setSigma] = useState(0.3)
 
-  const call76 = black76(F, K, T2, r, sigma, 'call')
-  const put76 = black76(F, K, T2, r, sigma, 'put')
+  const call76 = black76(F, strike, T2, r, sigma, 'call')
+  const put76 = black76(F, strike, T2, r, sigma, 'put')
 
-  const d1 = (Math.log(F / K) + 0.5 * sigma * sigma * T2) / (sigma * Math.sqrt(T2))
+  const d1 = (Math.log(F / strike) + 0.5 * sigma * sigma * T2) / (sigma * Math.sqrt(T2))
   const d2 = d1 - sigma * Math.sqrt(T2)
 
   const profileData = useMemo(() => {
@@ -468,12 +467,12 @@ export function Black76Tab() {
     for (let f = F * 0.5; f <= F * 1.8; f += F * 0.02) {
       pts.push({
         F: +f.toFixed(1),
-        call: +black76(f, K, T2, r, sigma, 'call').toFixed(3),
-        put: +black76(f, K, T2, r, sigma, 'put').toFixed(3),
+        call: +black76(f, strike, T2, r, sigma, 'call').toFixed(3),
+        put: +black76(f, strike, T2, r, sigma, 'put').toFixed(3),
       })
     }
     return pts
-  }, [K, T2, r, sigma, F])
+  }, [strike, T2, r, sigma, F])
 
   return (
     <div>
@@ -495,11 +494,10 @@ export function Black76Tab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Black-76 — Option sur Future">
-        C = e^(-rT) × [F·N(d₁) - K·N(d₂)]
-        P = e^(-rT) × [K·N(-d₂) - F·N(-d₁)]
-
-        d₁ = [ln(F/K) + (σ²/2)·T] / (σ·√T)
-        d₂ = d₁ - σ·√T
+        <K display>{"C = e^{-rT} \\cdot \\bigl[F \\cdot N(d_1) - K \\cdot N(d_2)\\bigr]"}</K>
+        <K display>{"P = e^{-rT} \\cdot \\bigl[K \\cdot N(-d_2) - F \\cdot N(-d_1)\\bigr]"}</K>
+        <K display>{"d_1 = \\frac{\\ln(F/K) + (\\sigma^2/2)\\,T}{\\sigma\\sqrt{T}}"}</K>
+        <K display>{"d_2 = d_1 - \\sigma\\sqrt{T}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Lien B-S ↔ Black-76 : la substitution fondamentale</SectionTitle>
@@ -507,8 +505,7 @@ export function Black76Tab() {
         La relation entre un futures F et le spot S est donnée par le <strong>cost of carry</strong> (théorème de parité forward-spot) :
       </div>
       <FormulaBox accent={ACCENT} label="Cost of carry — Relation Futures/Spot">
-        F = S × e^((r + u - δ)T)
-
+        <K display>{"F = S \\times e^{(r + u - \\delta)\\,T}"}</K>
         r = taux d'intérêt sans risque (coût de financement)
         u = coûts de stockage (storage costs, % du prix/an)
         δ = convenience yield (bénéfice de détenir le physique)
@@ -526,10 +523,10 @@ export function Black76Tab() {
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '12px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6 }}>Différences Black-Scholes vs Black-76</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 13, color: T.text }}>
-          <div><span style={{ color: T.muted }}>Black-Scholes :</span> S×N(d₁) - K×e^(-rT)×N(d₂)</div>
-          <div><span style={{ color: ACCENT }}>Black-76 :</span> e^(-rT)×[F×N(d₁) - K×N(d₂)]</div>
-          <div><span style={{ color: T.muted }}>d₁ BS :</span> [ln(S/K)+(r+σ²/2)T]/(σ√T)</div>
-          <div><span style={{ color: ACCENT }}>d₁ B76 :</span> [ln(F/K)+σ²T/2]/(σ√T)</div>
+          <div><span style={{ color: T.muted }}>Black-Scholes :</span> <K>{"S \\cdot N(d_1) - K e^{-rT} N(d_2)"}</K></div>
+          <div><span style={{ color: ACCENT }}>Black-76 :</span> <K>{"e^{-rT}[F \\cdot N(d_1) - K \\cdot N(d_2)]"}</K></div>
+          <div><span style={{ color: T.muted }}>d₁ BS :</span> <K>{"\\frac{\\ln(S/K)+(r+\\sigma^2/2)T}{\\sigma\\sqrt{T}}"}</K></div>
+          <div><span style={{ color: ACCENT }}>d₁ B76 :</span> <K>{"\\frac{\\ln(F/K)+\\sigma^2 T/2}{\\sigma\\sqrt{T}}"}</K></div>
           <div><span style={{ color: T.muted }}>Contexte :</span> Equity (dividendes nuls)</div>
           <div><span style={{ color: ACCENT }}>Contexte :</span> Commodités, taux, énergie</div>
         </div>
@@ -537,9 +534,9 @@ export function Black76Tab() {
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Interprétation des termes F·N(d₁) et K·N(d₂) en Black-76</div>
-        <Step num={1} accent={ACCENT}>F · N(d₁) — "la jambe forward" : valeur espérée de recevoir le futures F_T si exercé (sous Q^F, la mesure futures). Même logique que S·N(d₁) en B-S, mais avec le forward F à la place du spot S. N(d₁) est la probabilité sous Q^F que l'option finisse ITM.</Step>
-        <Step num={2} accent={ACCENT}>K · N(d₂) — "la jambe strike" : valeur actuelle du strike × probabilité d'exercice sous Q standard. N(d₂) = P^Q(F_T {'>'} K), la probabilité risque-neutre que le futures dépasse K à maturité.</Step>
-        <Step num={3} accent={ACCENT}>e^(−rT) devant le tout : le futures F lui-même n'a pas de valeur initiale (contrat à coût nul) → pas de terme d'actualisation de S. Mais la prime de l'option doit être actualisée de T à 0, d'où e^(−rT) × [F·N(d₁) − K·N(d₂)].</Step>
+        <Step num={1} accent={ACCENT}><K>{"F \\cdot N(d_1)"}</K> — "la jambe forward" : valeur espérée de recevoir le futures <K>{"F_T"}</K> si exercé (sous <K>{"Q^F"}</K>, la mesure futures). Même logique que <K>{"S \\cdot N(d_1)"}</K> en B-S, mais avec le forward F à la place du spot S. <K>{"N(d_1)"}</K> est la probabilité sous <K>{"Q^F"}</K> que l'option finisse ITM.</Step>
+        <Step num={2} accent={ACCENT}><K>{"K \\cdot N(d_2)"}</K> — "la jambe strike" : valeur actuelle du strike × probabilité d'exercice sous Q standard. <K>{"N(d_2) = P^Q(F_T > K)"}</K>, la probabilité risque-neutre que le futures dépasse K à maturité.</Step>
+        <Step num={3} accent={ACCENT}><K>{"e^{-rT}"}</K> devant le tout : le futures F lui-même n'a pas de valeur initiale (contrat à coût nul) → pas de terme d'actualisation de S. Mais la prime de l'option doit être actualisée de T à 0, d'où <K>{"e^{-rT} \\times [F \\cdot N(d_1) - K \\cdot N(d_2)]"}</K>.</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
           Toujours la même structure : ce qu'on reçoit (le futures F_T) moins ce qu'on paie (le strike K), pondéré par les probabilités sous leurs mesures respectives. Black-76 = Black-Scholes avec S remplacé par F et le coût de portage supprimé (déjà incorporé dans F).
         </div>
@@ -547,7 +544,7 @@ export function Black76Tab() {
 
       <Grid cols={3} gap="8px">
         <Slider label="F (prix forward)" value={F} min={40} max={200} step={1} onChange={setF} accent={ACCENT} format={v => `${v}$/bbl`} />
-        <Slider label="K (strike)" value={K} min={40} max={200} step={1} onChange={setK} accent={T.a5} format={v => `${v}$/bbl`} />
+        <Slider label="K (strike)" value={strike} min={40} max={200} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}$/bbl`} />
         <Slider label="T (maturité)" value={T2} min={0.05} max={2} step={0.05} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(2)}a`} />
         <Slider label="r (taux)" value={r} min={0} max={0.12} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ (volatilité)" value={sigma} min={0.05} max={0.8} step={0.01} onChange={setSigma} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
@@ -558,7 +555,7 @@ export function Black76Tab() {
         <InfoChip label="Put (B76)" value={put76.toFixed(4)} unit="$/bbl" accent={T.a2} />
         <InfoChip label="d₁" value={d1.toFixed(4)} accent={T.muted} />
         <InfoChip label="d₂" value={d2.toFixed(4)} accent={T.muted} />
-        <InfoChip label="F/K" value={(F / K).toFixed(3)} accent={T.a5} />
+        <InfoChip label="F/K" value={(F / strike).toFixed(3)} accent={T.a5} />
       </div>
 
       <Accordion title="Exercice — Pricer un cap sur gaz naturel avec Black-76" accent={ACCENT} badge="Moyen">
@@ -568,13 +565,13 @@ export function Black76Tab() {
         </p>
         <FormulaBox accent={ACCENT}>Prime du cap = 0.261 $/MMBtu → coût total = 15 660$ pour 60 000 MMBtu</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Black-76 (futures)" ruleDetail="d₁ = [ln(F/K)+σ²T/2]/(σ√T)" accent={ACCENT}>d₁ = [ln(3.50/4.00) + (0.45²/2) × 0.5] / (0.45 × √0.5)</DemoStep>
-          <DemoStep num={2} rule="Black-76 (futures)" ruleDetail="F au lieu de S" accent={ACCENT}>= [ln(0.875) + 0.05063] / (0.45 × 0.7071) = [-0.13353 + 0.05063] / 0.31820</DemoStep>
-          <DemoStep num={3} rule="Black-76 (futures)" ruleDetail="d₁ numérique" accent={ACCENT}>= -0.08290 / 0.31820 = -0.2604</DemoStep>
-          <DemoStep num={4} rule="Black-76 (futures)" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = -0.2604 - 0.31820 = -0.5786</DemoStep>
-          <DemoStep num={5} rule="Black-76 (futures)" ruleDetail="N(·) = CDF normale" accent={ACCENT}>N(d₁) = N(-0.2604) ≈ 0.3973 ; N(d₂) = N(-0.5786) ≈ 0.2814</DemoStep>
-          <DemoStep num={6} rule="Black-76 (futures)" ruleDetail="C = e^(−rT)[F·N(d₁)−K·N(d₂)]" accent={ACCENT}>Call B76 = e^(-0.03×0.5) × [3.50 × 0.3973 - 4.00 × 0.2814]</DemoStep>
-          <DemoStep num={7} rule="Black-76 (futures)" ruleDetail="Résultat final" accent={ACCENT}>= 0.9851 × [1.3906 - 1.1256] = 0.9851 × 0.2650 = 0.261 $/MMBtu</DemoStep>
+          <DemoStep num={1} rule="Black-76 (futures)" ruleDetail="d₁ = [ln(F/K)+σ²T/2]/(σ√T)" accent={ACCENT}><K>{"d_1 = \\frac{\\ln(3.50/4.00) + (0.45^2/2) \\times 0.5}{0.45 \\times \\sqrt{0.5}}"}</K></DemoStep>
+          <DemoStep num={2} rule="Black-76 (futures)" ruleDetail="F au lieu de S" accent={ACCENT}><K>{"= \\frac{\\ln(0.875) + 0.05063}{0.45 \\times 0.7071} = \\frac{-0.13353 + 0.05063}{0.31820}"}</K></DemoStep>
+          <DemoStep num={3} rule="Black-76 (futures)" ruleDetail="d₁ numérique" accent={ACCENT}><K>{"= -0.08290 / 0.31820 = -0.2604"}</K></DemoStep>
+          <DemoStep num={4} rule="Black-76 (futures)" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}><K>{"d_2 = -0.2604 - 0.31820 = -0.5786"}</K></DemoStep>
+          <DemoStep num={5} rule="Black-76 (futures)" ruleDetail="N(·) = CDF normale" accent={ACCENT}><K>{"N(d_1) = N(-0.2604) \\approx 0.3973"}</K> ; <K>{"N(d_2) = N(-0.5786) \\approx 0.2814"}</K></DemoStep>
+          <DemoStep num={6} rule="Black-76 (futures)" ruleDetail="C = e^(−rT)[F·N(d₁)−K·N(d₂)]" accent={ACCENT}><K>{"C_{B76} = e^{-0.03 \\times 0.5} \\times [3.50 \\times 0.3973 - 4.00 \\times 0.2814]"}</K></DemoStep>
+          <DemoStep num={7} rule="Black-76 (futures)" ruleDetail="Résultat final" accent={ACCENT}><K>{"= 0.9851 \\times [1.3906 - 1.1256] = 0.9851 \\times 0.2650 = 0.261"}</K> $/MMBtu</DemoStep>
         </Demonstration>
       </Accordion>
 
@@ -584,7 +581,7 @@ export function Black76Tab() {
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
             <XAxis dataKey="F" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
             <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-            <ReferenceLine x={K} stroke={T.border} label={{ value: `K=${K}`, fill: T.muted, fontSize: 10 }} />
+            <ReferenceLine x={strike} stroke={T.border} label={{ value: `K=${strike}`, fill: T.muted, fontSize: 10 }} />
             <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
             <Legend wrapperStyle={{ color: T.muted, fontSize: 12 }} />
             <Line type="monotone" dataKey="call" stroke={ACCENT} strokeWidth={2.5} dot={false} name="Call Black-76" />
@@ -599,31 +596,31 @@ export function Black76Tab() {
 // ─── Tab: Greeks ──────────────────────────────────────────────────────────────
 export function GreeksTab() {
   const [S, setS] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [T2, setT2] = useState(1)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.2)
 
-  const g = bsGreeks(S, K, T2, r, sigma)
-  const call = bs(S, K, T2, r, sigma, 'call')
+  const g = bsGreeks(S, strike, T2, r, sigma)
+  const call = bs(S, strike, T2, r, sigma, 'call')
 
   const greekVsS = useMemo(() => {
     const pts = []
     for (let s = 60; s <= 160; s += 2) {
-      const gr = bsGreeks(s, K, T2, r, sigma)
+      const gr = bsGreeks(s, strike, T2, r, sigma)
       pts.push({ S: s, delta: +gr.delta.toFixed(4), gamma: +(gr.gamma * 100).toFixed(5), vega: +gr.vega.toFixed(4) })
     }
     return pts
-  }, [K, T2, r, sigma])
+  }, [strike, T2, r, sigma])
 
   const greekVsT = useMemo(() => {
     const pts = []
     for (let t = 0.02; t <= 2; t += 0.04) {
-      const gr = bsGreeks(S, K, t, r, sigma)
+      const gr = bsGreeks(S, strike, t, r, sigma)
       pts.push({ T: +t.toFixed(2), vega: +gr.vega.toFixed(4), gamma: +(gr.gamma * 100).toFixed(5) })
     }
     return pts
-  }, [S, K, r, sigma])
+  }, [S, strike, r, sigma])
 
   return (
     <div>
@@ -648,12 +645,12 @@ export function GreeksTab() {
           {
             name: 'Delta (Δ)',
             color: ACCENT,
-            content: 'Ratio de couverture (hedge ratio) : pour couvrir 1 call, vendre Δ actions. Call ATM : Δ ≈ 0.5. Call ITM profond : Δ → 1. Call OTM profond : Δ → 0. Propriété : Δ_call + |Δ_put| = 1 pour même strike/maturité (parité put-call différentiée). Le Delta est dynamique → il faut rééquilibrer le hedge en continu.',
+            content: <>Ratio de couverture (hedge ratio) : pour couvrir 1 call, vendre Δ actions. Call ATM : <K>{"\\Delta \\approx 0.5"}</K>. Call ITM profond : <K>{"\\Delta \\to 1"}</K>. Call OTM profond : <K>{"\\Delta \\to 0"}</K>. Propriété : <K>{"\\Delta_{\\text{call}} + |\\Delta_{\\text{put}}| = 1"}</K> pour même strike/maturité (parité put-call différentiée). Le Delta est dynamique → il faut rééquilibrer le hedge en continu.</>,
           },
           {
             name: 'Gamma (Γ)',
             color: T.a3,
-            content: 'Convexité de l\'option : Γ = ∂Δ/∂S = ∂²C/∂S². Toujours positif (long gamma = long convexité). Maximum pour les options ATM proches de l\'échéance. Coût de couverture dynamique : si Γ > 0, le hedge Delta génère un profit quadratique en (ΔS)². "Être long Gamma" signifie profiter des grands mouvements du marché.',
+            content: <>Convexité de l'option : <K>{"\\Gamma = \\frac{\\partial \\Delta}{\\partial S} = \\frac{\\partial^2 C}{\\partial S^2}"}</K>. Toujours positif (long gamma = long convexité). Maximum pour les options ATM proches de l'échéance. Coût de couverture dynamique : si Γ {'>'} 0, le hedge Delta génère un profit quadratique en <K>{"(\\Delta S)^2"}</K>. "Être long Gamma" signifie profiter des grands mouvements du marché.</>,
           },
           {
             name: 'Vega (ν)',
@@ -668,12 +665,12 @@ export function GreeksTab() {
           {
             name: 'Rho (ρ)',
             color: T.a7,
-            content: 'Sensibilité au taux sans risque. Peu important pour options court terme (< 1 an). Crucial pour options longues et obligations. Rho_call > 0 : si r augmente, le coût de portage K·e^(-rT) baisse → call plus cher. Rho_put < 0 : symétrie inverse. En énergie : Rho souvent négligé car la vol domine.',
+            content: <>Sensibilité au taux sans risque. Peu important pour options court terme ({'<'} 1 an). Crucial pour options longues et obligations. <K>{"\\rho_{\\text{call}} > 0"}</K> : si r augmente, le coût de portage <K>{"Ke^{-rT}"}</K> baisse → call plus cher. <K>{"\\rho_{\\text{put}} < 0"}</K> : symétrie inverse. En énergie : Rho souvent négligé car la vol domine.</>,
           },
           {
             name: 'Theta-Gamma tradeoff',
             color: ACCENT,
-            content: 'La relation fondamentale de la PDE B-S : Θ + ½Γσ²S² = rV. Dans un portefeuille Delta-neutre (Δ=0) : Θ et Γ se compensent exactement ! Être long Gamma (profiter des mouvements) coûte du Theta (perte de valeur temps quotidienne). Le marché fixe ce prix implicitement via la vol implicite.',
+            content: <>La relation fondamentale de la PDE B-S : <K>{"\\Theta + \\tfrac{1}{2}\\Gamma\\sigma^2 S^2 = rV"}</K>. Dans un portefeuille Delta-neutre (<K>{"\\Delta=0"}</K>) : Θ et Γ se compensent exactement ! Être long Gamma (profiter des mouvements) coûte du Theta (perte de valeur temps quotidienne). Le marché fixe ce prix implicitement via la vol implicite.</>,
           },
         ].map((g2, i) => (
           <div key={i} style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${g2.color}22`, fontSize: 12 }}>
@@ -694,9 +691,9 @@ export function GreeksTab() {
       </div>
 
       <FormulaBox accent={ACCENT} label="Theta-Gamma tradeoff — de la PDE de Black-Scholes">
-        Θ + ½Γσ²S² = rV
+        <K display>{"\\Theta + \\tfrac{1}{2}\\Gamma\\sigma^2 S^2 = rV"}</K>
         Dans un portefeuille Delta-neutre (V = call, Δ = 0 couvert) :
-        -(valeur temps perdue/j) = ½Γσ²S²  [gain de convexité espéré]
+        <K display>{"-(\\text{valeur temps perdue/j}) = \\tfrac{1}{2}\\Gamma\\sigma^2 S^2 \\quad \\text{[gain de convexité espéré]}"}</K>
         Le marché fixe ce "prix du Gamma" via la vol implicite σ.
       </FormulaBox>
 
@@ -718,7 +715,7 @@ export function GreeksTab() {
 
       <Grid cols={5} gap="8px">
         <Slider label="S" value={S} min={60} max={160} step={1} onChange={setS} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K" value={K} min={60} max={160} step={1} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K" value={strike} min={60} max={160} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="T" value={T2} min={0.05} max={2} step={0.05} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(2)}a`} />
         <Slider label="r" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ" value={sigma} min={0.05} max={0.7} step={0.01} onChange={setSigma} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
@@ -731,7 +728,7 @@ export function GreeksTab() {
           { name: 'ν Vega', val: g.vega.toFixed(4), desc: 'Si σ +1% → Call +ν€', interp: 'Risque de volatilité', c: T.a5 },
           { name: 'Θ Theta', val: g.theta.toFixed(5), desc: 'Si +1j → Call +Θ€', interp: 'Coût de temps (par jour)', c: T.a2 },
           { name: 'ρ Rho', val: g.rho.toFixed(5), desc: 'Si r +1% → Call +ρ€', interp: 'Risque de taux', c: T.a7 },
-          { name: 'Call BS', val: call.toFixed(4), desc: `S=${S}€, K=${K}€`, interp: `${S >= K ? 'ITM' : 'OTM'} (moneyness ${(S / K).toFixed(2)})`, c: ACCENT },
+          { name: 'Call BS', val: call.toFixed(4), desc: `S=${S}€, K=${strike}€`, interp: `${S >= strike ? 'ITM' : 'OTM'} (moneyness ${(S / strike).toFixed(2)})`, c: ACCENT },
         ].map(g2 => (
           <div key={g2.name} style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${g2.c}33` }}>
             <div style={{ color: g2.c, fontWeight: 800, fontSize: 15, marginBottom: 4 }}>{g2.name}</div>
@@ -749,7 +746,7 @@ export function GreeksTab() {
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
               <XAxis dataKey="S" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
               <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <ReferenceLine x={K} stroke={T.border} strokeDasharray="3 3" />
+              <ReferenceLine x={strike} stroke={T.border} strokeDasharray="3 3" />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
               <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
               <Line type="monotone" dataKey="delta" stroke={ACCENT} strokeWidth={2} dot={false} name="Delta" />
@@ -763,7 +760,7 @@ export function GreeksTab() {
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
               <XAxis dataKey="S" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
               <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <ReferenceLine x={K} stroke={T.border} strokeDasharray="3 3" />
+              <ReferenceLine x={strike} stroke={T.border} strokeDasharray="3 3" />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
               <Line type="monotone" dataKey="vega" stroke={T.a5} strokeWidth={2} dot={false} name="Vega (per 1% vol)" />
             </LineChart>
@@ -777,7 +774,7 @@ export function GreeksTab() {
 // ─── Tab: Monte Carlo ─────────────────────────────────────────────────────────
 export function MonteCarloTab() {
   const [S, setS] = useState(100)
-  const [K, setK] = useState(105)
+  const [strike, setStrike] = useState(105)
   const [T2, setT2] = useState(1)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.25)
@@ -790,8 +787,8 @@ export function MonteCarloTab() {
     const drift = (r - 0.5 * sigma * sigma) * T2
     for (let i = 0; i < nSim; i++) {
       const ST = S * Math.exp(drift + sigma * sqrtT * gaussRand())
-      payoffsCall.push(Math.max(ST - K, 0))
-      payoffsPut.push(Math.max(K - ST, 0))
+      payoffsCall.push(Math.max(ST - strike, 0))
+      payoffsPut.push(Math.max(strike - ST, 0))
     }
     const df = Math.exp(-r * T2)
     const mcCall = df * payoffsCall.reduce((a, b) => a + b, 0) / nSim
@@ -799,7 +796,7 @@ export function MonteCarloTab() {
 
     // Histogram of call payoffs
     const bins = {}
-    const bw = Math.max(5, Math.round(K * 0.05))
+    const bw = Math.max(5, Math.round(strike * 0.05))
     payoffsCall.forEach(p => {
       const bin = Math.round(p / bw) * bw
       bins[bin] = (bins[bin] || 0) + 1
@@ -809,10 +806,10 @@ export function MonteCarloTab() {
       .map(([payoff, count]) => ({ payoff: parseFloat(payoff).toFixed(0), count, pct: (count / nSim * 100).toFixed(1) }))
 
     return { mcCall, mcPut, histData }
-  }, [S, K, T2, r, sigma, nSim, key])
+  }, [S, strike, T2, r, sigma, nSim, key])
 
-  const bsCall = bs(S, K, T2, r, sigma, 'call')
-  const bsPut = bs(S, K, T2, r, sigma, 'put')
+  const bsCall = bs(S, strike, T2, r, sigma, 'call')
+  const bsPut = bs(S, strike, T2, r, sigma, 'put')
   const error = Math.abs(mcCall - bsCall)
 
   return (
@@ -837,9 +834,8 @@ export function MonteCarloTab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Monte Carlo Pricing">
-        C_MC = e^(-rT) × (1/N) × Σᵢ max(S_T^(i) - K, 0)
-
-        où S_T^(i) = S₀ × exp[(r - σ²/2)T + σ√T × Zᵢ],  Zᵢ ~ N(0,1)
+        <K display>{"C_{MC} = e^{-rT} \\times \\frac{1}{N} \\sum_{i=1}^{N} \\max\\bigl(S_T^{(i)} - K,\\, 0\\bigr)"}</K>
+        <K display>{"S_T^{(i)} = S_0 \\times \\exp\\!\\bigl[(r - \\sigma^2/2)\\,T + \\sigma\\sqrt{T}\\, Z_i\\bigr], \\quad Z_i \\sim \\mathcal{N}(0,1)"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Discrétisation de l'EDS : schéma d'Euler-Maruyama</SectionTitle>
@@ -847,9 +843,8 @@ export function MonteCarloTab() {
         Pour les modèles sans solution analytique (MRJD, Heston, etc.), on discrétise l'EDS en N pas de temps.
       </div>
       <FormulaBox accent={ACCENT} label="Schéma d'Euler-Maruyama vs Solution exacte">
-        Euler-Maruyama : S(t+Δt) ≈ S(t) + µ·S(t)·Δt + σ·S(t)·√Δt·Z
-        Solution exacte (GBM) : S(t+Δt) = S(t) × exp[(µ-σ²/2)Δt + σ√Δt·Z]
-
+        <K display>{"\\text{Euler : } S(t{+}\\Delta t) \\approx S(t) + \\mu\\, S(t)\\,\\Delta t + \\sigma\\, S(t)\\,\\sqrt{\\Delta t}\\, Z"}</K>
+        <K display>{"\\text{Exacte : } S(t{+}\\Delta t) = S(t) \\times \\exp\\!\\bigl[(\\mu - \\sigma^2/2)\\,\\Delta t + \\sigma\\sqrt{\\Delta t}\\, Z\\bigr]"}</K>
         Euler : approximation d'ordre 1, biais pour les grands Δt
         Exacte : utiliser quand disponible (GBM, OU) — pas de biais de discrétisation
       </FormulaBox>
@@ -877,7 +872,7 @@ export function MonteCarloTab() {
 
       <Grid cols={3} gap="8px">
         <Slider label="S₀" value={S} min={60} max={160} step={1} onChange={setS} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K" value={K} min={60} max={160} step={1} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K" value={strike} min={60} max={160} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="T" value={T2} min={0.1} max={3} step={0.1} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(1)}a`} />
         <Slider label="r" value={r} min={0} max={0.12} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ" value={sigma} min={0.05} max={0.7} step={0.01} onChange={setSigma} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
@@ -939,7 +934,7 @@ function gaussRandM4() {
 // ─── Tab: Arbres Binomiaux ────────────────────────────────────────────────────
 export function ArbreTab() {
   const [S0, setS0] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.2)
   const [Tmat, setTmat] = useState(1)
@@ -962,17 +957,17 @@ export function ArbreTab() {
     const V = []
     for (let i = 0; i <= N; i++) V.push(new Array(i + 1).fill(0))
     for (let j = 0; j <= N; j++) {
-      V[N][j] = optType === 'call' ? Math.max(S[N][j] - K, 0) : Math.max(K - S[N][j], 0)
+      V[N][j] = optType === 'call' ? Math.max(S[N][j] - strike, 0) : Math.max(strike - S[N][j], 0)
     }
     for (let i = N - 1; i >= 0; i--) {
       for (let j = 0; j <= i; j++) {
         const cont = disc * (p * V[i + 1][j + 1] + (1 - p) * V[i + 1][j])
-        const intr = optType === 'call' ? Math.max(S[i][j] - K, 0) : Math.max(K - S[i][j], 0)
+        const intr = optType === 'call' ? Math.max(S[i][j] - strike, 0) : Math.max(strike - S[i][j], 0)
         V[i][j] = optStyle === 'american' ? Math.max(intr, cont) : cont
       }
     }
     return { S, V }
-  }, [S0, K, r, sigma, Tmat, N, optType, optStyle])
+  }, [S0, strike, r, sigma, Tmat, N, optType, optStyle])
 
   const { S, V } = tree
   const price = V[0][0]
@@ -990,9 +985,9 @@ export function ArbreTab() {
 
       <SectionTitle accent={ACCENT}>Paramétrage CRR (Cox-Ross-Rubinstein, 1979)</SectionTitle>
       <FormulaBox accent={ACCENT} label="Calibration sur σ">
-        u = e^(σ√Δt)    d = 1/u    Δt = T/N
-        p* = (e^(rΔt) - d) / (u - d)    [probabilité risque-neutre]
-        V(nœud) = e^(-rΔt) × [p* × V_up + (1-p*) × V_down]
+        <K display>{"u = e^{\\sigma\\sqrt{\\Delta t}}, \\quad d = \\frac{1}{u}, \\quad \\Delta t = \\frac{T}{N}"}</K>
+        <K display>{"p^* = \\frac{e^{r\\,\\Delta t} - d}{u - d} \\quad \\text{[probabilité risque-neutre]}"}</K>
+        <K display>{"V_{\\text{nœud}} = e^{-r\\,\\Delta t} \\times \\bigl[p^* \\cdot V_{\\text{up}} + (1-p^*) \\cdot V_{\\text{down}}\\bigr]"}</K>
       </FormulaBox>
       <SymbolLegend accent={ACCENT} symbols={[
         ['u / d', 'Facteurs montée/descente — calibrés pour que σ_tree = σ_BS'],
@@ -1004,7 +999,7 @@ export function ArbreTab() {
 
       <Grid cols={3} gap="10px">
         <Slider label="S₀" value={S0} min={50} max={200} step={5} onChange={setS0} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K (strike)" value={K} min={50} max={200} step={5} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K (strike)" value={strike} min={50} max={200} step={5} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="r (taux)" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={T.a3} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="σ (vol)" value={sigma} min={0.05} max={0.6} step={0.01} onChange={setSigma} accent={T.a6} format={v => `${(v * 100).toFixed(0)}%`} />
         <Slider label="T (maturité)" value={Tmat} min={0.25} max={3} step={0.25} onChange={setTmat} accent={T.a7} format={v => `${v.toFixed(2)}a`} />
@@ -1051,7 +1046,7 @@ export function ArbreTab() {
                 const topPx = (1 - frac) * (treeH - 54)
                 const sVal = S[step][j]
                 const vVal = V[step][j]
-                const intr = optType === 'call' ? Math.max(sVal - K, 0) : Math.max(K - sVal, 0)
+                const intr = optType === 'call' ? Math.max(sVal - strike, 0) : Math.max(strike - sVal, 0)
                 const earlyEx = optStyle === 'american' && step > 0 && step < N && intr > 0 && Math.abs(vVal - intr) < 0.01
                 const isTerminal = step === N
                 return (
@@ -1082,8 +1077,8 @@ export function ArbreTab() {
         (par le TCL appliqué aux N pas iid), et la probabilité risque-neutre p* → N(d₁).
       </div>
       <FormulaBox accent={ACCENT} label="Convergence binomial → Black-Scholes">
-        Somme pondérée des payoffs terminaux → e^(-rT) E^Q[max(S_T - K, 0)]
-        p* → N(d₁) quand N → ∞ (par TCL sur la distribution binomiale)
+        <K display>{"\\sum \\text{payoffs pondérés} \\;\\longrightarrow\\; e^{-rT}\\, \\mathbb{E}^Q[\\max(S_T - K,\\, 0)]"}</K>
+        <K display>{"p^* \\to N(d_1) \\quad \\text{quand } N \\to \\infty \\;\\text{(par TCL)}"}</K>
         Prix binomial(N=50) ≈ Prix BS à 0.01% près (convergence oscillatoire)
         Prix américain : pas de formule B-S fermée → l'arbre est irremplaçable !
       </FormulaBox>
@@ -1131,7 +1126,7 @@ export function ArbreTab() {
 // ─── Tab: Options Exotiques (Path-Dependent) ──────────────────────────────────
 export function ExotiquesTab() {
   const [S0, setS0] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [r, setR] = useState(0.05)
   const [sigma, setSigma] = useState(0.25)
   const [Tmat, setTmat] = useState(1)
@@ -1157,13 +1152,13 @@ export function ExotiquesTab() {
       const avg = sumS / (n + 1)
       const disc = Math.exp(-r * Tmat)
       // Vanilla call
-      vanillaCall += disc * Math.max(S - K, 0)
+      vanillaCall += disc * Math.max(S - strike, 0)
       // Asian call (average price)
-      asianCall += disc * Math.max(avg - K, 0)
+      asianCall += disc * Math.max(avg - strike, 0)
       // Knock-out call (barrier H, if min < H → knocked out)
-      koCall += disc * (minS > barrier ? Math.max(S - K, 0) : 0)
+      koCall += disc * (minS > barrier ? Math.max(S - strike, 0) : 0)
       // Knock-in call (pays only if min < H at some point)
-      kiCall += disc * (minS <= barrier ? Math.max(S - K, 0) : 0)
+      kiCall += disc * (minS <= barrier ? Math.max(S - strike, 0) : 0)
     }
     return {
       vanilla: (vanillaCall / nSim).toFixed(2),
@@ -1171,7 +1166,7 @@ export function ExotiquesTab() {
       ko: (koCall / nSim).toFixed(2),
       ki: (kiCall / nSim).toFixed(2),
     }
-  }, [S0, K, r, sigma, Tmat, barrier, nSim, key])
+  }, [S0, strike, r, sigma, Tmat, barrier, nSim, key])
 
   // Sample paths for visualization
   const samplePaths = useMemo(() => {
@@ -1209,7 +1204,7 @@ export function ExotiquesTab() {
 
       <SectionTitle accent={ACCENT}>1. Options Asiatiques (Average Price)</SectionTitle>
       <FormulaBox accent={ACCENT} label="Payoff — Asian call (fixed strike)">
-        Payoff = max(Ā - K, 0)   où Ā = (1/n) Σᵢ S(tᵢ)  [moyenne arithmétique]
+        <K display>{"\\text{Payoff} = \\max(\\bar{A} - K,\\, 0), \\quad \\bar{A} = \\frac{1}{n}\\sum_{i} S(t_i) \\;\\text{[moyenne arithmétique]}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 14, lineHeight: 1.7 }}>
         Ā est moins volatile que S_T (effet de lissage) → <strong>Asian option moins chère</strong> qu'une vanilla.
@@ -1220,11 +1215,11 @@ export function ExotiquesTab() {
       <SectionTitle accent={ACCENT}>2. Options à Barrière (Barrier Options)</SectionTitle>
       <Grid cols={2} gap="12px">
         <FormulaBox accent={ACCENT} label="Knock-Out (KO) — Call down-and-out">
-          Payoff = max(S_T - K, 0) × 1[min(S) {'>'} H]
+          <K display>{"\\text{Payoff} = \\max(S_T - K,\\, 0) \\times \\mathbf{1}_{\\{\\min(S) > H\\}}"}</K>
           Si le prix touche H → l'option s'annule (knocked out)
         </FormulaBox>
         <FormulaBox accent={T.a5} label="Knock-In (KI) — Call down-and-in">
-          Payoff = max(S_T - K, 0) × 1[min(S) ≤ H]
+          <K display>{"\\text{Payoff} = \\max(S_T - K,\\, 0) \\times \\mathbf{1}_{\\{\\min(S) \\leq H\\}}"}</K>
           L'option ne vit que si le prix a touché H
         </FormulaBox>
       </Grid>
@@ -1237,8 +1232,8 @@ export function ExotiquesTab() {
 
       <Grid cols={3} gap="10px">
         <Slider label="S₀" value={S0} min={50} max={200} step={5} onChange={setS0} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K (strike)" value={K} min={50} max={200} step={5} onChange={setK} accent={T.a5} format={v => `${v}€`} />
-        <Slider label="H (barrière KO/KI)" value={barrier} min={30} max={K - 5} step={5} onChange={setBarrier} accent={T.a3} format={v => `${v}€`} />
+        <Slider label="K (strike)" value={strike} min={50} max={200} step={5} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="H (barrière KO/KI)" value={barrier} min={30} max={strike - 5} step={5} onChange={setBarrier} accent={T.a3} format={v => `${v}€`} />
         <Slider label="σ (vol)" value={sigma} min={0.05} max={0.6} step={0.01} onChange={setSigma} accent={T.a6} format={v => `${(v * 100).toFixed(0)}%`} />
         <Slider label="T (maturité)" value={Tmat} min={0.25} max={2} step={0.25} onChange={setTmat} accent={T.a7} format={v => `${v.toFixed(2)}a`} />
         <Slider label="Simulations" value={nSim} min={500} max={5000} step={500} onChange={setNSim} accent={T.muted} format={v => v.toLocaleString()} />
@@ -1277,7 +1272,7 @@ export function ExotiquesTab() {
               <XAxis dataKey="t" type="number" domain={[0, Tmat]} stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
               <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
               <ReferenceLine y={barrier} stroke={T.a3} strokeWidth={2} strokeDasharray="5 3" label={{ value: `H=${barrier}`, fill: T.a3, fontSize: 10 }} />
-              <ReferenceLine y={K} stroke={ACCENT} strokeDasharray="3 3" label={{ value: `K=${K}`, fill: ACCENT, fontSize: 10 }} />
+              <ReferenceLine y={strike} stroke={ACCENT} strokeDasharray="3 3" label={{ value: `K=${strike}`, fill: ACCENT, fontSize: 10 }} />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
               {samplePaths.map((p, i) => (
                 <Line key={i} data={p} type="monotone" dataKey="S" stroke={COLORS[i]} strokeWidth={1.5} dot={false} name={`Path ${i + 1}`} />
@@ -1327,9 +1322,9 @@ export function ExotiquesTab() {
         </div>
       </div>
       <FormulaBox accent={ACCENT} label="Payoff d'une swing option (1 période)">
-        Payoff = Σₜ max[(F(t) - K), 0] × qₜ  soumis à q_min ≤ qₜ ≤ q_max
-        et Q_min ≤ ΣqDt ≤ Q_max  [contraintes de volume cumulatif]
-        Droit = choisir qₜ de manière optimale à chaque date t
+        <K display>{"\\text{Payoff} = \\sum_t \\max\\bigl[(F(t) - K),\\, 0\\bigr] \\times q_t \\quad \\text{soumis à } q_{\\min} \\leq q_t \\leq q_{\\max}"}</K>
+        <K display>{"Q_{\\min} \\leq \\sum q_t \\,\\Delta t \\leq Q_{\\max} \\quad \\text{[contraintes de volume cumulatif]}"}</K>
+        Droit = choisir <K>{"q_t"}</K> de manière optimale à chaque date t
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
         <strong style={{ color: ACCENT }}>Intuition économique :</strong> Le producteur de gaz vend une swing option à un distributeur.

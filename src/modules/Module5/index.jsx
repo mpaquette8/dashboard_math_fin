@@ -102,16 +102,16 @@ export function HistVolTab() {
 
       <IntuitionBlock emoji="📊" title="La volatilité historique : mesurer les fluctuations passées" accent={ACCENT}>
         La volatilité historique mesure l'amplitude des rendements passés.
-        C'est l'écart-type des log-rendements quotidiens, multiplié par √252 pour annualiser.
+        C'est l'écart-type des log-rendements quotidiens, multiplié par <K>{"\\sqrt{252}"}</K> pour annualiser.
         Elle répond à : "À quelle vitesse ce prix a-t-il bougé ces dernières semaines ?"
         En énergie, la vol peut varier dramatiquement (pétrole : 20-80% selon les crises).
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Volatilité Historique Annualisée">
-        r_t = ln(S_t / S_{'{'}t-1{'}'})      (log-rendement quotidien)
-        r̄ = (1/n) Σ r_t
-        σ²_daily = (1/(n-1)) Σ (r_t - r̄)²
-        σ_ann = σ_daily × √252
+        <K display>{"r_t = \\ln\\!\\left(\\frac{S_t}{S_{t-1}}\\right) \\quad \\text{(log-rendement quotidien)}"}</K>
+        <K display>{"\\bar{r} = \\frac{1}{n} \\sum r_t"}</K>
+        <K display>{"\\sigma^2_{daily} = \\frac{1}{n-1} \\sum (r_t - \\bar{r})^2"}</K>
+        <K display>{"\\sigma_{ann} = \\sigma_{daily} \\times \\sqrt{252}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Calcul pas à pas de la volatilité historique</SectionTitle>
@@ -121,26 +121,26 @@ export function HistVolTab() {
       <ExampleBlock title="Calcul pas à pas — Données journalières" accent={ACCENT}>
         <p style={{ color: T.muted, fontSize: 13 }}>Calculer la volatilité historique annualisée à partir d'une série de prix journaliers.</p>
         <FormulaBox accent={ACCENT} label="Résultat">
-          σ_ann = σ_daily × √252
+          <K display>{"\\sigma_{ann} = \\sigma_{daily} \\times \\sqrt{252}"}</K>
         </FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Log-rendements" ruleDetail="rᵢ = ln(Sᵢ/Sᵢ₋₁)" accent={ACCENT}>
             <strong>Calculer les log-rendements :</strong> <K>{"r_i = \\ln\\!\\left(\\frac{S_i}{S_{i-1}}\\right)"}</K>. Par exemple, si S₀ = 100 et S₁ = 102, alors r₁ = ln(102/100) = 0.0198. On utilise les log-rendements (et non les rendements simples) car ils sont additifs dans le temps et symétriques pour les hausses/baisses.
           </DemoStep>
           <DemoStep num={2} rule="Moyenne arithmétique" ruleDetail="r̄ = (1/n) Σ rᵢ" accent={ACCENT}>
-            <strong>Calculer la moyenne :</strong> <K>{"\\bar{r} = \\frac{1}{n} \\sum_i r_i"}</K>. Sur un horizon court, r̄ ≈ 0 (le drift journalier est négligeable devant la vol). Sur n=252 jours avec µ_ann=5%, r̄_daily ≈ 0.0002.
+            <strong>Calculer la moyenne :</strong> <K>{"\\bar{r} = \\frac{1}{n} \\sum_i r_i"}</K>. Sur un horizon court, <K>{"\\bar{r} \\approx 0"}</K> (le drift journalier est négligeable devant la vol). Sur <K>{"n=252"}</K> jours avec <K>{"\\mu_{ann}=5\\%"}</K>, <K>{"\\bar{r}_{daily} \\approx 0.0002"}</K>.
           </DemoStep>
           <DemoStep num={3} rule="Variance de Bessel" ruleDetail="σ² = Σ(rᵢ−r̄)²/(n−1)" accent={ACCENT}>
-            <strong>Calculer la variance quotidienne :</strong> <K>{"\\hat{\\sigma}^2_{daily} = \\frac{1}{n-1} \\sum_i (r_i - \\bar{r})^2"}</K>. On divise par (n-1) et non n pour avoir un estimateur sans biais (correction de Bessel). Exemple : avec n=21 jours et Σ(rᵢ - r̄)² = 0.0084, on obtient σ̂²_daily = 0.0084/20 = 0.00042, soit σ̂_daily = 2.05%.
+            <strong>Calculer la variance quotidienne :</strong> <K>{"\\hat{\\sigma}^2_{daily} = \\frac{1}{n-1} \\sum_i (r_i - \\bar{r})^2"}</K>. On divise par (n-1) et non n pour avoir un estimateur sans biais (correction de Bessel). Exemple : avec <K>{"n=21"}</K> jours et <K>{"\\sum(r_i - \\bar{r})^2 = 0.0084"}</K>, on obtient <K>{"\\hat{\\sigma}^2_{daily} = 0.0084/20 = 0.00042"}</K>, soit <K>{"\\hat{\\sigma}_{daily} = 2.05\\%"}</K>.
           </DemoStep>
           <DemoStep num={4} rule="Annualisation √252" ruleDetail="σ_ann = σ_daily × √252" accent={ACCENT}>
-            <strong>Annualiser :</strong> <K>{"\\sigma_{ann} = \\sigma_{daily} \\times \\sqrt{252}"}</K>. Si σ_daily = 2.05%, alors σ_ann = 2.05% × √252 ≈ 32.5%. Le facteur √252 vient du scaling de la variance : si les rendements sont iid, Var(rendement annuel) = 252 × Var(rendement daily), donc σ_ann = √252 × σ_daily.
+            <strong>Annualiser :</strong> <K>{"\\sigma_{ann} = \\sigma_{daily} \\times \\sqrt{252}"}</K>. Si <K>{"\\sigma_{daily} = 2.05\\%"}</K>, alors <K>{"\\sigma_{ann} = 2.05\\% \\times \\sqrt{252} \\approx 32.5\\%"}</K>. Le facteur <K>{"\\sqrt{252}"}</K> vient du scaling de la variance : si les rendements sont iid, <K>{"\\text{Var}(\\text{rendement annuel}) = 252 \\times \\text{Var}(\\text{rendement daily})"}</K>, donc <K>{"\\sigma_{ann} = \\sqrt{252} \\times \\sigma_{daily}"}</K>.
           </DemoStep>
         </Demonstration>
       </ExampleBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Pourquoi √252 ?</strong> La variance est additive dans le temps (pour des rendements indépendants). Sur T jours, σ²_T = T × σ²_daily. Donc σ_T = σ_daily × √T. Il y a 252 jours de trading par an (hors week-ends et jours fériés). Le facteur de scaling √252 ≈ 15.87 est donc la conversion standard daily → annuel.
+        <strong style={{ color: ACCENT }}>Pourquoi <K>{"\\sqrt{252}"}</K> ?</strong> La variance est additive dans le temps (pour des rendements indépendants). Sur T jours, <K>{"\\sigma^2_T = T \\times \\sigma^2_{daily}"}</K>. Donc <K>{"\\sigma_T = \\sigma_{daily} \\times \\sqrt{T}"}</K>. Il y a 252 jours de trading par an (hors week-ends et jours fériés). Le facteur de scaling <K>{"\\sqrt{252} \\approx 15.87"}</K> est donc la conversion standard daily → annuel.
       </div>
 
       <IntuitionBlock emoji="🌊" title="Volatility Clustering — ARCH/GARCH" accent={ACCENT}>
@@ -172,29 +172,28 @@ export function HistVolTab() {
           <strong style={{ color: ACCENT }}>Données :</strong> 6 prix journaliers WTI ($/bbl) : 80.00, 81.20, 79.50, 82.10, 81.80, 83.00.
           <br /><br />
           <strong>Étape 1 — Log-rendements :</strong><br />
-          r₁ = ln(81.20/80.00) = ln(1.015) = 0.01489<br />
-          r₂ = ln(79.50/81.20) = ln(0.9791) = -0.02113<br />
-          r₃ = ln(82.10/79.50) = ln(1.0327) = 0.03218<br />
-          r₄ = ln(81.80/82.10) = ln(0.9963) = -0.00365<br />
-          r₅ = ln(83.00/81.80) = ln(1.0147) = 0.01458<br /><br />
-          <strong>Étape 2 — Moyenne :</strong> r̄ = (0.01489 - 0.02113 + 0.03218 - 0.00365 + 0.01458) / 5 = 0.00737<br /><br />
+          <K>{"r_1 = \\ln(81.20/80.00) = 0.01489"}</K><br />
+          <K>{"r_2 = \\ln(79.50/81.20) = -0.02113"}</K><br />
+          <K>{"r_3 = \\ln(82.10/79.50) = 0.03218"}</K><br />
+          <K>{"r_4 = \\ln(81.80/82.10) = -0.00365"}</K><br />
+          <K>{"r_5 = \\ln(83.00/81.80) = 0.01458"}</K><br /><br />
+          <strong>Étape 2 — Moyenne :</strong> <K>{"\\bar{r} = \\frac{0.01489 - 0.02113 + 0.03218 - 0.00365 + 0.01458}{5} = 0.00737"}</K><br /><br />
           <strong>Étape 3 — Variance (n-1 = 4) :</strong><br />
-          Σ(rᵢ - r̄)² = (0.01489-0.00737)² + (-0.02113-0.00737)² + (0.03218-0.00737)² + (-0.00365-0.00737)² + (0.01458-0.00737)²<br />
-          = 0.0000565 + 0.0008122 + 0.0006155 + 0.0001215 + 0.0000520 = 0.0016577<br />
-          σ²_daily = 0.0016577 / 4 = 0.000414 → σ_daily = 2.035%<br /><br />
-          <strong>Étape 4 — Annualisation :</strong> σ_ann = 2.035% × √252 = 2.035% × 15.875 = <strong style={{ color: ACCENT }}>32.3%</strong>
+          <K>{"\\sum(r_i - \\bar{r})^2 = 0.0000565 + 0.0008122 + 0.0006155 + 0.0001215 + 0.0000520 = 0.0016577"}</K><br />
+          <K>{"\\sigma^2_{daily} = 0.0016577 / 4 = 0.000414"}</K> → <K>{"\\sigma_{daily} = 2.035\\%"}</K><br /><br />
+          <strong>Étape 4 — Annualisation :</strong> <K>{"\\sigma_{ann} = 2.035\\% \\times \\sqrt{252} = 2.035\\% \\times 15.875"}</K> = <strong style={{ color: ACCENT }}>32.3%</strong>
         </div>
       </Accordion>
 
       <Accordion title="Exercice — Volatilité EWMA (pondération exponentielle)" accent={ACCENT} badge="Difficile">
         <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          <strong style={{ color: ACCENT }}>Principe :</strong> Dans EWMA (Exponentially Weighted Moving Average), on donne plus de poids aux données récentes via un facteur de décroissance λ (RiskMetrics™ utilise λ = 0.94 pour des données journalières).<br /><br />
-          <strong>Formule récursive :</strong> σ²_t = λ × σ²_{'{'}t-1{'}'} + (1-λ) × r²_{'{'}t-1{'}'}<br /><br />
-          <strong>Intuition :</strong> Les poids décroissent exponentiellement : le jour t-1 a un poids (1-λ), le jour t-2 a un poids λ(1-λ), etc.<br /><br />
-          <strong>Avantage :</strong> Très réactif aux chocs récents. La demi-vie de l'information est ln(0.5)/ln(λ) ≈ 11 jours pour λ=0.94.<br /><br />
-          <strong>Calcul exemple (λ=0.94, σ²_0 = 0.0004) :</strong><br />
-          r₁ = 0.025 → σ²_1 = 0.94 × 0.0004 + 0.06 × 0.025² = 0.000376 + 0.0000375 = 0.000414<br />
-          σ_1_daily = 2.03% → σ_1_ann = 32.2%<br /><br />
+          <strong style={{ color: ACCENT }}>Principe :</strong> Dans EWMA (Exponentially Weighted Moving Average), on donne plus de poids aux données récentes via un facteur de décroissance <K>{"\\lambda"}</K> (RiskMetrics™ utilise <K>{"\\lambda = 0.94"}</K> pour des données journalières).<br /><br />
+          <strong>Formule récursive :</strong> <K>{"\\sigma^2_t = \\lambda \\, \\sigma^2_{t-1} + (1-\\lambda) \\, r^2_{t-1}"}</K><br /><br />
+          <strong>Intuition :</strong> Les poids décroissent exponentiellement : le jour t-1 a un poids <K>{"(1-\\lambda)"}</K>, le jour t-2 a un poids <K>{"\\lambda(1-\\lambda)"}</K>, etc.<br /><br />
+          <strong>Avantage :</strong> Très réactif aux chocs récents. La demi-vie de l'information est <K>{"\\frac{\\ln 0.5}{\\ln \\lambda} \\approx 11"}</K> jours pour <K>{"\\lambda=0.94"}</K>.<br /><br />
+          <strong>Calcul exemple (<K>{"\\lambda=0.94"}</K>, <K>{"\\sigma^2_0 = 0.0004"}</K>) :</strong><br />
+          <K>{"r_1 = 0.025"}</K> → <K>{"\\sigma^2_1 = 0.94 \\times 0.0004 + 0.06 \\times 0.025^2 = 0.000414"}</K><br />
+          <K>{"\\sigma_{1,daily} = 2.03\\%"}</K> → <K>{"\\sigma_{1,ann} = 32.2\\%"}</K><br /><br />
           <strong>Usage :</strong> EWMA est la base de RiskMetrics™ (JP Morgan, 1994), largement utilisé pour la VaR en énergie car il réagit vite aux changements de régime de vol.
         </div>
       </Accordion>
@@ -244,27 +243,27 @@ export function HistVolTab() {
 // ─── Tab: Vol Implicite ───────────────────────────────────────────────────────
 export function ImplVolTab() {
   const [S, setS] = useState(100)
-  const [K, setK] = useState(100)
+  const [strike, setStrike] = useState(100)
   const [T2, setT2] = useState(0.5)
   const [r, setR] = useState(0.04)
   const [marketPrice, setMarketPrice] = useState(6)
 
-  const iv = useMemo(() => impliedVol(marketPrice, S, K, T2, r), [marketPrice, S, K, T2, r])
-  const bsPrice = bsCall(S, K, T2, r, iv || 0.3)
+  const iv = useMemo(() => impliedVol(marketPrice, S, strike, T2, r), [marketPrice, S, strike, T2, r])
+  const bsPrice = bsCall(S, strike, T2, r, iv || 0.3)
 
   // Price vs vol
   const priceVsVol = useMemo(() => {
     const pts = []
     for (let sig = 0.05; sig <= 0.8; sig += 0.01) {
-      pts.push({ sigma: +(sig * 100).toFixed(0), price: +bsCall(S, K, T2, r, sig).toFixed(4) })
+      pts.push({ sigma: +(sig * 100).toFixed(0), price: +bsCall(S, strike, T2, r, sig).toFixed(4) })
     }
     return pts
-  }, [S, K, T2, r])
+  }, [S, strike, T2, r])
 
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La volatilité implicite est le <strong style={{ color: ACCENT }}>message que le marché envoie aux traders</strong>. Si le marché cote une option à un certain prix, on peut "inverser" la formule Black-Scholes pour trouver la volatilité que le marché "pense" — c'est-à-dire la volatilité future anticipée. C'est un processus d'inversion numérique, car il n'existe pas de formule fermée pour σ en fonction du prix.
+        La volatilité implicite est le <strong style={{ color: ACCENT }}>message que le marché envoie aux traders</strong>. Si le marché cote une option à un certain prix, on peut "inverser" la formule Black-Scholes pour trouver la volatilité que le marché "pense" — c'est-à-dire la volatilité future anticipée. C'est un processus d'inversion numérique, car il n'existe pas de formule fermée pour <K>{"\\sigma"}</K> en fonction du prix.
       </div>
 
       <IntuitionBlock emoji="🔍" title="La vol implicite : ce que le marché 'pense'" accent={ACCENT}>
@@ -276,27 +275,27 @@ export function ImplVolTab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Vol implicite = racine de l'équation">
-        Trouver σ_impl tel que : BS(S, K, T, r, σ_impl) = C_marché
+        <K display>{"\\text{Trouver }\\sigma_{impl}\\text{ tel que : }BS(S,\\,K,\\,T,\\,r,\\,\\sigma_{impl}) = C_{\\text{marché}}"}</K>
       </FormulaBox>
 
       <FormulaBox accent={ACCENT} label="Algorithme Newton-Raphson (itération)">
-        σ_{'{'}n+1{'}'} = σ_n - [BS(σ_n) - C_marché] / Vega(σ_n)
+        <K display>{"\\sigma_{n+1} = \\sigma_n - \\frac{BS(\\sigma_n) - C_{\\text{marché}}}{\\text{Vega}(\\sigma_n)}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Newton-Raphson pour la vol implicite — étape par étape</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Newton-Raphson est un algorithme d'optimisation qui converge rapidement (quadratiquement). L'idée est simple : partant d'une estimation initiale σ₀, on calcule le prix BS(σ₀), on compare au prix de marché, et on corrige en divisant l'erreur par le Vega (la sensibilité du prix à la vol).
+        Newton-Raphson est un algorithme d'optimisation qui converge rapidement (quadratiquement). L'idée est simple : partant d'une estimation initiale <K>{"\\sigma_0"}</K>, on calcule le prix <K>{"BS(\\sigma_0)"}</K>, on compare au prix de marché, et on corrige en divisant l'erreur par le Vega (la sensibilité du prix à la vol).
       </div>
       <ExampleBlock title="Newton-Raphson — Recherche de σ_impl" accent={ACCENT}>
-        <p>Call sur WTI : S=80, K=80, T=0.25an, r=4%, C_marché=4.50$. Chercher σ_impl.</p>
+        <p>Call sur WTI : <K>{"S=80,\\; K=80,\\; T=0.25"}</K>an, <K>{"r=4\\%"}</K>, <K>{"C_{\\text{marché}}=4.50\\$"}</K>. Chercher <K>{"\\sigma_{impl}"}</K>.</p>
         <FormulaBox accent={ACCENT} label="Résultat">
-          σ_impl ≈ 34.1%
+          <K display>{"\\sigma_{impl} \\approx 34.1\\%"}</K>
         </FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Newton-Raphson" ruleDetail="σₙ₊₁ = σₙ − (BS−C)/Vega" accent={ACCENT}>Initialisation : σ₀ = 0.30 (30%). Calculer BS(σ₀) = 3.86$. Erreur = 3.86 - 4.50 = -0.64$. Vega(σ₀) = S × ϕ(d₁) × √T = 80 × 0.3989 × 0.5 = 15.96. Correction : Δσ = -(-0.64)/15.96 = +0.040.</DemoStep>
-          <DemoStep num={2} rule="Newton-Raphson" ruleDetail="Itération convergente" accent={ACCENT}>Itération 1 : σ₁ = 0.30 + 0.040 = 0.340 (34%). BS(σ₁) ≈ 4.48$. Erreur = -0.02$. Très proche ! Vega ≈ 16.1. Correction : Δσ = 0.02/16.1 ≈ +0.001.</DemoStep>
-          <DemoStep num={3} rule="Newton-Raphson" ruleDetail="Convergence quadratique" accent={ACCENT}>Itération 2 : σ₂ = 0.341 (34.1%). BS(σ₂) ≈ 4.498$ ≈ 4.50$. Convergence atteinte en seulement 2-3 itérations !</DemoStep>
-          <DemoStep num={4} rule="Vega" ruleDetail="∂C/∂σ = S·ϕ(d₁)·√T" accent={ACCENT}>Résultat : σ_impl ≈ 34.1%. Le marché anticipe une volatilité annualisée de 34% pour le WTI sur les 3 prochains mois.</DemoStep>
+          <DemoStep num={1} rule="Newton-Raphson" ruleDetail="σₙ₊₁ = σₙ − (BS−C)/Vega" accent={ACCENT}>Initialisation : <K>{"\\sigma_0 = 0.30"}</K> (30%). Calculer <K>{"BS(\\sigma_0) = 3.86\\$"}</K>. Erreur <K>{"= 3.86 - 4.50 = -0.64\\$"}</K>. <K>{"\\text{Vega}(\\sigma_0) = S \\times \\phi(d_1) \\times \\sqrt{T} = 80 \\times 0.3989 \\times 0.5 = 15.96"}</K>. Correction : <K>{"\\Delta\\sigma = +0.040"}</K>.</DemoStep>
+          <DemoStep num={2} rule="Newton-Raphson" ruleDetail="Itération convergente" accent={ACCENT}>Itération 1 : <K>{"\\sigma_1 = 0.30 + 0.040 = 0.340"}</K> (34%). <K>{"BS(\\sigma_1) \\approx 4.48\\$"}</K>. Erreur <K>{"= -0.02\\$"}</K>. Très proche ! <K>{"\\text{Vega} \\approx 16.1"}</K>. Correction : <K>{"\\Delta\\sigma = 0.02/16.1 \\approx +0.001"}</K>.</DemoStep>
+          <DemoStep num={3} rule="Newton-Raphson" ruleDetail="Convergence quadratique" accent={ACCENT}>Itération 2 : <K>{"\\sigma_2 = 0.341"}</K> (34.1%). <K>{"BS(\\sigma_2) \\approx 4.498\\$ \\approx 4.50\\$"}</K>. Convergence atteinte en seulement 2-3 itérations !</DemoStep>
+          <DemoStep num={4} rule="Vega" ruleDetail="∂C/∂σ = S·ϕ(d₁)·√T" accent={ACCENT}>Résultat : <K>{"\\sigma_{impl} \\approx 34.1\\%"}</K>. Le marché anticipe une volatilité annualisée de 34% pour le WTI sur les 3 prochains mois.</DemoStep>
         </Demonstration>
       </ExampleBlock>
 
@@ -313,39 +312,39 @@ export function ImplVolTab() {
         ))}
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Volatility Risk Premium :</strong> En moyenne, σ_impl {'>'} σ_hist. Cet écart systématique s'appelle la prime de risque de volatilité. Les marchés paient une prime pour la couverture — les vendeurs d'options (qui acceptent le risque) exigent une compensation. En énergie, cette prime est souvent de 3-8 points de vol. C'est la base du "vol selling" (vente de vol) comme stratégie.
+        <strong style={{ color: ACCENT }}>Volatility Risk Premium :</strong> En moyenne, <K>{"\\sigma_{impl} > \\sigma_{hist}"}</K>. Cet écart systématique s'appelle la prime de risque de volatilité. Les marchés paient une prime pour la couverture — les vendeurs d'options (qui acceptent le risque) exigent une compensation. En énergie, cette prime est souvent de 3-8 points de vol. C'est la base du "vol selling" (vente de vol) comme stratégie.
       </div>
 
       <ExampleBlock title="VIX — l'indice de peur du marché" accent={ACCENT}>
         <p>Le VIX mesure la volatilité implicite du S&P500 à 30 jours. C'est le "baromètre de la peur" des marchés.</p>
         <FormulaBox accent={ACCENT} label="Résultat">
-          VIX² ≈ (2/T) × Σ [ΔK/K² × e^(rT) × Q(K)]
+          <K display>{"VIX^2 \\approx \\frac{2}{T} \\sum \\left[\\frac{\\Delta K}{K^2} \\cdot e^{rT} \\cdot Q(K)\\right]"}</K>
         </FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Implied vol" ruleDetail="Extraction depuis prix d'options" accent={ACCENT}>Construction : on observe les prix de toutes les options (calls et puts) sur le S&P500 avec maturité proche de 30 jours.</DemoStep>
-          <DemoStep num={2} rule="Implied vol" ruleDetail="VIX² = (2/T) Σ ΔK/K² · e^(rT) · Q(K)" accent={ACCENT}>Calcul : VIX² ≈ (2/T) × Σ [ΔK/K² × e^(rT) × Q(K)] — une moyenne pondérée des prix d'options pour tous les strikes, sans hypothèse de modèle.</DemoStep>
-          <DemoStep num={3} rule="Implied vol" ruleDetail="Baromètre de la peur" accent={ACCENT}>Interprétation : VIX=20 signifie que le marché anticipe une vol annualisée de 20% pour le S&P500 sur le prochain mois. VIX{'>'}30 = anxiété. VIX{'>'}40 = panique (ex: Covid mars 2020).</DemoStep>
+          <DemoStep num={2} rule="Implied vol" ruleDetail="VIX² = (2/T) Σ ΔK/K² · e^(rT) · Q(K)" accent={ACCENT}>Calcul : <K>{"VIX^2 \\approx \\frac{2}{T} \\sum \\left[\\frac{\\Delta K}{K^2} \\cdot e^{rT} \\cdot Q(K)\\right]"}</K> — une moyenne pondérée des prix d'options pour tous les strikes, sans hypothèse de modèle.</DemoStep>
+          <DemoStep num={3} rule="Implied vol" ruleDetail="Baromètre de la peur" accent={ACCENT}>Interprétation : <K>{"VIX=20"}</K> signifie que le marché anticipe une vol annualisée de 20% pour le S&P500 sur le prochain mois. <K>{"VIX > 30"}</K> = anxiété. <K>{"VIX > 40"}</K> = panique (ex: Covid mars 2020).</DemoStep>
           <DemoStep num={4} rule="Implied vol" ruleDetail="OVX = VIX pétrole" accent={ACCENT}>En énergie : l'OVX (Oil VIX) joue le même rôle pour le WTI. Il peut atteindre 80-100% lors des crises pétrolières majeures (Covid 2020 : OVX à 325% !)</DemoStep>
         </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Calculer σ_impl par bisection step-by-step" accent={ACCENT} badge="Moyen">
         <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          <strong style={{ color: ACCENT }}>Méthode de bisection :</strong> Plus robuste que Newton-Raphson (toujours converge), moins rapide. On encadre la solution entre σ_low et σ_high.<br /><br />
-          <strong>Données :</strong> Put WTI K=75, S=80, T=0.5an, r=3%, P_marché=3.20$.<br /><br />
-          <strong>Étape 1 :</strong> Trouver un intervalle [σ_low, σ_high] contenant la solution.<br />
-          BS_put(σ=0.10) = 0.45$ {'<'} 3.20$. BS_put(σ=0.80) = 8.90$ {'>'} 3.20$. Donc σ_impl ∈ [10%, 80%].<br /><br />
-          <strong>Étape 2 :</strong> σ_mid = (10+80)/2 = 45%. BS_put(45%) = 4.82$ {'>'} 3.20$ → σ_impl {'<'} 45%.<br />
+          <strong style={{ color: ACCENT }}>Méthode de bisection :</strong> Plus robuste que Newton-Raphson (toujours converge), moins rapide. On encadre la solution entre <K>{"\\sigma_{low}"}</K> et <K>{"\\sigma_{high}"}</K>.<br /><br />
+          <strong>Données :</strong> Put WTI <K>{"K=75,\\; S=80,\\; T=0.5"}</K>an, <K>{"r=3\\%"}</K>, <K>{"P_{\\text{marché}}=3.20\\$"}</K>.<br /><br />
+          <strong>Étape 1 :</strong> Trouver un intervalle <K>{"[\\sigma_{low},\\,\\sigma_{high}]"}</K> contenant la solution.<br />
+          <K>{"BS_{put}(\\sigma{=}0.10) = 0.45\\$ < 3.20\\$"}</K>. <K>{"BS_{put}(\\sigma{=}0.80) = 8.90\\$ > 3.20\\$"}</K>. Donc <K>{"\\sigma_{impl} \\in [10\\%,\\,80\\%]"}</K>.<br /><br />
+          <strong>Étape 2 :</strong> <K>{"\\sigma_{mid} = (10{+}80)/2 = 45\\%"}</K>. <K>{"BS_{put}(45\\%) = 4.82\\$ > 3.20\\$"}</K> → <K>{"\\sigma_{impl} < 45\\%"}</K>.<br />
           Nouvel intervalle : [10%, 45%].<br /><br />
-          <strong>Étape 3 :</strong> σ_mid = (10+45)/2 = 27.5%. BS_put(27.5%) = 3.18$ ≈ 3.20$. Très proche !<br /><br />
-          <strong>Étape 4 :</strong> σ_mid = (27.5+45)/2 = 36.25%. BS_put(36.25%) = 3.94$ {'>'} 3.20$ → nouvel intervalle [27.5%, 36.25%].<br /><br />
-          Après ~10-15 itérations : <strong style={{ color: ACCENT }}>σ_impl ≈ 27.8%</strong>. La bisection converge lentement (linéairement) mais de façon garantie.
+          <strong>Étape 3 :</strong> <K>{"\\sigma_{mid} = (10{+}45)/2 = 27.5\\%"}</K>. <K>{"BS_{put}(27.5\\%) = 3.18\\$ \\approx 3.20\\$"}</K>. Très proche !<br /><br />
+          <strong>Étape 4 :</strong> <K>{"\\sigma_{mid} = (27.5{+}45)/2 = 36.25\\%"}</K>. <K>{"BS_{put}(36.25\\%) = 3.94\\$ > 3.20\\$"}</K> → nouvel intervalle [27.5%, 36.25%].<br /><br />
+          Après ~10-15 itérations : <strong style={{ color: ACCENT }}><K>{"\\sigma_{impl} \\approx 27.8\\%"}</K></strong>. La bisection converge lentement (linéairement) mais de façon garantie.
         </div>
       </Accordion>
 
       <Grid cols={3} gap="8px">
         <Slider label="S" value={S} min={70} max={150} step={1} onChange={setS} accent={ACCENT} format={v => `${v}€`} />
-        <Slider label="K" value={K} min={70} max={150} step={1} onChange={setK} accent={T.a5} format={v => `${v}€`} />
+        <Slider label="K" value={strike} min={70} max={150} step={1} onChange={setStrike} accent={T.a5} format={v => `${v}€`} />
         <Slider label="T" value={T2} min={0.05} max={2} step={0.05} onChange={setT2} accent={T.muted} format={v => `${v.toFixed(2)}a`} />
         <Slider label="r" value={r} min={0} max={0.12} step={0.005} onChange={setR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="Prix de marché C" value={marketPrice} min={0.1} max={40} step={0.1} onChange={setMarketPrice} accent={ACCENT} format={v => `${v.toFixed(1)}€`} />
@@ -444,27 +443,27 @@ export function SmileTab() {
       </div>
 
       <FormulaBox accent={ACCENT} label="Modèle de smile paramétrique (SVI simplifié)">
-        σ(K) = σ_ATM + skew × (K/S - 1) + kurt × (K/S - 1)²
+        <K display>{"\\sigma(K) = \\sigma_{ATM} + \\text{skew} \\times \\left(\\frac{K}{S} - 1\\right) + \\text{kurt} \\times \\left(\\frac{K}{S} - 1\\right)^2"}</K>
       </FormulaBox>
 
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
         <strong style={{ color: ACCENT }}>Smile symétrique</strong> (skew=0, kurt{'>'} 0) : puts et calls OTM tous les deux plus chers que prévu par BS. Le marché craint des mouvements violents dans les deux sens. Typique pour les paires de devises, certaines matières premières.<br />
-        <strong style={{ color: ACCENT }}>Skew négatif</strong> (skew{'<'} 0) : puts OTM beaucoup plus chers que calls OTM. Typique des marchés actions (peur des crashes) et du pétrole (peur des chutes de prix). Le skew est mesuré par 25Δ-skew = σ(25Δ-put) - σ(25Δ-call).<br />
+        <strong style={{ color: ACCENT }}>Skew négatif</strong> (skew{'<'} 0) : puts OTM beaucoup plus chers que calls OTM. Typique des marchés actions (peur des crashes) et du pétrole (peur des chutes de prix). Le skew est mesuré par <K>{"25\\Delta\\text{-skew} = \\sigma(25\\Delta\\text{-put}) - \\sigma(25\\Delta\\text{-call})"}</K>.<br />
         <strong style={{ color: ACCENT }}>Skew positif</strong> (skew{'>'} 0) : calls OTM plus chers. Parfois observé en énergie électricité/gaz naturel où le marché craint des spikes haussiers (vague de froid, panne de réseau).
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Pourquoi σ_impl(K) encode la densité risque-neutre</div>
-        <Step num={1} accent={ACCENT}>Smile plat (σ_impl identique pour tous K) → la densité risque-neutre est exactement log-normale → B-S est parfait pour tous les strikes → jamais observé en pratique sur les marchés réels.</Step>
-        <Step num={2} accent={ACCENT}>σ_impl(K) croît pour les K faibles (put OTM) → les événements S_T {'<'} K sont plus probables que ce que prédit la loi log-normale → queues gauches épaisses. Le marché "paye" une prime pour se protéger contre les crashes.</Step>
-        <Step num={3} accent={ACCENT}>Formule de Breeden-Litzenberger (1978) : f_Q(K) = e^(rT) × ∂²C/∂K². La densité risque-neutre se lit directement dans la courbure des prix d'options en K. Une courbure forte à K bas → probabilité élevée d'être près de K à maturité.</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Pourquoi <K>{"\\sigma_{impl}(K)"}</K> encode la densité risque-neutre</div>
+        <Step num={1} accent={ACCENT}>Smile plat (<K>{"\\sigma_{impl}"}</K> identique pour tous K) → la densité risque-neutre est exactement log-normale → B-S est parfait pour tous les strikes → jamais observé en pratique sur les marchés réels.</Step>
+        <Step num={2} accent={ACCENT}><K>{"\\sigma_{impl}(K)"}</K> croît pour les K faibles (put OTM) → les événements <K>{"S_T < K"}</K> sont plus probables que ce que prédit la loi log-normale → queues gauches épaisses. Le marché "paye" une prime pour se protéger contre les crashes.</Step>
+        <Step num={3} accent={ACCENT}>Formule de Breeden-Litzenberger (1978) : <K>{"f_Q(K) = e^{rT} \\times \\frac{\\partial^2 C}{\\partial K^2}"}</K>. La densité risque-neutre se lit directement dans la courbure des prix d'options en K. Une courbure forte à K bas → probabilité élevée d'être près de K à maturité.</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
           Le smile de vol est la "carte" de la distribution réelle du sous-jacent vue par le marché. Chaque point du smile correspond à une information sur la densité risque-neutre à ce niveau de prix. Construire une surface de vol cohérente, c'est construire une distribution risque-neutre entière.
         </div>
       </div>
 
       <IntuitionBlock emoji="🧠" title="Prix d'options → Distribution implicite du marché" accent={ACCENT}>
-        Une surface de vol implicite encode exactement la densité de probabilité risque-neutre du sous-jacent. La formule de <strong>Breeden-Litzenberger (1978)</strong> est remarquable : f(K,T) = e^(rT) × ∂²C/∂K². En dérivant deux fois le prix d'un call par rapport au strike K, on obtient directement la densité de probabilité risque-neutre. Un smile avec fort skew négatif correspond à une distribution asymétrique vers la gauche (queue gauche épaisse), c'est-à-dire une probabilité plus élevée de grandes baisses que ne le prédit la loi normale.
+        Une surface de vol implicite encode exactement la densité de probabilité risque-neutre du sous-jacent. La formule de <strong>Breeden-Litzenberger (1978)</strong> est remarquable : <K>{"f(K,T) = e^{rT} \\times \\frac{\\partial^2 C}{\\partial K^2}"}</K>. En dérivant deux fois le prix d'un call par rapport au strike K, on obtient directement la densité de probabilité risque-neutre. Un smile avec fort skew négatif correspond à une distribution asymétrique vers la gauche (queue gauche épaisse), c'est-à-dire une probabilité plus élevée de grandes baisses que ne le prédit la loi normale.
       </IntuitionBlock>
 
       <Grid cols={2} gap="10px">
@@ -488,9 +487,9 @@ export function SmileTab() {
       </ChartWrapper>
 
       <ExampleBlock title="Skew pétrole brut — Analyse typique" accent={ACCENT}>
-        <p>WTI à S=80$/bbl, σ_ATM=30%, T=3 mois. Observations marché :</p>
+        <p>WTI à <K>{"S=80"}</K>$/bbl, <K>{"\\sigma_{ATM}=30\\%"}</K>, <K>{"T=3"}</K> mois. Observations marché :</p>
         <FormulaBox accent={ACCENT} label="Résultat">
-          Skew 25Δ ≈ −5% → fort skew négatif
+          <K display>{"\\text{Skew}\\;25\\Delta \\approx -5\\% \\;\\rightarrow\\; \\text{fort skew négatif}"}</K>
         </FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Smile de volatilité" ruleDetail="σ_impl varie selon K" accent={ACCENT}>Put K=70 (OTM -12.5%) : <K>{"\\sigma_{impl} = 38\\%"}</K> (protection crash pétrolier)</DemoStep>
@@ -515,7 +514,7 @@ export function SmileTab() {
             </thead>
             <tbody>
               <tr>
-                <td style={{ color: T.muted, padding: '6px 10px' }}>σ_impl</td>
+                <td style={{ color: T.muted, padding: '6px 10px' }}><K>{"\\sigma_{impl}"}</K></td>
                 <td style={{ color: T.text, padding: '6px 10px', textAlign: 'center', fontWeight: 700 }}>62%</td>
                 <td style={{ color: ACCENT, padding: '6px 10px', textAlign: 'center', fontWeight: 700 }}>45%</td>
                 <td style={{ color: T.text, padding: '6px 10px', textAlign: 'center', fontWeight: 700 }}>52%</td>
@@ -527,7 +526,7 @@ export function SmileTab() {
           <strong>Questions :</strong><br />
           1. Quelle est la forme du smile ? <em>Réponse : smile asymétrique (skew mixte) — les deux côtés OTM sont plus chers, avec le côté put (K=2.50) légèrement plus cher.</em><br />
           2. Que dit le marché sur les risques ? <em>Réponse : le marché craint des mouvements importants dans les deux sens pour le gaz, ce qui est typique. La courbure (kurt {'>'} 0) reflète la nature non-gaussienne des prix du gaz.</em><br />
-          3. Le skew 25Δ = (62% - 52%)/2 = +5%. Que signifie ce skew légèrement positif ? <em>Réponse : les puts OTM (côté baisse) sont légèrement plus valorisés que les calls OTM — le marché craint davantage les chutes que les hausses à ce moment.</em>
+          3. Le skew <K>{"25\\Delta = (62\\% - 52\\%)/2 = +5\\%"}</K>. Que signifie ce skew légèrement positif ? <em>Réponse : les puts OTM (côté baisse) sont légèrement plus valorisés que les calls OTM — le marché craint davantage les chutes que les hausses à ce moment.</em>
         </div>
       </Accordion>
 
@@ -619,27 +618,25 @@ export function SurfaceTab() {
 
       <SectionTitle accent={ACCENT}>Interpolation et conditions d'absence d'arbitrage</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Une surface de vol ne peut pas être n'importe quelle fonction σ(K,T). Pour être cohérente avec l'absence d'arbitrage, elle doit satisfaire plusieurs contraintes :
+        Une surface de vol ne peut pas être n'importe quelle fonction <K>{"\\sigma(K,T)"}</K>. Pour être cohérente avec l'absence d'arbitrage, elle doit satisfaire plusieurs contraintes :
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.9 }}>
         <strong style={{ color: ACCENT }}>Conditions d'absence d'arbitrage sur la surface :</strong><br />
-        • <strong>Convexité en K :</strong> Pour T fixé, C(K,T) doit être convexe en K. Sinon, un butterfly spread serait en arbitrage.<br />
-        • <strong>Monotonie en T :</strong> σ²(ATM,T) × T doit être croissant en T (variance totale croissante). Sinon, un calendar spread serait en arbitrage.<br />
-        • <strong>Bornes sur σ :</strong> σ(K,T) doit être strictement positive. La variance totale w(K,T) = σ²(K,T)×T doit satisfaire des conditions de Gatheral (SVI).<br />
-        • <strong>SVI (Stochastic Volatility Inspired) :</strong> Modèle de Gatheral (2004) pour paramétrer la variance totale w(k) = a + b × (ρ(k-m) + √((k-m)²+σ²)) — permet une calibration sans arbitrage en 5 paramètres.
+        • <strong>Convexité en K :</strong> Pour T fixé, <K>{"C(K,T)"}</K> doit être convexe en K. Sinon, un butterfly spread serait en arbitrage.<br />
+        • <strong>Monotonie en T :</strong> <K>{"\\sigma^2(ATM,T) \\times T"}</K> doit être croissant en T (variance totale croissante). Sinon, un calendar spread serait en arbitrage.<br />
+        • <strong>Bornes sur σ :</strong> <K>{"\\sigma(K,T)"}</K> doit être strictement positive. La variance totale <K>{"w(K,T) = \\sigma^2(K,T) \\times T"}</K> doit satisfaire des conditions de Gatheral (SVI).<br />
+        • <strong>SVI (Stochastic Volatility Inspired) :</strong> Modèle de Gatheral (2004) pour paramétrer la variance totale <K>{"w(k) = a + b\\left(\\rho(k-m) + \\sqrt{(k-m)^2 + \\sigma^2}\\right)"}</K> — permet une calibration sans arbitrage en 5 paramètres.
       </div>
 
       <Accordion title="Exercice — Calculer la forward vol" accent={ACCENT} badge="Difficile">
         <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          <strong style={{ color: ACCENT }}>Données :</strong> Surface de vol WTI. σ_impl(ATM, 3M) = 28%, σ_impl(ATM, 6M) = 25%.<br /><br />
+          <strong style={{ color: ACCENT }}>Données :</strong> Surface de vol WTI. <K>{"\\sigma_{impl}(ATM,\\,3M) = 28\\%"}</K>, <K>{"\\sigma_{impl}(ATM,\\,6M) = 25\\%"}</K>.<br /><br />
           <strong>Calcul de la forward vol entre 3M et 6M :</strong><br />
-          σ²_fwd(3M→6M) = [σ²(6M) × T₂ - σ²(3M) × T₁] / (T₂ - T₁)<br />
-          = [0.25² × 0.5 - 0.28² × 0.25] / (0.5 - 0.25)<br />
-          = [0.03125 - 0.01960] / 0.25<br />
-          = 0.01165 / 0.25 = 0.04660<br />
-          σ_fwd(3M→6M) = √0.04660 = <strong style={{ color: ACCENT }}>21.6%</strong><br /><br />
+          <K display>{"\\sigma^2_{fwd}(3M{\\to}6M) = \\frac{\\sigma^2(6M) \\times T_2 - \\sigma^2(3M) \\times T_1}{T_2 - T_1}"}</K>
+          <K display>{"= \\frac{0.25^2 \\times 0.5 - 0.28^2 \\times 0.25}{0.5 - 0.25} = \\frac{0.03125 - 0.01960}{0.25} = 0.04660"}</K>
+          <K display>{"\\sigma_{fwd}(3M{\\to}6M) = \\sqrt{0.04660}"}</K> = <strong style={{ color: ACCENT }}>21.6%</strong><br /><br />
           <strong>Interprétation :</strong> Le marché anticipe une vol de 21.6% entre le 3ème et le 6ème mois — inférieure à la vol de 3M (28%). La structure par terme est en backwardation : le marché pense que la vol va baisser après les 3 prochains mois.<br /><br />
-          <strong>Application :</strong> Une option sur pétrole qui commence dans 3 mois et expire dans 6 mois (compound option ou option à départ différé) doit être pricée avec σ_fwd ≈ 21.6%, pas 25% ni 28%.
+          <strong>Application :</strong> Une option sur pétrole qui commence dans 3 mois et expire dans 6 mois (compound option ou option à départ différé) doit être pricée avec <K>{"\\sigma_{fwd} \\approx 21.6\\%"}</K>, pas 25% ni 28%.
         </div>
       </Accordion>
 
@@ -749,18 +746,17 @@ export function HestonTab() {
       </div>
 
       <IntuitionBlock emoji="🌊" title="Heston : la volatilité stochastique" accent={ACCENT}>
-        Black-Scholes suppose σ constant — mais en réalité, la volatilité elle-même fluctue !
-        Le modèle de Heston (1993) modélise v = σ² comme un processus CIR (mean-reversion) :
-        la volatilité revient vers un niveau long terme θ avec vitesse κ, et fluctue avec "vol de vol" ξ.
-        La corrélation ρ entre prix et vol (généralement négative) génère le skew observé :
+        Black-Scholes suppose <K>{"\\sigma"}</K> constant — mais en réalité, la volatilité elle-même fluctue !
+        Le modèle de Heston (1993) modélise <K>{"v = \\sigma^2"}</K> comme un processus CIR (mean-reversion) :
+        la volatilité revient vers un niveau long terme <K>{"\\theta"}</K> avec vitesse <K>{"\\kappa"}</K>, et fluctue avec "vol de vol" <K>{"\\xi"}</K>.
+        La corrélation <K>{"\\rho"}</K> entre prix et vol (généralement négative) génère le skew observé :
         quand le prix baisse, la vol monte — le "leverage effect".
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Modèle de Heston (1993)">
-        dS = µS dt + √v · S · dW₁
-        dv = κ(θ - v)dt + ξ·√v · dW₂
-
-        avec : E[dW₁·dW₂] = ρ·dt
+        <K display>{"dS = \\mu S \\, dt + \\sqrt{v} \\cdot S \\cdot dW_1"}</K>
+        <K display>{"dv = \\kappa(\\theta - v)\\,dt + \\xi\\sqrt{v} \\cdot dW_2"}</K>
+        <K display>{"\\text{avec : } E[dW_1 \\cdot dW_2] = \\rho \\, dt"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Les 5 paramètres de Heston — intuitions</SectionTitle>
@@ -778,45 +774,45 @@ export function HestonTab() {
         ))}
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '0 0 14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>v₀ — Variance initiale :</strong> La variance au moment t=0, soit la vol courante du sous-jacent. v₀ = σ₀². Si le marché est actuellement volatil (σ₀=35%), v₀=0.1225. Si v₀ ≠ θ, la variance va drifter vers θ avec vitesse κ — cela crée la term structure de vol observée.
+        <strong style={{ color: ACCENT }}>v₀ — Variance initiale :</strong> La variance au moment <K>{"t=0"}</K>, soit la vol courante du sous-jacent. <K>{"v_0 = \\sigma_0^2"}</K>. Si le marché est actuellement volatil (<K>{"\\sigma_0=35\\%"}</K>), <K>{"v_0=0.1225"}</K>. Si <K>{"v_0 \\neq \\theta"}</K>, la variance va drifter vers <K>{"\\theta"}</K> avec vitesse <K>{"\\kappa"}</K> — cela crée la term structure de vol observée.
       </div>
 
       <SectionTitle accent={ACCENT}>Condition de Feller — garantir v(t) {'>'} 0</SectionTitle>
       <FormulaBox accent={ACCENT} label="Condition de Feller">
-        2κθ {'>'} ξ²   →   la variance v(t) reste strictement positive
-        Si 2κθ ≤ ξ² : v(t) peut atteindre 0 (problème numérique)
+        <K display>{"2\\kappa\\theta > \\xi^2 \\quad \\Rightarrow \\quad \\text{la variance } v(t) \\text{ reste strictement positive}"}</K>
+        <K display>{"\\text{Si } 2\\kappa\\theta \\leq \\xi^2 \\text{ : } v(t) \\text{ peut atteindre 0 (problème numérique)}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La condition de Feller est une condition mathématique sur les paramètres du processus CIR (Cox-Ingersoll-Ross) pour garantir que la variance reste positive. En pratique, de nombreuses calibrations ne satisfont pas cette condition (le paramètre ξ calibré sur le marché est souvent trop grand). On utilise alors des schémas de discrétisation robustes (full truncation, absorption) qui troncatent v(t) à 0 pour éviter des valeurs négatives lors des simulations Monte Carlo.
+        La condition de Feller est une condition mathématique sur les paramètres du processus CIR (Cox-Ingersoll-Ross) pour garantir que la variance reste positive. En pratique, de nombreuses calibrations ne satisfont pas cette condition (le paramètre <K>{"\\xi"}</K> calibré sur le marché est souvent trop grand). On utilise alors des schémas de discrétisation robustes (full truncation, absorption) qui troncatent <K>{"v(t)"}</K> à 0 pour éviter des valeurs négatives lors des simulations Monte Carlo.
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Comment ρ génère le skew — mécanisme exact</div>
-        <Step num={1} accent={ACCENT}>Si ρ {'<'} 0 (leverage effect) : quand S baisse (dW_S {'<'} 0), la variance v tend à monter (car dW_v est corrélé négativement avec dW_S). En crise, baisse de prix et hausse de vol se produisent ensemble → puts OTM beaucoup plus chers que ce que prédit B-S → skew négatif prononcé.</Step>
-        <Step num={2} accent={ACCENT}>Si ρ {'>'} 0 (energy spikes) : quand S monte, v monte aussi → calls OTM plus chers que puts OTM → skew positif. Typique du gaz naturel et de l'électricité : les spikes de prix sont haussiers et accompagnés de forte volatilité.</Step>
-        <Step num={3} accent={ACCENT}>Si ρ = 0 : les deux processus sont indépendants → smile symétrique autour de l'ATM. B-S serait exact si la vol était constante, mais la vol of vol ξ génère quand même une courbure (kurt) même avec ρ=0.</Step>
+        <Step num={1} accent={ACCENT}>Si <K>{"\\rho < 0"}</K> (leverage effect) : quand S baisse (<K>{"dW_S < 0"}</K>), la variance <K>{"v"}</K> tend à monter (car <K>{"dW_v"}</K> est corrélé négativement avec <K>{"dW_S"}</K>). En crise, baisse de prix et hausse de vol se produisent ensemble → puts OTM beaucoup plus chers que ce que prédit B-S → skew négatif prononcé.</Step>
+        <Step num={2} accent={ACCENT}>Si <K>{"\\rho > 0"}</K> (energy spikes) : quand S monte, <K>{"v"}</K> monte aussi → calls OTM plus chers que puts OTM → skew positif. Typique du gaz naturel et de l'électricité : les spikes de prix sont haussiers et accompagnés de forte volatilité.</Step>
+        <Step num={3} accent={ACCENT}>Si <K>{"\\rho = 0"}</K> : les deux processus sont indépendants → smile symétrique autour de l'ATM. B-S serait exact si la vol était constante, mais la vol of vol <K>{"\\xi"}</K> génère quand même une courbure (kurt) même avec <K>{"\\rho=0"}</K>.</Step>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 10, lineHeight: 1.8 }}>
-          Intuition des termes de l'EDS de v : κ(θ−v)dt = mean-reversion de la variance, θ = variance de LT (vol LT = √θ). ξ√v·dW_v = "vol de vol" — la variance elle-même fluctue, avec amplitude proportionnelle à √v (processus CIR). Plus ξ est grand, plus le smile est courbé.
+          Intuition des termes de l'EDS de <K>{"v"}</K> : <K>{"\\kappa(\\theta - v)\\,dt"}</K> = mean-reversion de la variance, <K>{"\\theta"}</K> = variance de LT (vol LT = <K>{"\\sqrt{\\theta}"}</K>). <K>{"\\xi\\sqrt{v} \\cdot dW_v"}</K> = "vol de vol" — la variance elle-même fluctue, avec amplitude proportionnelle à <K>{"\\sqrt{v}"}</K> (processus CIR). Plus <K>{"\\xi"}</K> est grand, plus le smile est courbé.
         </div>
       </div>
 
       <IntuitionBlock emoji="🔄" title="Pourquoi ρ négatif génère un skew négatif" accent={ACCENT}>
-        Le lien entre ρ et le skew est intuitif : avec ρ {'<'} 0, quand W₁ est négatif (prix S baisse), W₂ tend à être positif (variance v monte). Résultat : les grandes baisses de prix sont corrélées avec une forte volatilité. Cela signifie que les puts OTM (qui paient lors des baisses) sont relativement plus chers car ces baisses surviennent justement quand la vol est haute — elles sont "doublement mauvaises". Conséquence directe : le smile est asymétrique, plus haut côté put OTM = skew négatif. Plus |ρ| est grand, plus le skew est prononcé.
+        Le lien entre <K>{"\\rho"}</K> et le skew est intuitif : avec <K>{"\\rho < 0"}</K>, quand <K>{"W_1"}</K> est négatif (prix S baisse), <K>{"W_2"}</K> tend à être positif (variance <K>{"v"}</K> monte). Résultat : les grandes baisses de prix sont corrélées avec une forte volatilité. Cela signifie que les puts OTM (qui paient lors des baisses) sont relativement plus chers car ces baisses surviennent justement quand la vol est haute — elles sont "doublement mauvaises". Conséquence directe : le smile est asymétrique, plus haut côté put OTM = skew négatif. Plus <K>{"\\lvert\\rho\\rvert"}</K> est grand, plus le skew est prononcé.
       </IntuitionBlock>
 
       <Accordion title="Exercice — Calibration intuitive de Heston" accent={ACCENT} badge="Difficile">
         <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          <strong style={{ color: ACCENT }}>Problème :</strong> On observe le smile suivant pour le WTI (T=3M, S=80) :<br />
-          σ_impl(K=70) = 38%, σ_impl(K=80) = 30%, σ_impl(K=90) = 26%.<br />
-          Le skew 25Δ = (38-26)/2 = -6%. Comment choisir ρ pour reproduire ce skew ?<br /><br />
-          <strong>Règle heuristique :</strong> Plus le skew est négatif (fort), plus ρ doit être négatif. En général : skew ≈ -ρ × ξ × √(T/2) (approximation de premier ordre). Avec ξ=0.5 et T=0.25 : ρ ≈ skew / (ξ × √(T/2)) = -0.06 / (0.5 × 0.354) ≈ -0.34.<br /><br />
+          <strong style={{ color: ACCENT }}>Problème :</strong> On observe le smile suivant pour le WTI (<K>{"T=3M,\\; S=80"}</K>) :<br />
+          <K>{"\\sigma_{impl}(K{=}70) = 38\\%"}</K>, <K>{"\\sigma_{impl}(K{=}80) = 30\\%"}</K>, <K>{"\\sigma_{impl}(K{=}90) = 26\\%"}</K>.<br />
+          Le skew <K>{"25\\Delta = (38{-}26)/2 = -6\\%"}</K>. Comment choisir <K>{"\\rho"}</K> pour reproduire ce skew ?<br /><br />
+          <strong>Règle heuristique :</strong> Plus le skew est négatif (fort), plus <K>{"\\rho"}</K> doit être négatif. En général : <K>{"\\text{skew} \\approx -\\rho \\times \\xi \\times \\sqrt{T/2}"}</K> (approximation de premier ordre). Avec <K>{"\\xi=0.5"}</K> et <K>{"T=0.25"}</K> : <K>{"\\rho \\approx \\frac{\\text{skew}}{\\xi \\times \\sqrt{T/2}} = \\frac{-0.06}{0.5 \\times 0.354} \\approx -0.34"}</K>.<br /><br />
           <strong>Itération calibration :</strong><br />
-          1. Fixer v₀ = ATM_vol² = 0.09 (σ₀=30%)<br />
-          2. Fixer θ = v₀ = 0.09 (vol de long terme similaire à vol courante)<br />
-          3. Fixer κ = 2.0 (mean-reversion modérée)<br />
-          4. Essayer ξ = 0.5, ρ = -0.7 → calculer le smile Heston (via Fourier ou MC)<br />
-          5. Comparer au smile observé. Ajuster ρ pour le skew, ξ pour la courbure.<br /><br />
-          <strong>Résultat :</strong> Heston avec ρ=-0.7, ξ=0.5, κ=2, θ=0.09 reproduit typiquement un skew de -5 à -8% selon les autres paramètres. Vérifier la condition de Feller : 2×2×0.09 = 0.36 {'>'} 0.5² = 0.25 ✓.
+          1. Fixer <K>{"v_0 = ATM_{vol}^2 = 0.09"}</K> (<K>{"\\sigma_0=30\\%"}</K>)<br />
+          2. Fixer <K>{"\\theta = v_0 = 0.09"}</K> (vol de long terme similaire à vol courante)<br />
+          3. Fixer <K>{"\\kappa = 2.0"}</K> (mean-reversion modérée)<br />
+          4. Essayer <K>{"\\xi = 0.5,\\; \\rho = -0.7"}</K> → calculer le smile Heston (via Fourier ou MC)<br />
+          5. Comparer au smile observé. Ajuster <K>{"\\rho"}</K> pour le skew, <K>{"\\xi"}</K> pour la courbure.<br /><br />
+          <strong>Résultat :</strong> Heston avec <K>{"\\rho=-0.7,\\; \\xi=0.5,\\; \\kappa=2,\\; \\theta=0.09"}</K> reproduit typiquement un skew de -5 à -8% selon les autres paramètres. Vérifier la condition de Feller : <K>{"2 \\times 2 \\times 0.09 = 0.36 > 0.5^2 = 0.25"}</K> ✓.
         </div>
       </Accordion>
 

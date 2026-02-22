@@ -68,19 +68,19 @@ export function EaRTab() {
       <IntuitionBlock emoji="💰" title="EaR : combien peut-on perdre sur nos revenus ?" accent={ACCENT}>
         Une société pétrolière budgète ses revenus trimestriels. Mais le prix du pétrole fluctue.
         L'<strong>Earnings at Risk (EaR)</strong> répond à : "À {(conf * 100).toFixed(0)}% de confiance,
-        nos revenus ne tomberont pas en dessous de [E - EaR]."
+        nos revenus ne tomberont pas en dessous de <K>{"E - EaR"}</K>."
         Le <strong>CFaR (Cash Flow at Risk)</strong> étend ce concept sur plusieurs périodes futures.
         C'est l'équivalent de la VaR, mais pour les flux de trésorerie plutôt que pour les P&L de trading.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Earnings at Risk (1 période)">
-        EaR(α) = z_α × σ_CF     où z_α = {zAlpha} pour α = {(conf * 100).toFixed(0)}%
-
-        CF_worst = E[CF] - EaR = µ_CF - z_α × σ_CF
+        <K display>{"EaR(\\alpha) = z_\\alpha \\times \\sigma_{CF}"}</K>
+        <>où <K>{"z_\\alpha"}</K> = {zAlpha} pour <K>{"\\alpha"}</K> = {(conf * 100).toFixed(0)}%</>
+        <K display>{"CF_{worst} = E[CF] - EaR = \\mu_{CF} - z_\\alpha \\times \\sigma_{CF}"}</K>
       </FormulaBox>
 
       <FormulaBox accent={ACCENT} label="CFaR sur T périodes (cashflows iid)">
-        CFaR(α, T) = z_α × σ_CF × √T
+        <K display>{"CFaR(\\alpha, T) = z_\\alpha \\times \\sigma_{CF} \\times \\sqrt{T}"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -196,8 +196,8 @@ export function EaRTab() {
       </Grid>
 
       <ExampleBlock title="Producteur de gaz naturel — EaR annuel" accent={ACCENT}>
-        <p>Production : 10 Bcf/an, prix spot moyen = 3$/MMBtu (σ=0.8$/MMBtu), vol = 30%</p>
-        <FormulaBox accent={ACCENT}>Revenus minimaux cumulés (95%) = 93.7M$</FormulaBox>
+        <p>Production : 10 Bcf/an, prix spot moyen = 3$/MMBtu (<K>{"\\sigma = 0.8"}</K> $/MMBtu), vol = 30%</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Revenus minimaux cumulés (95\\%)} = 93.7\\text{ M\\$}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="EaR énergie" ruleDetail="Volume × Prix" accent={ACCENT}>Revenus espérés = <K>{"10 \\times 3 = 30"}</K> M$ par trimestre (E[CF])</DemoStep>
           <DemoStep num={2} rule="Risque de prix" ruleDetail="σ_CF = Vol × σ_prix" accent={ACCENT}><K>{"\\sigma_{CF} = 10 \\times 0.8 = 8"}</K> M$/trimestre (risque de prix × volume)</DemoStep>
@@ -218,23 +218,23 @@ export function EaRTab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Calcul EaR basique" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>E[CF] = 100M$, σ = 25M$. Calculez EaR 95% et le CF plancher.</p>
-        <FormulaBox accent={ACCENT}>CF_plancher = 100 - 41.1 = 58.9M$ (avec 95% de confiance)</FormulaBox>
+        <p style={{ color: T.text }}><K>{"E[CF] = 100"}</K> M$, <K>{"\\sigma = 25"}</K> M$. Calculez EaR 95% et le CF plancher.</p>
+        <FormulaBox accent={ACCENT}><K display>{"CF_{plancher} = 100 - 41.1 = 58.9\\text{ M\\$}"}</K> (avec 95% de confiance)</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="EaR" ruleDetail="z_α × σ_CF" accent={ACCENT}><K>{"EaR = 1.645 \\times 25 = 41.1"}</K> M$ → CF plancher = <K>{"100 - 41.1 = 58.9"}</K> M$</DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — CFaR multi-périodes" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Une raffinerie a E[CF] = 50M$/trim, σ = 15M$/trim. CFaR 99% sur 8 trimestres ?</p>
-        <FormulaBox accent={ACCENT}>CF cumulé plancher = 8×50M$ - 98.7M$ = 301.3M$</FormulaBox>
+        <p style={{ color: T.text }}>Une raffinerie a <K>{"E[CF] = 50"}</K> M$/trim, <K>{"\\sigma = 15"}</K> M$/trim. CFaR 99% sur 8 trimestres ?</p>
+        <FormulaBox accent={ACCENT}><K display>{"CF_{\\text{cumulé, plancher}} = 8 \\times 50 - 98.7 = 301.3\\text{ M\\$}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="CFaR" ruleDetail="z_α × σ × √T" accent={ACCENT}><K>{"CFaR = z_{99\\%} \\times \\sigma \\times \\sqrt{T} = 2.326 \\times 15 \\times \\sqrt{8}"}</K></DemoStep>
           <DemoStep num={2} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 2.326 \\times 15 \\times 2.828 = 98.7"}</K> M$ → CF cumulé plancher = <K>{"400 - 98.7 = 301.3"}</K> M$</DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — EaR d'un producteur de gaz naturel" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Producteur de gaz : 50 Bcf/an de production, prix Henry Hub = 3.5$/MMBtu, σ_prix = 1.0$/MMBtu. Calculez l'EaR trimestriel à 95% et le CFaR annuel (4 trimestres).</p>
-        <FormulaBox accent={ACCENT}>CF annuel plancher = 4×43.75 - 41.1 = 175 - 41.1 = 133.9M$ (vs budget 175M$)</FormulaBox>
+        <p style={{ color: T.text }}>Producteur de gaz : 50 Bcf/an de production, prix Henry Hub = 3.5$/MMBtu, <K>{"\\sigma_{prix} = 1.0"}</K> $/MMBtu. Calculez l'EaR trimestriel à 95% et le CFaR annuel (4 trimestres).</p>
+        <FormulaBox accent={ACCENT}><K display>{"CF_{\\text{annuel, plancher}} = 4 \\times 43.75 - 41.1 = 175 - 41.1 = 133.9\\text{ M\\$}"}</K> (vs budget 175M$)</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="EaR énergie" ruleDetail="Volume trimestriel" accent={ACCENT}>Volume trimestriel = <K>{"50 / 4 = 12.5"}</K> Bcf = 12 500 000 MMBtu</DemoStep>
           <DemoStep num={2} rule="Revenu espéré" ruleDetail="Vol × Prix" accent={ACCENT}><K>{"E[CF_{trim}] = 12\\,500\\,000 \\times 3.5 = 43.75"}</K> M$/trimestre</DemoStep>
@@ -294,14 +294,13 @@ export function RAROCTab() {
         La rentabilité brute ne suffit pas. Un projet qui rapporte 20% mais prend 10x plus de risque
         n'est pas meilleur qu'un projet à 15% avec peu de risque.
         Le <strong>RAROC (Risk-Adjusted Return on Capital)</strong> normalise le rendement par le capital
-        économique mobilisé. Si RAROC {'>'} Hurdle Rate (coût du capital), le projet crée de la valeur.
+        économique mobilisé. Si <K>{"RAROC > \\text{Hurdle Rate}"}</K> (coût du capital), le projet crée de la valeur.
         C'est l'outil de décision standard dans les banques et les compagnies énergétiques intégrées.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="RAROC">
-        RAROC = NIACC / EC
-
-        NIACC = Revenus - Coûts - Pertes Attendues - (Coût du Capital × EC)
+        <K display>{"RAROC = \\frac{NIACC}{EC}"}</K>
+        <K display>{"NIACC = \\text{Revenus} - \\text{Coûts} - \\text{Pertes Attendues} - (\\text{Coût du Capital} \\times EC)"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -314,9 +313,9 @@ export function RAROCTab() {
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du RAROC — numérateur et dénominateur</div>
-        <Step num={1} accent={ACCENT}><strong>Numérateur = NIACC</strong> = Revenus nets - Coûts opérationnels - Expected Loss (EL = PD × LGD × EAD). L'EL est la perte moyenne annuelle du portefeuille — c'est une charge d'exploitation normale, provisionnée chaque année.</Step>
-        <Step num={2} accent={ACCENT}><strong>Dénominateur = Capital Économique</strong> = VaR à 99.9% - EL. Seule la perte inattendue (UL = Unexpected Loss) consomme du capital. La perte attendue est déjà couverte par les provisions, donc le capital protège uniquement contre les queues de distribution.</Step>
-        <Step num={3} accent={ACCENT}><strong>Hurdle rate h</strong> : si RAROC {'>'} h → le projet crée de la valeur pour les actionnaires (rémunère suffisamment le capital risqué) ; si RAROC {'<'} h → le projet détruit de la valeur et doit être refusé ou restructuré pour améliorer le ratio.</Step>
+        <Step num={1} accent={ACCENT}><strong>Numérateur = NIACC</strong> = Revenus nets - Coûts opérationnels - Expected Loss (<K>{"EL = PD \\times LGD \\times EAD"}</K>). L'EL est la perte moyenne annuelle du portefeuille — c'est une charge d'exploitation normale, provisionnée chaque année.</Step>
+        <Step num={2} accent={ACCENT}><strong>Dénominateur = Capital Économique</strong> = <K>{"VaR_{99.9\\%} - EL"}</K>. Seule la perte inattendue (UL = Unexpected Loss) consomme du capital. La perte attendue est déjà couverte par les provisions, donc le capital protège uniquement contre les queues de distribution.</Step>
+        <Step num={3} accent={ACCENT}><strong>Hurdle rate h</strong> : si <K>{"RAROC > h"}</K> → le projet crée de la valeur pour les actionnaires (rémunère suffisamment le capital risqué) ; si <K>{"RAROC < h"}</K> → le projet détruit de la valeur et doit être refusé ou restructuré pour améliorer le ratio.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
           Synthèse : le RAROC permet de comparer des projets de tailles et de risques très différents sur une base homogène — un projet de 10M$ très risqué peut avoir un RAROC inférieur à un projet de 1M$ peu risqué. C'est l'outil d'allocation optimale du capital rare entre les desks et les lignes métiers.
         </div>
@@ -330,7 +329,7 @@ export function RAROCTab() {
             = Revenus bruts<br />
             − Coûts opérationnels<br />
             − <strong style={{ color: T.error }}>Expected Loss (EL)</strong><br /><br />
-            EL = PD × LGD × EAD<br />
+            <K>{"EL = PD \\times LGD \\times EAD"}</K><br />
             <em>PD = prob. de défaut, LGD = perte en cas de défaut, EAD = exposition au moment du défaut</em><br /><br />
             L'EL est le "coût moyen du risque" — une charge normale d'exploitation, comme une provision.
           </div>
@@ -339,7 +338,7 @@ export function RAROCTab() {
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>② Dénominateur — Capital économique</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Le capital économique (EC) est le "coussin de sécurité" pour absorber les pertes <em>inattendues</em>.<br /><br />
-            EC ≈ VaR 99.9% sur 1 an<br />
+            <K>{"EC \\approx VaR_{99.9\\%}"}</K> sur 1 an<br />
             = Perte que la banque/entreprise peut absorber avec 99.9% de probabilité<br /><br />
             C'est différent de l'EL (perte moyenne) — le EC couvre les queues de distribution.
           </div>
@@ -349,8 +348,8 @@ export function RAROCTab() {
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Le RAROC minimum acceptable = <strong>coût des fonds propres</strong><br /><br />
             Typiquement 10–15% selon le secteur<br /><br />
-            Si RAROC {'>'} Hurdle Rate : le projet <span style={{ color: T.success }}>crée de la valeur</span> (les actionnaires sont rémunérés au-delà de leur exigence)<br />
-            Si RAROC {'<'} Hurdle Rate : le projet <span style={{ color: T.error }}>détruit de la valeur</span> → à refuser ou restructurer
+            Si <K>{"RAROC > \\text{Hurdle Rate}"}</K> : le projet <span style={{ color: T.success }}>crée de la valeur</span> (les actionnaires sont rémunérés au-delà de leur exigence)<br />
+            Si <K>{"RAROC < \\text{Hurdle Rate}"}</K> : le projet <span style={{ color: T.error }}>détruit de la valeur</span> → à refuser ou restructurer
           </div>
         </div>
       </Grid>
@@ -391,12 +390,12 @@ export function RAROCTab() {
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
         Le RAROC est un outil d'allocation du capital rare : quand plusieurs activités se disputent le même capital, on priorise celles qui créent le plus de valeur par unité de risque. Le processus :
         (1) Calculer le RAROC de chaque activité/projet. (2) Comparer au hurdle rate. (3) Classer par RAROC décroissant. (4) Allouer le capital disponible en commençant par les RAROC les plus élevés, jusqu'à épuisement du budget de capital.
-        Les activités dont RAROC {'<'} hurdle rate doivent être restructurées, réduites, ou abandonnées — même si elles sont nominalement profitables.
+        Les activités dont <K>{"RAROC < \\text{hurdle rate}"}</K> doivent être restructurées, réduites, ou abandonnées — même si elles sont nominalement profitables.
       </div>
 
       <ExampleBlock title="Décision RAROC — Projet de trading en énergie" accent={ACCENT}>
         <p>Une banque d'énergie évalue un nouveau desk de trading de dérivés gaz. Budget capital = 50M$.</p>
-        <FormulaBox accent={ACCENT}>RAROC = 10.68% {'<'} Hurdle 12% → REFUSÉ. Levier : coûts à 4M$ → RAROC = 14.7% → acceptable</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"RAROC = 10.68\\% < \\text{Hurdle } 12\\%"}</K> → REFUSÉ. Levier : coûts à 4M$ → <K>{"RAROC = 14.7\\%"}</K> → acceptable</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="RAROC" ruleDetail="Revenus bruts" accent={ACCENT}>Revenus estimés : 18M$/an (spread bid-ask + positions directionnelles)</DemoStep>
           <DemoStep num={2} rule="RAROC" ruleDetail="Coûts opérationnels" accent={ACCENT}>Coûts opérationnels : 6M$/an (salaires traders, systèmes, back-office)</DemoStep>
@@ -458,8 +457,8 @@ export function RAROCTab() {
       </div>
 
       <ExampleBlock title="Décision d'investissement — Pétrole vs Renouvelables" accent={ACCENT}>
-        <p>Compagnie pétrolière avec CoC = 10%. Quel projet privilégier ?</p>
-        <FormulaBox accent={ACCENT}>Renouvelables (RAROC 23.7%) {'>'} Offshore (14.7%) → privilégier les renouvelables malgré des revenus bruts inférieurs</FormulaBox>
+        <p>Compagnie pétrolière avec <K>{"CoC = 10\\%"}</K>. Quel projet privilégier ?</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Renouvelables}\\;(RAROC\\;23.7\\%) > \\text{Offshore}\\;(14.7\\%)"}</K> → privilégier les renouvelables malgré des revenus bruts inférieurs</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="RAROC" ruleDetail="NIACC / EC" accent={ACCENT}>Offshore : <K>{"RAROC = (80-35-8-15)/150 = 14.7\\%"}</K> {'>'} 10% → ✓</DemoStep>
           <DemoStep num={2} rule="RAROC" ruleDetail="NIACC / EC" accent={ACCENT}>Renouvelables : <K>{"RAROC = (30-10-1-4.8)/60 = 23.7\\%"}</K> {'>'} 10% → ✓✓</DemoStep>
@@ -478,8 +477,8 @@ export function RAROCTab() {
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Calculer le RAROC et décider" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Un desk de trading pétrole génère 25M$ de revenus bruts, 10M$ de coûts. PD = 2%, LGD = 60%, EAD = 100M$. Capital éco = 80M$. Coût du capital = 11%. Faut-il accepter ce projet ?</p>
-        <FormulaBox accent={ACCENT}>RAROC = 6.25% {'<'} 11% → Projet REFUSÉ — détruit de la valeur pour les actionnaires</FormulaBox>
+        <p style={{ color: T.text }}>Un desk de trading pétrole génère 25M$ de revenus bruts, 10M$ de coûts. <K>{"PD = 2\\%"}</K>, <K>{"LGD = 60\\%"}</K>, <K>{"EAD = 100"}</K> M$. Capital éco = 80M$. Coût du capital = 11%. Faut-il accepter ce projet ?</p>
+        <FormulaBox accent={ACCENT}><K display>{"RAROC = 6.25\\% < 11\\%"}</K> → Projet REFUSÉ — détruit de la valeur pour les actionnaires</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="RAROC" ruleDetail="EL = PD × LGD × EAD" accent={ACCENT}><K>{"EL = 0.02 \\times 0.60 \\times 100 = 1.2"}</K> M$</DemoStep>
           <DemoStep num={2} rule="RAROC" ruleDetail="CoC × EC" accent={ACCENT}>Coût du capital = <K>{"11\\% \\times 80 = 8.8"}</K> M$</DemoStep>
@@ -597,9 +596,9 @@ export function PFETab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="PFE(t, α) — Exposition potentielle future">
-        PFE(t, α) = Quantile_α[max(V(t), 0)]
-
-        EPE(t) = E[max(V(t), 0)]   (Expected Positive Exposure)
+        <K display>{"PFE(t, \\alpha) = Q_\\alpha[\\max(V(t), 0)]"}</K>
+        <K display>{"EPE(t) = E[\\max(V(t), 0)]"}</K>
+        <div style={{ color: T.muted, fontSize: 12 }}>(Expected Positive Exposure)</div>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -616,7 +615,7 @@ export function PFETab() {
           <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>MtM — Mark-to-Market actuel</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Valeur actuelle du dérivé = ce qu'on perdrait si la contrepartie faisait défaut <em>aujourd'hui</em>.<br /><br />
-            MtM = max(V(t=maintenant), 0)<br /><br />
+            <K>{"MtM = \\max(V(t_{now}), 0)"}</K><br /><br />
             Connue avec certitude, mais ne capture pas le risque futur. Un swap à valeur zéro aujourd'hui peut valoir +20M$ dans 2 ans.
           </div>
         </div>
@@ -624,7 +623,7 @@ export function PFETab() {
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>EPE — Expected Positive Exposure</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Moyenne de l'exposition positive future à chaque instant :<br />
-            EPE(t) = E[max(V(t), 0)]<br /><br />
+            <K>{"EPE(t) = E[\\max(V(t), 0)]"}</K><br /><br />
             C'est la base du calcul CVA. L'EEPE (Effective EPE) = moyenne de l'EPE sur la durée de vie = ce qu'utilise Bâle pour le capital réglementaire CCR.
           </div>
         </div>
@@ -632,7 +631,7 @@ export function PFETab() {
           <div style={{ color: T.error, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>PFE — Potential Future Exposure</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Worst case d'exposition à un niveau de confiance α :<br />
-            PFE(t, α) = Quantile_α[max(V(t), 0)]<br /><br />
+            <K>{"PFE(t, \\alpha) = Q_\\alpha[\\max(V(t), 0)]"}</K><br /><br />
             Utilisé pour les limites de crédit de contrepartie. "Avec 97% de prob., je ne perdrai pas plus de PFE max si ma contrepartie fait défaut à n'importe quel moment."
           </div>
         </div>
@@ -652,7 +651,7 @@ export function PFETab() {
             • Pic : typiquement à 30-40% de la maturité totale<br />
             • Phase descendante : les paiements réduisent le notionnel résiduel et l'exposition<br />
             • t=T : exposition → 0 (dernier échange de cash-flows)<br /><br />
-            La volatilité des taux (σ ≈ 1-2%) étant faible, la PFE reste modérée (3-8% du notionnel).
+            La volatilité des taux (<K>{"\\sigma \\approx 1\\text{-}2\\%"}</K>) étant faible, la PFE reste modérée (3-8% du notionnel).
           </div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
@@ -660,7 +659,7 @@ export function PFETab() {
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Profil similaire mais amplifié par la volatilité élevée :<br />
             • Même structure "en bosse" que les swaps de taux<br />
-            • Mais σ_pétrole ≈ 30-40%, σ_gaz ≈ 50-80% → PFE beaucoup plus grande<br />
+            • Mais <K>{"\\sigma_{\\text{pétrole}} \\approx 30\\text{-}40\\%"}</K>, <K>{"\\sigma_{\\text{gaz}} \\approx 50\\text{-}80\\%"}</K> → PFE beaucoup plus grande<br />
             • PFE max ≈ 20-40% du notionnel pour un swap pétrole<br />
             • Réglementation : même traitement CCR mais capital plus élevé<br /><br />
             C'est pourquoi les banques appliquent des limites de contrepartie strictes sur les dérivés énergie.
@@ -675,7 +674,7 @@ export function PFETab() {
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
             Si deux transactions s'annulent partiellement avec la même contrepartie, l'exposition nette est inférieure à la somme des expositions brutes.<br /><br />
             <strong>Sans netting :</strong> Trade A = +10M$, Trade B = -7M$ → Exposition brute = 10M$<br />
-            <strong>Avec netting :</strong> Exposition nette = max(10-7, 0) = 3M$ (-70%)<br /><br />
+            <strong>Avec netting :</strong> Exposition nette = <K>{"\\max(10-7, 0) = 3"}</K> M$ (-70%)<br /><br />
             La convention ISDA Master Agreement permet ce netting légal en cas de défaut. Sans ISDA, la faillite de la contrepartie traite chaque trade séparément.
           </div>
         </div>
@@ -746,8 +745,8 @@ export function PFETab() {
       </div>
 
       <ExampleBlock title="Swap de taux 5 ans — Profil d'exposition" accent={ACCENT}>
-        <p>Notionnel = 200M$, durée = 5 ans, σ_taux = 1% (100bps), couverture 97%</p>
-        <FormulaBox accent={ACCENT}>PFE max 97% ≈ 12M$ → transaction acceptée si limite contrepartie ≥ 15M$</FormulaBox>
+        <p>Notionnel = 200M$, durée = 5 ans, <K>{"\\sigma_{taux} = 1\\%"}</K> (100bps), couverture 97%</p>
+        <FormulaBox accent={ACCENT}><K display>{"PFE_{\\max,97\\%} \\approx 12\\text{ M\\$}"}</K> → transaction acceptée si limite contrepartie <K>{"\\geq 15"}</K> M$</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="PFE" ruleDetail="Profil en bosse" accent={ACCENT}>PFE pic ≈ à ~2-3 ans (milieu de vie du swap)</DemoStep>
           <DemoStep num={2} rule="PFE" ruleDetail="Quantile × Notionnel" accent={ACCENT}><K>{"PFE_{97\\%} \\approx 200 \\times N(1.88 \\times 0.01 \\times \\sqrt{2.5}) \\approx 12"}</K> M$</DemoStep>
@@ -758,18 +757,18 @@ export function PFETab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice — PFE d'un forward sur pétrole" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Forward pétrole 1 an : notionnel = 100M$ (1M bbl à 100$/bbl), σ = 35%, r = 5%, PFE à 95%.</p>
-        <FormulaBox accent={ACCENT}>PFE 95% ≈ 75.7M$ sur 100M$ de notionnel = 75.7% du notionnel (volatilité élevée !)</FormulaBox>
+        <p style={{ color: T.text }}>Forward pétrole 1 an : notionnel = 100M$ (1M bbl à 100$/bbl), <K>{"\\sigma = 35\\%"}</K>, <K>{"r = 5\\%"}</K>, PFE à 95%.</p>
+        <FormulaBox accent={ACCENT}><K display>{"PFE_{95\\%} \\approx 75.7\\text{ M\\$}"}</K> sur 100M$ de notionnel = 75.7% du notionnel (volatilité élevée !)</FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="PFE" ruleDetail="Exposition forward" accent={ACCENT}>Pour un forward, l'exposition positive est max(S_T - K, 0) — similaire à un call européen</DemoStep>
+          <DemoStep num={1} rule="PFE" ruleDetail="Exposition forward" accent={ACCENT}>Pour un forward, l'exposition positive est <K>{"\\max(S_T - K, 0)"}</K> — similaire à un call européen</DemoStep>
           <DemoStep num={2} rule="Potential Future Exposure" ruleDetail="Quantile log-normal" accent={ACCENT}>PFE 95% : <K>{"S_T = 100 \\times e^{(0.05 - 0.5 \\times 0.35^2) + 1.645 \\times 0.35}"}</K></DemoStep>
           <DemoStep num={3} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 100 \\times e^{0.564} = 100 \\times 1.757 = 175.7"}</K> $/bbl</DemoStep>
           <DemoStep num={4} rule="PFE" ruleDetail="Exposition en $" accent={ACCENT}>Exposition = <K>{"\\max(175.7 - 100, 0) \\times 1M = 75.7"}</K> M$. La banque doit réserver cette capacité de crédit. Si limite = 50M$, trade non autorisé sans netting ou collatéral.</DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Impact du netting sur l'exposition" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Même contrepartie, 3 trades : Trade A (MtM = +15M$), Trade B (MtM = -8M$), Trade C (MtM = +4M$). Comparez l'exposition brute vs nette.</p>
-        <FormulaBox accent={ACCENT}>Netting ratio = Exposition nette / Exposition brute = 11/19 = 58% (plus bas = meilleure efficacité)</FormulaBox>
+        <p style={{ color: T.text }}>Même contrepartie, 3 trades : Trade A (<K>{"MtM = +15"}</K> M$), Trade B (<K>{"MtM = -8"}</K> M$), Trade C (<K>{"MtM = +4"}</K> M$). Comparez l'exposition brute vs nette.</p>
+        <FormulaBox accent={ACCENT}><K display>{"\\text{Netting ratio} = \\frac{\\text{Exposition nette}}{\\text{Exposition brute}} = \\frac{11}{19} = 58\\%"}</K> (plus bas = meilleure efficacité)</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Netting" ruleDetail="Exposition brute" accent={ACCENT}>Exposition brute = <K>{"\\max(15,0) + \\max(-8,0) + \\max(4,0) = 19"}</K> M$</DemoStep>
           <DemoStep num={2} rule="Compensation bilatérale" ruleDetail="ISDA netting" accent={ACCENT}>Exposition nette = <K>{"\\max(15 - 8 + 4, 0) = 11"}</K> M$</DemoStep>
@@ -836,14 +835,13 @@ export function CVATab() {
         Mais si la banque fait faillite avant maturité, vous ne recevez rien (ou peu).
         Le <strong>Credit Valuation Adjustment (CVA)</strong> est la <em>décote de valeur</em>
         appliquée à une transaction pour tenir compte du risque de défaut de la contrepartie.
-        En pratique : Prix_réel = Prix_risque_neutre - CVA.
+        En pratique : <K>{"Prix_{\\text{réel}} = Prix_{\\text{risque neutre}} - CVA"}</K>.
         Le CVA est devenu une contrainte réglementaire majeure depuis la crise de 2008.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="CVA unilatéral — formule discrète">
-        CVA = Σᵢ PD(tᵢ₋₁, tᵢ) × LGD × EE(tᵢ) × DF(tᵢ)
-
-        CVA ≈ LGD × ∫₀ᵀ PD(0,t) × EE(t) × DF(t) dt
+        <K display>{"CVA = \\sum_i PD(t_{i-1}, t_i) \\times LGD \\times EE(t_i) \\times DF(t_i)"}</K>
+        <K display>{"CVA \\approx LGD \\times \\int_0^T PD(0,t) \\times EE(t) \\times DF(t)\\,dt"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -857,18 +855,18 @@ export function CVATab() {
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la formule CVA — terme par terme</div>
-        <Step num={1} accent={ACCENT}><strong>B(0,t) = e^(-rt)</strong> — facteur d'actualisation : valeur actuelle de 1€ reçu au temps t. Une perte dans 5 ans vaut moins qu'une perte aujourd'hui. Ce terme pénalise les pertes lointaines et rend le CVA sensible au niveau des taux d'intérêt.</Step>
-        <Step num={2} accent={ACCENT}><strong>EE(t) = E[max(V(t), 0)]</strong> — exposition espérée positive : on ne perd que si on est créancier net (V {'>'} 0). Si la contrepartie nous doit de l'argent et fait défaut, on perd EE(t). Si on lui doit de l'argent (V {'<'} 0), la perte est nulle — d'où le max(V, 0).</Step>
-        <Step num={3} accent={ACCENT}><strong>PD(t-1, t)</strong> — probabilité de défaut marginale entre t-1 et t, extraite des spreads CDS ou des ratings. Pour une contrepartie Investment Grade (BBB) : PD ≈ 0.15-0.25%/an. Pour un High Yield (BB) : PD ≈ 1-3%/an.</Step>
-        <Step num={4} accent={ACCENT}><strong>LGD = 1 - Recovery Rate</strong> — Loss Given Default : fraction de l'exposition perdue en cas de défaut. Typiquement 60% pour les banques (Recovery = 40%). Pour les dérivés non collatéralisés, LGD peut atteindre 70-80%.</Step>
+        <Step num={1} accent={ACCENT}><strong><K>{"B(0,t) = e^{-rt}"}</K></strong> — facteur d'actualisation : valeur actuelle de 1€ reçu au temps t. Une perte dans 5 ans vaut moins qu'une perte aujourd'hui. Ce terme pénalise les pertes lointaines et rend le CVA sensible au niveau des taux d'intérêt.</Step>
+        <Step num={2} accent={ACCENT}><strong><K>{"EE(t) = E[\\max(V(t), 0)]"}</K></strong> — exposition espérée positive : on ne perd que si on est créancier net (<K>{"V > 0"}</K>). Si la contrepartie nous doit de l'argent et fait défaut, on perd <K>{"EE(t)"}</K>. Si on lui doit de l'argent (<K>{"V < 0"}</K>), la perte est nulle — d'où le <K>{"\\max(V, 0)"}</K>.</Step>
+        <Step num={3} accent={ACCENT}><strong><K>{"PD(t-1, t)"}</K></strong> — probabilité de défaut marginale entre t-1 et t, extraite des spreads CDS ou des ratings. Pour une contrepartie Investment Grade (BBB) : <K>{"PD \\approx 0.15\\text{-}0.25\\%"}</K>/an. Pour un High Yield (BB) : <K>{"PD \\approx 1\\text{-}3\\%"}</K>/an.</Step>
+        <Step num={4} accent={ACCENT}><strong><K>{"LGD = 1 - \\text{Recovery Rate}"}</K></strong> — Loss Given Default : fraction de l'exposition perdue en cas de défaut. Typiquement 60% pour les banques (Recovery = 40%). Pour les dérivés non collatéralisés, LGD peut atteindre 70-80%.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : CVA ≈ LGD × EPE × spread / DiscountFactor (approximation courante). L'EPE (Expected Positive Exposure) est la moyenne temporelle des EE(t). Cette formule montre que le CVA est un produit de crédit sur la durée de vie du dérivé — plus le spread CDS est élevé, plus le CVA est important.
+          Synthèse : <K>{"CVA \\approx LGD \\times EPE \\times \\text{spread} / \\text{DiscountFactor}"}</K> (approximation courante). L'EPE (Expected Positive Exposure) est la moyenne temporelle des EE(t). Cette formule montre que le CVA est un produit de crédit sur la durée de vie du dérivé — plus le spread CDS est élevé, plus le CVA est important.
         </div>
       </div>
 
       <SectionTitle accent={ACCENT}>La formule CVA décortiquée — Terme par terme</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        CVA = Σₜ B(0,t) × EE(t) × PD(t-1, t) × LGD
+        <K display>{"CVA = \\sum_t B(0,t) \\times EE(t) \\times PD(t-1, t) \\times LGD"}</K>
       </div>
       <Grid cols={2} gap="10px" style={{ marginBottom: 14 }}>
         {[
@@ -924,7 +922,7 @@ export function CVATab() {
         <br />• <strong>Collatéral (CSA)</strong> : réduit l'EE au risque de variation sur quelques jours seulement — impact majeur
         <br />• <strong>CDS de protection</strong> : acheter un CDS sur la contrepartie "hedged" le risque PD — réduit le CVA net mais crée un coût de basis (CDS vs défaut réel)
         <br />• <strong>Choix de contreparties bien notées</strong> : PD plus faible → CVA plus faible → vendre à des contreparties AA vs BB divise le CVA par 5-10
-        <br />• <strong>Clearing central (CCP)</strong> : LGD ≈ 0 (la CCP garantit le paiement via le Default Fund) → CVA quasi nul pour les dérivés compensés
+        <br />• <strong>Clearing central (CCP)</strong> : <K>{"LGD \\approx 0"}</K> (la CCP garantit le paiement via le Default Fund) → CVA quasi nul pour les dérivés compensés
       </IntuitionBlock>
 
       <Grid cols={2} gap="10px">
@@ -958,8 +956,8 @@ export function CVATab() {
       </ChartWrapper>
 
       <ExampleBlock title="CVA sur un swap énergie — Contrepartie BBB" accent={ACCENT}>
-        <p>Swap pétrole 3 ans, EE_moy = 8M$, PD_ann = 1.5% (rating BBB), LGD = 60%, r = 4%</p>
-        <FormulaBox accent={ACCENT}>CVA ≈ 0.200M$ soit 0.2% du notionnel. Si downgrade BB (PD=5%) → CVA ≈ 0.66M$ (+230%)</FormulaBox>
+        <p>Swap pétrole 3 ans, <K>{"EE_{moy} = 8"}</K> M$, <K>{"PD_{ann} = 1.5\\%"}</K> (rating BBB), <K>{"LGD = 60\\%"}</K>, <K>{"r = 4\\%"}</K></p>
+        <FormulaBox accent={ACCENT}><K display>{"CVA \\approx 0.200\\text{ M\\$}"}</K> soit 0.2% du notionnel. Si downgrade BB (<K>{"PD = 5\\%"}</K>) → <K>{"CVA \\approx 0.66\\text{ M\\$}"}</K> (+230%)</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="CVA" ruleDetail="LGD × EE × ∫PD×DF" accent={ACCENT}><K>{"CVA \\approx LGD \\times EE_{moy} \\times \\int_0^3 PD \\times e^{-rt}\\,dt"}</K></DemoStep>
           <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Intégrale actualisée" accent={ACCENT}><K>{"\\approx 0.60 \\times 8 \\times 0.015 \\times \\frac{1-e^{-0.04 \\times 3}}{0.04}"}</K></DemoStep>
@@ -971,8 +969,8 @@ export function CVATab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Calcul CVA simplifié" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Options énergie 1 an, EE=5M$, PD=2%, LGD=60%, r=5%</p>
-        <FormulaBox accent={ACCENT}>CVA = 57,100$ soit 1.14% de l'EE</FormulaBox>
+        <p style={{ color: T.text }}>Options énergie 1 an, <K>{"EE = 5"}</K> M$, <K>{"PD = 2\\%"}</K>, <K>{"LGD = 60\\%"}</K>, <K>{"r = 5\\%"}</K></p>
+        <FormulaBox accent={ACCENT}><K display>{"CVA = 57{,}100\\$"}</K> soit 1.14% de l'EE</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="CVA" ruleDetail="PD × LGD × EE × DF" accent={ACCENT}><K>{"CVA = 0.02 \\times 0.60 \\times 5 \\times e^{-0.05}"}</K></DemoStep>
           <DemoStep num={2} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 0.02 \\times 0.60 \\times 5 \\times 0.951 = 0.0571"}</K> M$</DemoStep>
@@ -988,8 +986,8 @@ export function CVATab() {
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Calculer le CVA d'un swap simple" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Swap pétrole 2 ans, notionnel 50M$, EE moyen = 6M$, contrepartie rating BBB (PD = 1.8%/an), LGD = 60%, r = 4%. Calculez le CVA total.</p>
-        <FormulaBox accent={ACCENT}>CVA = 0.245% du notionnel → ajustement du prix de vente du swap de 12.5 bps/an</FormulaBox>
+        <p style={{ color: T.text }}>Swap pétrole 2 ans, notionnel 50M$, <K>{"EE_{moy} = 6"}</K> M$, contrepartie rating BBB (<K>{"PD = 1.8\\%"}</K>/an), <K>{"LGD = 60\\%"}</K>, <K>{"r = 4\\%"}</K>. Calculez le CVA total.</p>
+        <FormulaBox accent={ACCENT}><K display>{"CVA = 0.245\\%\\ \\text{du notionnel}"}</K> → ajustement du prix de vente du swap de 12.5 bps/an</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="CVA" ruleDetail="Σ PD × LGD × EE × DF" accent={ACCENT}>CVA discret sur 2 ans (annuel) : <K>{"CVA = \\sum PD \\times LGD \\times EE \\times DF"}</K></DemoStep>
           <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Période 1" accent={ACCENT}>t=1 : <K>{"0.018 \\times 0.60 \\times 6 \\times e^{-0.04} = 0.0625"}</K> M$</DemoStep>
@@ -999,7 +997,7 @@ export function CVATab() {
       </Accordion>
       <Accordion title="Exercice 4 — Wrong-Way Risk" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Un producteur pétrolier achète un put WTI à une contrepartie dont la santé financière est corrélée positivement au prix du pétrole. Expliquez le "Wrong-Way Risk" et son impact sur le CVA.</p>
-        <FormulaBox accent={ACCENT}>WWR = CVA_réel / CVA_indépendant {'>'} 1 → toujours vérifier si la contrepartie est exposée au même risque que vous !</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"WWR = \\frac{CVA_{\\text{réel}}}{CVA_{\\text{indépendant}}} > 1"}</K> → toujours vérifier si la contrepartie est exposée au même risque que vous !</FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="CVA" ruleDetail="Cas indépendant" accent={ACCENT}>Dans un marché normal, EE(t) et PD(t) sont indépendants → <K>{"CVA = LGD \\times E[EE] \\times E[PD_{cumul}]"}</K></DemoStep>
           <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Wrong-Way Risk" accent={ACCENT}>WWR : EE et PD sont positivement corrélés — quand le put est le plus précieux (prix pétrole bas), la contrepartie est aussi en détresse → PD élevée</DemoStep>

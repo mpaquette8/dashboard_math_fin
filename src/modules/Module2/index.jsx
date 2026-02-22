@@ -55,23 +55,23 @@ export function NormalTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>µ — L'espérance : centre de gravité</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            µ est la valeur autour de laquelle la distribution est centrée. C'est la moyenne de toutes les valeurs possibles, pondérées par leurs probabilités. Sur une cloche symétrique, µ = médiane = mode. En finance : µ est le rendement journalier moyen. Si µ = 0 (rendement moyen nul), la cloche est centrée en zéro. Si µ = 0.001 (+0.1%/jour), la cloche est décalée à droite. Modifier µ <em>déplace</em> horizontalement la courbe sans changer sa forme.
+            <K>{"\\mu"}</K> est la valeur autour de laquelle la distribution est centrée. C'est la moyenne de toutes les valeurs possibles, pondérées par leurs probabilités. Sur une cloche symétrique, <K>{"\\mu = \\text{médiane} = \\text{mode}"}</K>. En finance : <K>{"\\mu"}</K> est le rendement journalier moyen. Si <K>{"\\mu = 0"}</K> (rendement moyen nul), la cloche est centrée en zéro. Si <K>{"\\mu = 0.001"}</K> (+0.1%/jour), la cloche est décalée à droite. Modifier <K>{"\\mu"}</K> <em>déplace</em> horizontalement la courbe sans changer sa forme.
           </div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px 16px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>σ — L'écart-type : largeur de la cloche</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            σ mesure la <em>dispersion</em> autour de µ. Un grand σ = cloche large et aplatie (beaucoup d'incertitude). Un petit σ = cloche étroite et pointue (valeurs concentrées autour de µ). En finance : σ est la volatilité. Le Brent spot peut avoir σ ≈ 30%/an (très incertain), un bon du Trésor σ ≈ 2%/an (prévisible). Modifier σ <em>élargit ou rétrécit</em> la courbe sans déplacer son centre.
+            <K>{"\\sigma"}</K> mesure la <em>dispersion</em> autour de <K>{"\\mu"}</K>. Un grand <K>{"\\sigma"}</K> = cloche large et aplatie (beaucoup d'incertitude). Un petit <K>{"\\sigma"}</K> = cloche étroite et pointue (valeurs concentrées autour de <K>{"\\mu"}</K>). En finance : <K>{"\\sigma"}</K> est la volatilité. Le Brent spot peut avoir <K>{"\\sigma \\approx 30\\%/\\text{an}"}</K> (très incertain), un bon du Trésor <K>{"\\sigma \\approx 2\\%/\\text{an}"}</K> (prévisible). Modifier <K>{"\\sigma"}</K> <em>élargit ou rétrécit</em> la courbe sans déplacer son centre.
           </div>
         </div>
       </Grid>
 
       <IntuitionBlock emoji="🔢" title="Théorème Central Limite : pourquoi la normale est partout" accent={ACCENT}>
-        Le TCL explique l'omniprésence de la loi normale : si X₁, X₂, ..., Xₙ sont des variables aléatoires <strong>indépendantes et identiquement distribuées</strong> (i.i.d.) de moyenne µ et variance σ², alors leur somme normalisée converge vers une loi normale quand n → ∞. Formellement : (X₁ + ... + Xₙ - nµ) / (σ√n) → N(0,1). En finance : un rendement mensuel est la somme de ~21 rendements journaliers indépendants → la loi normale s'impose naturellement. Un rendement annuel est la somme de ~252 rendements journaliers. Plus la période est longue, plus l'approximation normale est justifiée... sauf pour les queues de distribution où les événements extrêmes s'accumulent différemment.
+        Le TCL explique l'omniprésence de la loi normale : si <K>{"X_1, X_2, \\ldots, X_n"}</K> sont des variables aléatoires <strong>indépendantes et identiquement distribuées</strong> (i.i.d.) de moyenne <K>{"\\mu"}</K> et variance <K>{"\\sigma^2"}</K>, alors leur somme normalisée converge vers une loi normale quand <K>{"n \\to \\infty"}</K>. Formellement : <K>{"\\frac{X_1 + \\cdots + X_n - n\\mu}{\\sigma\\sqrt{n}} \\to N(0,1)"}</K>. En finance : un rendement mensuel est la somme de ~21 rendements journaliers indépendants → la loi normale s'impose naturellement. Un rendement annuel est la somme de ~252 rendements journaliers. Plus la période est longue, plus l'approximation normale est justifiée... sauf pour les queues de distribution où les événements extrêmes s'accumulent différemment.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Densité de probabilité — N(µ, σ²)">
-        f(x) = (1 / (σ√2π)) × exp[-(x-µ)² / (2σ²)]
+        <K display>{"f(x) = \\frac{1}{\\sigma\\sqrt{2\\pi}} \\exp\\left[-\\frac{(x-\\mu)^2}{2\\sigma^2}\\right]"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -83,7 +83,7 @@ export function NormalTab() {
       ]} />
 
       <FormulaBox accent={ACCENT} label="Standardisation">
-        Si X ~ N(µ, σ²) alors Z = (X - µ) / σ ~ N(0, 1)
+        <K display>{"\\text{Si } X \\sim N(\\mu,\\,\\sigma^2) \\text{ alors } Z = \\frac{X - \\mu}{\\sigma} \\sim N(0,\\,1)"}</K>
       </FormulaBox>
 
       <Grid cols={2} gap="10px">
@@ -115,36 +115,36 @@ export function NormalTab() {
 
       <SectionTitle accent={ACCENT}>La règle des 68-95-99.7% : l'outil de VaR en un coup d'oeil</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Pour toute loi normale X ~ N(µ, σ²), les probabilités de tomber dans les intervalles ±kσ autour de µ sont universelles et doivent être mémorisées :
+        Pour toute loi normale <K>{"X \\sim N(\\mu,\\,\\sigma^2)"}</K>, les probabilités de tomber dans les intervalles <K>{"\\pm k\\sigma"}</K> autour de <K>{"\\mu"}</K> sont universelles et doivent être mémorisées :
       </div>
       <Grid cols={3} gap="10px">
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}33`, textAlign: 'center' }}>
           <div style={{ color: ACCENT, fontSize: 20, fontWeight: 800, marginBottom: 4 }}>68.3%</div>
-          <code style={{ color: T.text, fontSize: 12 }}>P(µ-σ ≤ X ≤ µ+σ)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>1 jour sur 3 sort de ±1σ. VaR 1σ = 15.9% de probabilité de perte.</div>
+          <K>{"P(\\mu - \\sigma \\le X \\le \\mu + \\sigma)"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>1 jour sur 3 sort de <K>{"\\pm 1\\sigma"}</K>. VaR <K>{"1\\sigma"}</K> = 15.9% de probabilité de perte.</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}33`, textAlign: 'center' }}>
           <div style={{ color: ACCENT, fontSize: 20, fontWeight: 800, marginBottom: 4 }}>95.4%</div>
-          <code style={{ color: T.text, fontSize: 12 }}>P(µ-2σ ≤ X ≤ µ+2σ)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>Proche de la VaR 97.5% unilatérale (z=1.96). Base des stress tests.</div>
+          <K>{"P(\\mu - 2\\sigma \\le X \\le \\mu + 2\\sigma)"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>Proche de la VaR 97.5% unilatérale (<K>{"z = 1.96"}</K>). Base des stress tests.</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}33`, textAlign: 'center' }}>
           <div style={{ color: ACCENT, fontSize: 20, fontWeight: 800, marginBottom: 4 }}>99.7%</div>
-          <code style={{ color: T.text, fontSize: 12 }}>P(µ-3σ ≤ X ≤ µ+3σ)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>Événement 3σ = 1 fois tous les ~333 jours. En réalité beaucoup plus fréquent (fat tails !).</div>
+          <K>{"P(\\mu - 3\\sigma \\le X \\le \\mu + 3\\sigma)"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>Événement <K>{"3\\sigma"}</K> = 1 fois tous les ~333 jours. En réalité beaucoup plus fréquent (fat tails !).</div>
         </div>
       </Grid>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Application VaR :</strong> Si un portefeuille a un P&L quotidien ~ N(0, σ=100k€), alors : VaR 95% = 1.645 × 100k = 164.5k€ (perte dépassée 1 jour sur 20), VaR 99% = 2.326 × 100k = 232.6k€ (perte dépassée 1 jour sur 100). Pour une position longue sur le Brent avec vol σ = 30%/an ≈ 1.89%/jour : sur 100M€ de position, VaR 99% quotidienne ≈ 2.326 × 1.89% × 100M = 4.4M€.
+        <strong style={{ color: ACCENT }}>Application VaR :</strong> Si un portefeuille a un P&L quotidien <K>{"\\sim N(0,\\,\\sigma=100k\\euro)"}</K>, alors : <K>{"\\text{VaR}_{95\\%} = 1.645 \\times 100k = 164.5k\\euro"}</K> (perte dépassée 1 jour sur 20), <K>{"\\text{VaR}_{99\\%} = 2.326 \\times 100k = 232.6k\\euro"}</K> (perte dépassée 1 jour sur 100). Pour une position longue sur le Brent avec vol <K>{"\\sigma = 30\\%/\\text{an} \\approx 1.89\\%/\\text{jour}"}</K> : sur 100M€ de position, <K>{"\\text{VaR}_{99\\%} \\approx 2.326 \\times 1.89\\% \\times 100M = 4.4M\\euro"}</K>.
       </div>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la VaR normale — VaR = -µ + z_α · σ</div>
-        <Step num={1} accent={ACCENT}><strong>-µ</strong> — si le rendement espéré est positif, il réduit la perte : une position avec µ = +0.05%/jour perd en espérance 0.05% de moins. La VaR mesure la perte au-delà de ce gain espéré.</Step>
-        <Step num={2} accent={ACCENT}><strong>z_α</strong> — quantile normal : z_95 = 1.645, z_99 = 2.326, z_99.9 = 3.090. C'est le nombre d'écarts-types au-delà duquel la perte n'est dépassée qu'avec probabilité (1-α). Mémoriser ces trois valeurs est indispensable.</Step>
-        <Step num={3} accent={ACCENT}><strong>σ</strong> — dispersion des rendements : doubler σ double la VaR. La VaR normale est linéaire en σ, ce qui la rend simple à calculer mais fragile face aux queues épaisses des marchés énergie.</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la VaR normale — <K>{"\\text{VaR} = -\\mu + z_\\alpha \\cdot \\sigma"}</K></div>
+        <Step num={1} accent={ACCENT}><strong><K>{"-\\mu"}</K></strong> — si le rendement espéré est positif, il réduit la perte : une position avec <K>{"\\mu = +0.05\\%/\\text{jour}"}</K> perd en espérance 0.05% de moins. La VaR mesure la perte au-delà de ce gain espéré.</Step>
+        <Step num={2} accent={ACCENT}><strong><K>{"z_\\alpha"}</K></strong> — quantile normal : <K>{"z_{95} = 1.645"}</K>, <K>{"z_{99} = 2.326"}</K>, <K>{"z_{99.9} = 3.090"}</K>. C'est le nombre d'écarts-types au-delà duquel la perte n'est dépassée qu'avec probabilité <K>{"(1-\\alpha)"}</K>. Mémoriser ces trois valeurs est indispensable.</Step>
+        <Step num={3} accent={ACCENT}><strong><K>{"\\sigma"}</K></strong> — dispersion des rendements : doubler <K>{"\\sigma"}</K> double la VaR. La VaR normale est linéaire en <K>{"\\sigma"}</K>, ce qui la rend simple à calculer mais fragile face aux queues épaisses des marchés énergie.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : la VaR est linéaire en σ pour un actif seul, mais la VaR d'un portefeuille est sous-additive (σ_p ≤ σ₁ + σ₂ grâce à la diversification). Cette sous-additivité est une propriété fondamentale qui justifie la diversification des risques.
+          Synthèse : la VaR est linéaire en <K>{"\\sigma"}</K> pour un actif seul, mais la VaR d'un portefeuille est sous-additive (<K>{"\\sigma_p \\le \\sigma_1 + \\sigma_2"}</K> grâce à la diversification). Cette sous-additivité est une propriété fondamentale qui justifie la diversification des risques.
         </div>
       </div>
 
@@ -156,14 +156,14 @@ export function NormalTab() {
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Sous la loi normale</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>
-            • Un choc de 5σ : probabilité ~ 1 sur 3.5 millions de jours (~14 000 ans)<br />
-            • Octobre 1987 (Black Monday) : chute de -22% du Dow Jones = choc de {'>'} 20σ selon la normale → probabilité astronomiquement faible
+            • Un choc de <K>{"5\\sigma"}</K> : probabilité ~ 1 sur 3.5 millions de jours (~14 000 ans)<br />
+            • Octobre 1987 (Black Monday) : chute de -22% du Dow Jones = choc de {'>'} <K>{"20\\sigma"}</K> selon la normale → probabilité astronomiquement faible
           </div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>En réalité (marchés énergie)</div>
           <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>
-            • Le prix du gaz naturel (Henry Hub) a connu des chocs de {'>'} 5σ plusieurs fois par décennie<br />
+            • Le prix du gaz naturel (Henry Hub) a connu des chocs de {'>'} <K>{"5\\sigma"}</K> plusieurs fois par décennie<br />
             • Les distributions réelles ont une queue gauche plus épaisse (kurtosis {'>'} 3)<br />
             • Solutions : modèles à sauts (Merton), distribution de Student, Extreme Value Theory (EVT)
           </div>
@@ -184,7 +184,7 @@ export function NormalTab() {
       </div>
 
       <ExampleBlock title="N(d₁) dans Black-Scholes" accent={ACCENT}>
-        <p>S=100, K=100, r=5%, σ=20%, T=1 an :</p>
+        <p><K>{"S=100,\\,K=100,\\,r=5\\%,\\,\\sigma=20\\%,\\,T=1"}</K> an :</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"C = 100 \\times 0.6368 - 100 e^{-0.05} \\times 0.5596 = 10.52\\euro"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Formule de d₁ (Black-Scholes)" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T] / (σ√T)" accent={ACCENT}>
@@ -204,7 +204,7 @@ export function NormalTab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Standardisation" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Si X ~ N(µ=5, σ²=4), calculez P(X ≤ 7)</p>
+        <p style={{ color: T.text }}>Si <K>{"X \\sim N(\\mu=5,\\,\\sigma^2=4)"}</K>, calculez <K>{"P(X \\le 7)"}</K></p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"N(1) \\approx 84.13\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Z-score (standardisation)" ruleDetail="Z = (X − µ) / σ" accent={ACCENT}>
@@ -216,7 +216,7 @@ export function NormalTab() {
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Intervalle de confiance VaR" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Un P&L suit N(µ=0, σ=100k€). VaR 95% et VaR 99% ?</p>
+        <p style={{ color: T.text }}>Un P&L suit <K>{"N(\\mu=0,\\,\\sigma=100k\\euro)"}</K>. <K>{"\\text{VaR}_{95\\%}"}</K> et <K>{"\\text{VaR}_{99\\%}"}</K> ?</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\text{VaR}_{95\\%} = 164.5k\\euro \\quad|\\quad \\text{VaR}_{99\\%} = 232.6k\\euro"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="VaR paramétrique" ruleDetail="VaRₐ = zₐ · σ (quand µ=0)" accent={ACCENT}>
@@ -226,13 +226,13 @@ export function NormalTab() {
             <K>{"\\text{VaR}_{99\\%} = 2.326 \\times 100k = 232.6k\\euro"}</K>
           </DemoStep>
           <DemoStep num={3} rule="Interprétation probabiliste" accent={ACCENT}>
-            P(Perte {'>'} VaR₉₅) = 5% ; P(Perte {'>'} VaR₉₉) = 1%. Le ratio VaR99/VaR95 = 1.41 — passer de 95% à 99% augmente la VaR de 41%.
+            <K>{"P(\\text{Perte} > \\text{VaR}_{95}) = 5\\%"}</K> ; <K>{"P(\\text{Perte} > \\text{VaR}_{99}) = 1\\%"}</K>. Le ratio <K>{"\\text{VaR}_{99}/\\text{VaR}_{95} = 1.41"}</K> — passer de 95% à 99% augmente la VaR de 41%.
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Z-score et VaR d'une position énergie" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Un trader est long 50 000 barils de Brent. Le rendement quotidien du Brent suit N(0, σ=1.8%/jour). Prix actuel : 80$/bbl. Calculez la VaR 99% quotidienne en dollars.
+          Un trader est long 50 000 barils de Brent. Le rendement quotidien du Brent suit <K>{"N(0,\\,\\sigma=1.8\\%/\\text{jour})"}</K>. Prix actuel : 80$/bbl. Calculez la <K>{"\\text{VaR}_{99\\%}"}</K> quotidienne en dollars.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\text{VaR}_{99\\%} = 2.326 \\times 1.8\\% \\times 4M\\$ \\approx 167k\\$"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -253,7 +253,7 @@ export function NormalTab() {
       </Accordion>
       <Accordion title="Exercice 4 — Règle des 3-sigma appliquée aux chocs gaziers" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Le rendement quotidien du gaz naturel Henry Hub suit approximativement N(0, σ=2.5%/jour). La règle des 3σ prédit qu'une variation supérieure à 7.5%/jour (=3σ) ne devrait survenir que 0.3% du temps (≈1 jour sur 333). Vérifiez le calcul, puis discutez pourquoi ce chiffre sous-estime la réalité.
+          Le rendement quotidien du gaz naturel Henry Hub suit approximativement <K>{"N(0,\\,\\sigma=2.5\\%/\\text{jour})"}</K>. La règle des <K>{"3\\sigma"}</K> prédit qu'une variation supérieure à 7.5%/jour (<K>{"= 3\\sigma"}</K>) ne devrait survenir que 0.3% du temps (≈1 jour sur 333). Vérifiez le calcul, puis discutez pourquoi ce chiffre sous-estime la réalité.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"P_{\\text{théorique}}(|r| > 7.5\\%) = 0.3\\% \\ll P_{\\text{empirique}} \\approx 2\\text{-}5\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -264,7 +264,7 @@ export function NormalTab() {
             Sur 252 jours/an : <K>{"0.3\\% \\times 252 \\approx 0.76"}</K> jour par an prédit par le modèle
           </DemoStep>
           <DemoStep num={3} rule="Queues épaisses (leptokurtose)" ruleDetail="Kurtosis > 3 → fat tails" accent={ACCENT}>
-            En réalité : le gaz naturel connaît des chocs {'>'} 3σ plusieurs fois par an (EIA, météo, incidents pipeline). La loi normale sous-estime les queues de 7 à 17×.
+            En réalité : le gaz naturel connaît des chocs {'>'} <K>{"3\\sigma"}</K> plusieurs fois par an (EIA, météo, incidents pipeline). La loi normale sous-estime les queues de 7 à 17×.
           </DemoStep>
           <DemoStep num={4} rule="Implication pour la modélisation" accent={ACCENT}>
             Conclusion : utiliser des modèles à sauts (Merton, Kou) ou des distributions à queues épaisses (Student-t, GEV) pour les marchés énergétiques.
@@ -306,48 +306,48 @@ export function LogNormalTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        <strong style={{ color: T.text }}>Le paradoxe de la normalité pour les prix :</strong> La loi normale permet des valeurs négatives (de -∞ à +∞). Or, un prix — que ce soit le Brent, le gaz naturel ou l'électricité (hors marchés spot avec prix négatifs) — ne peut pas être négatif. Un rendement simple peut être au minimum de -100% (l'actif vaut zéro), mais pas de -150%. En revanche, un <em>log-rendement</em> ln(S_t/S₀) peut aller de -∞ (si S_t → 0) à +∞ (si S_t → ∞) sans contrainte. C'est ce qui rend la loi log-normale naturelle pour les prix d'actifs : si ln(S_T/S₀) suit une loi normale, alors S_T {'>'} 0 toujours, et la distribution est asymétrique à droite (les hausses sont potentiellement illimitées, les baisses sont bornées à -100%).
+        <strong style={{ color: T.text }}>Le paradoxe de la normalité pour les prix :</strong> La loi normale permet des valeurs négatives (de <K>{"-\\infty"}</K> à <K>{"+\\infty"}</K>). Or, un prix — que ce soit le Brent, le gaz naturel ou l'électricité (hors marchés spot avec prix négatifs) — ne peut pas être négatif. Un rendement simple peut être au minimum de -100% (l'actif vaut zéro), mais pas de -150%. En revanche, un <em>log-rendement</em> <K>{"\\ln(S_t/S_0)"}</K> peut aller de <K>{"-\\infty"}</K> (si <K>{"S_t \\to 0"}</K>) à <K>{"+\\infty"}</K> (si <K>{"S_t \\to \\infty"}</K>) sans contrainte. C'est ce qui rend la loi log-normale naturelle pour les prix d'actifs : si <K>{"\\ln(S_T/S_0)"}</K> suit une loi normale, alors <K>{"S_T"}</K> {'>'} 0 toujours, et la distribution est asymétrique à droite (les hausses sont potentiellement illimitées, les baisses sont bornées à -100%).
       </div>
       <IntuitionBlock emoji="💹" title="Pourquoi les prix sont log-normaux ?" accent={ACCENT}>
         Un prix ne peut pas être négatif (contrairement à une variable normale).
         Si on suppose que le <strong>log-rendement</strong> est normal :
-        ln(S_T/S₀) ~ N(µT, σ²T), alors S_T suit une distribution log-normale.
+        <K>{"\\ln(S_T/S_0) \\sim N(\\mu T,\\,\\sigma^2 T)"}</K>, alors <K>{"S_T"}</K> suit une distribution log-normale.
         Elle est asymétrique à droite : les très grandes hausses sont possibles (une action peut tripler),
         mais la perte maximale est 100% (le prix ne peut aller en dessous de zéro).
         C'est le fondement de Black-Scholes.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Si X ~ N(µ, σ²), alors S = eˣ est log-normale">
-        f_lognorm(s) = (1 / (s·σ·√2π)) × exp[-(ln(s) - µ)² / (2σ²)]   pour s {'>'} 0
+        <K display>{"f_{\\text{lognorm}}(s) = \\frac{1}{s \\cdot \\sigma \\sqrt{2\\pi}} \\exp\\left[-\\frac{(\\ln s - \\mu)^2}{2\\sigma^2}\\right] \\quad \\text{pour } s > 0"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>Moments de la loi log-normale</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Si S ~ LogNormale(µ, σ²) (c'est-à-dire ln(S) ~ N(µ, σ²)), les moments se calculent en exploitant E[e^X] = e^(µ + σ²/2) pour X ~ N(µ, σ²) :
+        Si <K>{"S \\sim \\text{LogNormale}(\\mu,\\,\\sigma^2)"}</K> (c'est-à-dire <K>{"\\ln(S) \\sim N(\\mu,\\,\\sigma^2)"}</K>), les moments se calculent en exploitant <K>{"E[e^X] = e^{\\mu + \\sigma^2/2}"}</K> pour <K>{"X \\sim N(\\mu,\\,\\sigma^2)"}</K> :
       </div>
       <Grid cols={2} gap="10px">
         <FormulaBox accent={ACCENT} label="Espérance de la log-normale">
-          E[S] = e^(µ + σ²/2)
+          <K display>{"E[S] = e^{\\mu + \\sigma^2/2}"}</K>
         </FormulaBox>
         <FormulaBox accent={ACCENT} label="Variance de la log-normale">
-          Var[S] = e^(2µ + σ²) × (e^(σ²) - 1)
+          <K display>{"\\text{Var}[S] = e^{2\\mu + \\sigma^2} \\times (e^{\\sigma^2} - 1)"}</K>
         </FormulaBox>
       </Grid>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La dérivation de E[S] = e^(µ+σ²/2) : si ln(S) = X ~ N(µ, σ²), alors S = e^X. E[e^X] pour X normal se calcule via la fonction génératrice des moments de la loi normale : E[e^(tX)] = e^(µt + σ²t²/2). En prenant t=1 : E[S] = E[e^X] = e^(µ + σ²/2). La variance découle de E[S²] = e^(2µ + 2σ²), d'où Var[S] = E[S²] - (E[S])² = e^(2µ+σ²)(e^(σ²)-1).
+        La dérivation de <K>{"E[S] = e^{\\mu+\\sigma^2/2}"}</K> : si <K>{"\\ln(S) = X \\sim N(\\mu,\\,\\sigma^2)"}</K>, alors <K>{"S = e^X"}</K>. <K>{"E[e^X]"}</K> pour <K>{"X"}</K> normal se calcule via la fonction génératrice des moments de la loi normale : <K>{"E[e^{tX}] = e^{\\mu t + \\sigma^2 t^2/2}"}</K>. En prenant <K>{"t=1"}</K> : <K>{"E[S] = E[e^X] = e^{\\mu + \\sigma^2/2}"}</K>. La variance découle de <K>{"E[S^2] = e^{2\\mu + 2\\sigma^2}"}</K>, d'où <K>{"\\text{Var}[S] = E[S^2] - (E[S])^2 = e^{2\\mu+\\sigma^2}(e^{\\sigma^2}-1)"}</K>.
       </div>
 
       <IntuitionBlock emoji="🔗" title="Log-normale et GBM : le lien fondamental" accent={ACCENT}>
-        Le mouvement brownien géométrique (GBM) produit naturellement une distribution log-normale. Si S_T = S₀ × exp[(µ - σ²/2)T + σ√T × Z] avec Z ~ N(0,1), alors ln(S_T/S₀) ~ N((µ-σ²/2)T, σ²T) → S_T/S₀ est log-normale. Paramètres : µ_ln = (µ-σ²/2)T et σ_ln = σ√T. La log-normalité est donc une <strong>conséquence directe</strong> du GBM — pas une hypothèse supplémentaire mais une propriété émergente du modèle de marché.
+        Le mouvement brownien géométrique (GBM) produit naturellement une distribution log-normale. Si <K>{"S_T = S_0 \\times \\exp\\left[(\\mu - \\sigma^2/2)T + \\sigma\\sqrt{T} \\times Z\\right]"}</K> avec <K>{"Z \\sim N(0,1)"}</K>, alors <K>{"\\ln(S_T/S_0) \\sim N((\\mu-\\sigma^2/2)T,\\,\\sigma^2 T)"}</K> → <K>{"S_T/S_0"}</K> est log-normale. Paramètres : <K>{"\\mu_{\\ln} = (\\mu-\\sigma^2/2)T"}</K> et <K>{"\\sigma_{\\ln} = \\sigma\\sqrt{T}"}</K>. La log-normalité est donc une <strong>conséquence directe</strong> du GBM — pas une hypothèse supplémentaire mais une propriété émergente du modèle de marché.
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de ln(S_T/S₀) ~ N(µ_LN·T, σ²·T)</div>
-        <Step num={1} accent={ACCENT}><strong>µ_LN = µ - σ²/2</strong> — drift du log-prix : le drift effectif du log-rendement est plus petit que µ, car la croissance géométrique pénalise la variance (effet Jensen). Sur un actif avec µ = 10% et σ = 30%, µ_LN = 10% - 4.5% = 5.5%.</Step>
-        <Step num={2} accent={ACCENT}><strong>σ²/2</strong> — correction de Jensen : E[e^X] = e^(µ+σ²/2) {'>'} e^µ pour X normal. La fonction exp est convexe, donc l'espérance du prix dépasse toujours le prix exponentié de l'espérance du log. Cette correction est indispensable pour que E[S_T] = S₀·e^(µT) reste exact.</Step>
-        <Step num={3} accent={ACCENT}><strong>σ√T</strong> — écart-type du log-prix : l'incertitude croît comme la racine carrée du temps (diffusion). Après 4 ans, l'incertitude est 2× celle d'1 an. Ce scaling en √T est une signature du mouvement brownien.</Step>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de <K>{"\\ln(S_T/S_0) \\sim N(\\mu_{LN} \\cdot T,\\,\\sigma^2 \\cdot T)"}</K></div>
+        <Step num={1} accent={ACCENT}><strong><K>{"\\mu_{LN} = \\mu - \\sigma^2/2"}</K></strong> — drift du log-prix : le drift effectif du log-rendement est plus petit que <K>{"\\mu"}</K>, car la croissance géométrique pénalise la variance (effet Jensen). Sur un actif avec <K>{"\\mu = 10\\%"}</K> et <K>{"\\sigma = 30\\%"}</K>, <K>{"\\mu_{LN} = 10\\% - 4.5\\% = 5.5\\%"}</K>.</Step>
+        <Step num={2} accent={ACCENT}><strong><K>{"\\sigma^2/2"}</K></strong> — correction de Jensen : <K>{"E[e^X] = e^{\\mu+\\sigma^2/2}"}</K> {'>'} <K>{"e^\\mu"}</K> pour <K>{"X"}</K> normal. La fonction exp est convexe, donc l'espérance du prix dépasse toujours le prix exponentié de l'espérance du log. Cette correction est indispensable pour que <K>{"E[S_T] = S_0 \\cdot e^{\\mu T}"}</K> reste exact.</Step>
+        <Step num={3} accent={ACCENT}><strong><K>{"\\sigma\\sqrt{T}"}</K></strong> — écart-type du log-prix : l'incertitude croît comme la racine carrée du temps (diffusion). Après 4 ans, l'incertitude est 2× celle d'1 an. Ce scaling en <K>{"\\sqrt{T}"}</K> est une signature du mouvement brownien.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : S_T log-normale implique E[S_T] = S₀·e^(µT) ≠ S₀·e^(µ_LN·T). Le prix espéré croît au taux µ (drift arithmétique), mais le log-rendement médian croît au taux µ_LN = µ - σ²/2 (drift géométrique). La différence σ²/2 grandit avec la volatilité — une action très volatile peut avoir un prix espéré élevé mais une médiane stagnante.
+          Synthèse : <K>{"S_T"}</K> log-normale implique <K>{"E[S_T] = S_0 \\cdot e^{\\mu T} \\neq S_0 \\cdot e^{\\mu_{LN} \\cdot T}"}</K>. Le prix espéré croît au taux <K>{"\\mu"}</K> (drift arithmétique), mais le log-rendement médian croît au taux <K>{"\\mu_{LN} = \\mu - \\sigma^2/2"}</K> (drift géométrique). La différence <K>{"\\sigma^2/2"}</K> grandit avec la volatilité — une action très volatile peut avoir un prix espéré élevé mais une médiane stagnante.
         </div>
       </div>
 
@@ -360,9 +360,9 @@ export function LogNormalTab() {
             <InfoChip label="Mode" value={mode.toFixed(3)} accent={T.a5} />
           </div>
           <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.6 }}>
-            <div>• Médiane = e^µ</div>
-            <div>• Moyenne = e^(µ+σ²/2) {'>'} Médiane (asymétrie droite)</div>
-            <div>• Mode = e^(µ-σ²) {'<'} Médiane</div>
+            <div>• Médiane = <K>{"e^\\mu"}</K></div>
+            <div>• Moyenne = <K>{"e^{\\mu+\\sigma^2/2}"}</K> {'>'} Médiane (asymétrie droite)</div>
+            <div>• Mode = <K>{"e^{\\mu-\\sigma^2}"}</K> {'<'} Médiane</div>
           </div>
         </div>
         <div>
@@ -400,7 +400,7 @@ export function LogNormalTab() {
       </Grid>
 
       <ExampleBlock title="Prix du Brent à 6 mois — Calcul complet P(S_T {'>'} 90) et P(S_T {'<'} 70)" accent={ACCENT}>
-        <p>S₀ = 80$/bbl, µ_GBM = 0% (risque-neutre), σ = 30%, T = 0.5 an</p>
+        <p><K>{"S_0 = 80\\$/\\text{bbl}"}</K>, <K>{"\\mu_{GBM} = 0\\%"}</K> (risque-neutre), <K>{"\\sigma = 30\\%"}</K>, <K>{"T = 0.5"}</K> an</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(70 \\le S_T \\le 90) \\approx 44.6\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Drift log-normal (correction d'Itô)" ruleDetail="µ_ln = (r − σ²/2)·T" accent={ACCENT}>
@@ -410,14 +410,14 @@ export function LogNormalTab() {
             <K>{"\\sigma_{\\ln} = 0.30 \\times \\sqrt{0.5} = 0.2121"}</K>
           </DemoStep>
           <DemoStep num={3} rule="Z-score + CDF complémentaire" ruleDetail="P(S_T > K) = 1 − N(z)" accent={ACCENT}>
-            <K>{"z = \\frac{\\ln(90/80) - (-0.0225)}{0.2121} = \\frac{0.1178 + 0.0225}{0.2121} = 0.661"}</K> → P = 1−N(0.661) ≈ 25.4%
+            <K>{"z = \\frac{\\ln(90/80) - (-0.0225)}{0.2121} = \\frac{0.1178 + 0.0225}{0.2121} = 0.661"}</K> → <K>{"P = 1 - N(0.661) \\approx 25.4\\%"}</K>
           </DemoStep>
           <DemoStep num={4} rule="Z-score + CDF" ruleDetail="P(S_T < K) = N(z)" accent={ACCENT}>
-            <K>{"z = \\frac{\\ln(70/80) + 0.0225}{0.2121} = \\frac{-0.1335 + 0.0225}{0.2121} = -0.524"}</K> → P = N(−0.524) ≈ 30.0%
+            <K>{"z = \\frac{\\ln(70/80) + 0.0225}{0.2121} = \\frac{-0.1335 + 0.0225}{0.2121} = -0.524"}</K> → <K>{"P = N(-0.524) \\approx 30.0\\%"}</K>
           </DemoStep>
           <DemoStep num={5} rule="Règle du complément" ruleDetail="P(a ≤ X ≤ b) = 1 − P(X>b) − P(X<a)" accent={ACCENT}>
             <K>{"P(70 \\le S_T \\le 90) = 100\\% - 25.4\\% - 30.0\\% = 44.6\\%"}</K>
-            <br />Asymétrie visible : P(hausse {'>'}+12.5%) = 25.4% mais P(baisse {'>'}−12.5%) = 30.0%. La log-normale est asymétrique.
+            <br />Asymétrie visible : <K>{"P(\\text{hausse} > +12.5\\%) = 25.4\\%"}</K> mais <K>{"P(\\text{baisse} > -12.5\\%) = 30.0\\%"}</K>. La log-normale est asymétrique.
           </DemoStep>
         </Demonstration>
       </ExampleBlock>
@@ -459,21 +459,21 @@ export function CorrelTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La corrélation de Pearson mesure la <strong style={{ color: T.text }}>force et la direction du lien linéaire</strong> entre deux variables. "Linéaire" est le mot-clé : ρ = 1 signifie que Y augmente proportionnellement à X (relation parfaitement linéaire positive), ρ = -1 signifie que Y diminue proportionnellement à X, ρ = 0 signifie <em>absence de relation linéaire</em> — mais pas nécessairement d'indépendance. Ses <strong>limites</strong> sont importantes : la corrélation ne capture pas les relations non-linéaires (ex: Y = X²), est sensible aux valeurs aberrantes, et peut varier fortement dans le temps (corrélations non-stationnaires sur les marchés de l'énergie).
+        La corrélation de Pearson mesure la <strong style={{ color: T.text }}>force et la direction du lien linéaire</strong> entre deux variables. "Linéaire" est le mot-clé : <K>{"\\rho = 1"}</K> signifie que <K>{"Y"}</K> augmente proportionnellement à <K>{"X"}</K> (relation parfaitement linéaire positive), <K>{"\\rho = -1"}</K> signifie que <K>{"Y"}</K> diminue proportionnellement à <K>{"X"}</K>, <K>{"\\rho = 0"}</K> signifie <em>absence de relation linéaire</em> — mais pas nécessairement d'indépendance. Ses <strong>limites</strong> sont importantes : la corrélation ne capture pas les relations non-linéaires (ex: <K>{"Y = X^2"}</K>), est sensible aux valeurs aberrantes, et peut varier fortement dans le temps (corrélations non-stationnaires sur les marchés de l'énergie).
       </div>
       <IntuitionBlock emoji="🔗" title="La corrélation = force du lien linéaire" accent={ACCENT}>
         Si le prix du gaz naturel augmente chaque fois que le prix du pétrole augmente,
-        ils sont positivement corrélés (ρ {'>'} 0). Si ρ = 0 : indépendants. Si ρ = -1 : parfaitement opposés.
-        En pratique, ρ_oil,gas ≈ 0.4 à 0.7 selon les périodes.
+        ils sont positivement corrélés (<K>{"\\rho"}</K> {'>'} 0). Si <K>{"\\rho = 0"}</K> : indépendants. Si <K>{"\\rho = -1"}</K> : parfaitement opposés.
+        En pratique, <K>{"\\rho_{\\text{oil,gas}} \\approx 0.4"}</K> à 0.7 selon les périodes.
         La corrélation est cruciale pour le risk management de portefeuilles multi-énergie.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Coefficient de corrélation de Pearson">
-        ρ(X,Y) = Cov(X,Y) / (σ_X × σ_Y) = E[(X-µ_X)(Y-µ_Y)] / (σ_X × σ_Y)
+        <K display>{"\\rho(X,Y) = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\times \\sigma_Y} = \\frac{E[(X-\\mu_X)(Y-\\mu_Y)]}{\\sigma_X \\times \\sigma_Y}"}</K>
       </FormulaBox>
 
       <FormulaBox accent={ACCENT} label="Estimateur empirique">
-        r̂ = Σ(xᵢ-x̄)(yᵢ-ȳ) / √[Σ(xᵢ-x̄)² × Σ(yᵢ-ȳ)²]
+        <K display>{"\\hat{r} = \\frac{\\sum(x_i - \\bar{x})(y_i - \\bar{y})}{\\sqrt{\\sum(x_i - \\bar{x})^2 \\times \\sum(y_i - \\bar{y})^2}}"}</K>
       </FormulaBox>
 
       <Grid cols={2} gap="10px">
@@ -501,7 +501,7 @@ export function CorrelTab() {
 
       <SectionTitle accent={ACCENT}>Corrélation ≠ Indépendance, et corrélation en crise</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Deux actifs peuvent avoir ρ = 0 (non corrélés) tout en étant <strong>statistiquement dépendants</strong>. Exemple classique : si X ~ N(0,1) et Y = X², alors Cov(X, Y) = E[X³] = 0 (par symétrie de la normale), donc ρ = 0. Pourtant, Y est déterminé par X. En finance de l'énergie, l'électricité spot peut être non corrélée au pétrole en période normale, mais fortement dépendante lors de chocs extrêmes (blackouts, vagues de froid).
+        Deux actifs peuvent avoir <K>{"\\rho = 0"}</K> (non corrélés) tout en étant <strong>statistiquement dépendants</strong>. Exemple classique : si <K>{"X \\sim N(0,1)"}</K> et <K>{"Y = X^2"}</K>, alors <K>{"\\text{Cov}(X, Y) = E[X^3] = 0"}</K> (par symétrie de la normale), donc <K>{"\\rho = 0"}</K>. Pourtant, <K>{"Y"}</K> est déterminé par <K>{"X"}</K>. En finance de l'énergie, l'électricité spot peut être non corrélée au pétrole en période normale, mais fortement dépendante lors de chocs extrêmes (blackouts, vagues de froid).
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
         <strong style={{ color: ACCENT }}>Corrélation en crise — Le phénomène le plus dangereux en risk management :</strong> En période de stress (2008, COVID-2020, choc gazier 2022), les corrélations entre actifs tendent vers +1. Pétrole, gaz, électricité, equity — tout chute ensemble. La diversification, qui repose sur des corrélations {'<'} 1, <em>disparaît exactement quand on en a le plus besoin</em>. Ce phénomène est documenté comme la "correlation breakdown" et oblige les risk managers à utiliser des matrices de corrélation de stress distinct des corrélations historiques normales.
@@ -544,7 +544,7 @@ export function CorrelTab() {
       </div>
 
       <Accordion title="Exercice 1 — Corrélation pétrole/gaz" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>σ_oil=25%, σ_gas=35%, ρ=0.45. Calculez Cov et σ_p (50/50).</p>
+        <p style={{ color: T.text }}><K>{"\\sigma_{\\text{oil}}=25\\%"}</K>, <K>{"\\sigma_{\\text{gas}}=35\\%"}</K>, <K>{"\\rho=0.45"}</K>. Calculez Cov et <K>{"\\sigma_p"}</K> (50/50).</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\sigma_p = \\sqrt{0.065938} \\approx 25.68\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Covariance à partir de la corrélation" ruleDetail="Cov = ρ·σ_X·σ_Y" accent={ACCENT}>
@@ -557,13 +557,13 @@ export function CorrelTab() {
             <K>{"= 0.015625 + 0.019688 + 0.030625 = 0.065938"}</K>
           </DemoStep>
           <DemoStep num={4} rule="Effet de diversification" ruleDetail="σ_p < w₁σ₁ + w₂σ₂ si ρ < 1" accent={ACCENT}>
-            <K>{"\\sigma_p \\approx 25.68\\%"}</K> vs sans diversification : 0.5×25% + 0.5×35% = 30% → économie de 4.32% de vol !
+            <K>{"\\sigma_p \\approx 25.68\\%"}</K> vs sans diversification : <K>{"0.5 \\times 25\\% + 0.5 \\times 35\\% = 30\\%"}</K> → économie de 4.32% de vol !
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Calcul de corrélation à partir de données" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          On observe 4 rendements hebdomadaires pour le WTI (X) et le Henry Hub Gaz (Y) en % : X = [+3, -2, +5, -1] et Y = [+2, -1, +4, +1]. Calculez la corrélation empirique r̂.
+          On observe 4 rendements hebdomadaires pour le WTI (<K>{"X"}</K>) et le Henry Hub Gaz (<K>{"Y"}</K>) en % : <K>{"X = [+3, -2, +5, -1]"}</K> et <K>{"Y = [+2, -1, +4, +1]"}</K>. Calculez la corrélation empirique <K>{"\\hat{r}"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\hat{r} = \\frac{6.5}{3.304 \\times 2.082} \\approx 0.945"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -571,7 +571,7 @@ export function CorrelTab() {
             <K>{"\\bar{x} = \\frac{3-2+5-1}{4} = 1.25\\%"}</K> ; <K>{"\\bar{y} = \\frac{2-1+4+1}{4} = 1.50\\%"}</K>
           </DemoStep>
           <DemoStep num={2} rule="Écarts centrés" ruleDetail="xᵢ − x̄" accent={ACCENT}>
-            (xᵢ−x̄) = [1.75, −3.25, 3.75, −2.25] ; (yᵢ−ȳ) = [0.50, −2.50, 2.50, −0.50]
+            <K>{"(x_i - \\bar{x}) = [1.75,\\,-3.25,\\,3.75,\\,-2.25]"}</K> ; <K>{"(y_i - \\bar{y}) = [0.50,\\,-2.50,\\,2.50,\\,-0.50]"}</K>
           </DemoStep>
           <DemoStep num={3} rule="Covariance de Bessel" ruleDetail="Cov = Σ(xᵢ−x̄)(yᵢ−ȳ)/(n−1)" accent={ACCENT}>
             <K>{"\\text{Cov} = \\frac{0.875 + 8.125 + 9.375 + 1.125}{3} = \\frac{19.5}{3} = 6.5"}</K>
@@ -628,20 +628,20 @@ export function EstimationTab() {
   return (
     <div>
       <IntuitionBlock emoji="🎯" title="Paramètres vrais vs estimés : la distinction fondamentale" accent={ACCENT}>
-        En statistiques, on distingue deux mondes. Le monde réel possède de "vrais" paramètres inconnus — par exemple, la vraie volatilité du Brent est σ = 28.3% (on ne le saura jamais exactement). On observe un échantillon de n rendements historiques, et on calcule un estimateur σ̂ qui approxime σ. <strong>L'estimateur est une variable aléatoire</strong> — si on refaisait l'expérience avec un autre échantillon de n jours, on obtiendrait un σ̂ différent. La qualité d'un estimateur se mesure par : son <em>biais</em> (E[σ̂] - σ : est-il systématiquement trop haut ou trop bas ?), sa <em>variance</em> (à quel point varie-t-il d'un échantillon à l'autre ?), et sa <em>convergence</em> (σ̂ → σ quand n → ∞ ?).
+        En statistiques, on distingue deux mondes. Le monde réel possède de "vrais" paramètres inconnus — par exemple, la vraie volatilité du Brent est <K>{"\\sigma = 28.3\\%"}</K> (on ne le saura jamais exactement). On observe un échantillon de <K>{"n"}</K> rendements historiques, et on calcule un estimateur <K>{"\\hat{\\sigma}"}</K> qui approxime <K>{"\\sigma"}</K>. <strong>L'estimateur est une variable aléatoire</strong> — si on refaisait l'expérience avec un autre échantillon de <K>{"n"}</K> jours, on obtiendrait un <K>{"\\hat{\\sigma}"}</K> différent. La qualité d'un estimateur se mesure par : son <em>biais</em> (<K>{"E[\\hat{\\sigma}] - \\sigma"}</K> : est-il systématiquement trop haut ou trop bas ?), sa <em>variance</em> (à quel point varie-t-il d'un échantillon à l'autre ?), et sa <em>convergence</em> (<K>{"\\hat{\\sigma} \\to \\sigma"}</K> quand <K>{"n \\to \\infty"}</K> ?).
       </IntuitionBlock>
 
       <IntuitionBlock emoji="📊" title="L'estimation statistique : apprendre des données" accent={ACCENT}>
         En finance, on observe des rendements historiques et on en déduit les paramètres du modèle.
-        Plus on a de données (grand n), plus les estimateurs sont précis — c'est la <strong>loi des grands nombres</strong>.
-        Mais attention : avec 252 observations (1 an), l'incertitude sur µ reste élevée !
-        L'estimation de σ converge bien plus vite que celle de µ.
+        Plus on a de données (grand <K>{"n"}</K>), plus les estimateurs sont précis — c'est la <strong>loi des grands nombres</strong>.
+        Mais attention : avec 252 observations (1 an), l'incertitude sur <K>{"\\mu"}</K> reste élevée !
+        L'estimation de <K>{"\\sigma"}</K> converge bien plus vite que celle de <K>{"\\mu"}</K>.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Estimateurs empiriques">
-        x̄ = (1/n) Σ xᵢ      (moyenne empirique)
-        s² = (1/(n-1)) Σ (xᵢ - x̄)²    (variance de Bessel)
-        σ_ann = s × √252      (volatilité annualisée)
+        <K display>{"\\bar{x} = \\frac{1}{n} \\sum x_i \\quad \\text{(moyenne empirique)}"}</K>
+        <K display>{"s^2 = \\frac{1}{n-1} \\sum (x_i - \\bar{x})^2 \\quad \\text{(variance de Bessel)}"}</K>
+        <K display>{"\\sigma_{\\text{ann}} = s \\times \\sqrt{252} \\quad \\text{(volatilité annualisée)}"}</K>
       </FormulaBox>
 
       <Slider label="Nombre de jours d'observation (n)" value={n} min={10} max={500} step={10} onChange={setN} accent={ACCENT} format={v => v.toFixed(0)} />
@@ -687,15 +687,15 @@ export function EstimationTab() {
       <Grid cols={3} gap="10px">
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Sans biais</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>E[estimateur] = vrai paramètre. La variance de Bessel s² = Σ(xᵢ-x̄)²/(n-1) divise par n-1 (pas n) précisément pour être sans biais : E[s²] = σ².</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}><K>{"E[\\text{estimateur}] = \\text{vrai paramètre}"}</K>. La variance de Bessel <K>{"s^2 = \\sum(x_i - \\bar{x})^2/(n-1)"}</K> divise par <K>{"n-1"}</K> (pas <K>{"n"}</K>) précisément pour être sans biais : <K>{"E[s^2] = \\sigma^2"}</K>.</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Convergent (consistant)</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>estimateur → paramètre quand n → ∞. Par la loi des grands nombres : x̄ → µ. σ̂ → σ. Plus on a de données, plus on est précis.</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>estimateur → paramètre quand <K>{"n \\to \\infty"}</K>. Par la loi des grands nombres : <K>{"\\bar{x} \\to \\mu"}</K>. <K>{"\\hat{\\sigma} \\to \\sigma"}</K>. Plus on a de données, plus on est précis.</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Efficace</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Variance minimale parmi tous les estimateurs sans biais (borne de Cramér-Rao). La moyenne empirique est l'estimateur le plus efficace de µ pour la loi normale.</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Variance minimale parmi tous les estimateurs sans biais (borne de Cramér-Rao). La moyenne empirique est l'estimateur le plus efficace de <K>{"\\mu"}</K> pour la loi normale.</div>
         </div>
       </Grid>
 
@@ -704,31 +704,31 @@ export function EstimationTab() {
         En pratique, la volatilité historique d'un actif est estimée comme l'écart-type annualisé des log-rendements quotidiens :
       </div>
       <FormulaBox accent={ACCENT} label="Volatilité historique annualisée">
-        σ̂ = std(rᵢ) × √252   où rᵢ = ln(Sᵢ/Sᵢ₋₁)
+        <K display>{"\\hat{\\sigma} = \\text{std}(r_i) \\times \\sqrt{252} \\quad \\text{où } r_i = \\ln(S_i / S_{i-1})"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Le facteur √252 annualise la volatilité quotidienne (252 jours de trading par an). La formule exacte : σ̂ = √[(1/(n-1)) Σᵢ (rᵢ - r̄)² × 252].
+        Le facteur <K>{"\\sqrt{252}"}</K> annualise la volatilité quotidienne (252 jours de trading par an). La formule exacte : <K>{"\\hat{\\sigma} = \\sqrt{\\frac{1}{n-1} \\sum_i (r_i - \\bar{r})^2 \\times 252}"}</K>.
       </div>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
         <strong style={{ color: ACCENT }}>Choix de la fenêtre d'estimation — un arbitrage biais/variance :</strong>
-        <br />• <strong>Fenêtre courte (30 jours) :</strong> Réactive aux changements de régime, mais très bruitée. Idéale pour les marchés très volatils (électricité spot, gaz naturel en hiver). Mais σ̂ varie énormément d'une semaine à l'autre.
+        <br />• <strong>Fenêtre courte (30 jours) :</strong> Réactive aux changements de régime, mais très bruitée. Idéale pour les marchés très volatils (électricité spot, gaz naturel en hiver). Mais <K>{"\\hat{\\sigma}"}</K> varie énormément d'une semaine à l'autre.
         <br />• <strong>Fenêtre moyenne (60 jours) :</strong> Bon compromis biais/variance. Standard dans de nombreux systèmes de risk management.
         <br />• <strong>Fenêtre longue (252 jours) :</strong> Stable et lisse, mais ne reflète pas les changements récents (ex: une crise récente poids peu dans 252 jours). Problème du "ghost effect" : un choc disparaît exactement 1 an après.
-        <br />• <strong>EWMA (volatilité exponentiellement pondérée) :</strong> Solution alternative — pondère les observations récentes plus fortement. Paramètre λ typique = 0.94 (RiskMetrics de JP Morgan).
+        <br />• <strong>EWMA (volatilité exponentiellement pondérée) :</strong> Solution alternative — pondère les observations récentes plus fortement. Paramètre <K>{"\\lambda"}</K> typique = 0.94 (RiskMetrics de JP Morgan).
       </div>
 
       <SectionTitle accent={ACCENT}>Intervalle de confiance pour µ</SectionTitle>
       <FormulaBox accent={ACCENT} label="IC 95% pour la moyenne annualisée">
-        µ̂ ± 1.96 × (σ / √n) × √252 = µ̂ ± 1.96 × σ_ann / √n
+        <K display>{"\\hat{\\mu} \\pm 1.96 \\times \\frac{\\sigma}{\\sqrt{n}} \\times \\sqrt{252} = \\hat{\\mu} \\pm 1.96 \\times \\frac{\\sigma_{\\text{ann}}}{\\sqrt{n}}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, marginTop: 8 }}>
         IC à 95% : [{((muAnnualized - 1.96 * volAnnualized / Math.sqrt(n)) * 100).toFixed(1)}%, {((muAnnualized + 1.96 * volAnnualized / Math.sqrt(n)) * 100).toFixed(1)}%]
         <br />
-        → Avec seulement {n} observations, l'IC est très large. Il faut {Math.round(1.96 * 1.96 * 0.0625 / 0.0001)} années pour estimer µ à ±1% près !
+        → Avec seulement {n} observations, l'IC est très large. Il faut {Math.round(1.96 * 1.96 * 0.0625 / 0.0001)} années pour estimer <K>{"\\mu"}</K> à <K>{"\\pm 1\\%"}</K> près !
       </div>
 
       <Accordion title="Exercice 1 — Calcul de volatilité historique step-by-step" accent={ACCENT} badge="Pratique">
-        <p style={{ color: T.text }}>Rendements log-quotidiens du Brent sur 5 jours : [+1.2%, -0.8%, +2.1%, -1.5%, +0.3%]</p>
+        <p style={{ color: T.text }}>Rendements log-quotidiens du Brent sur 5 jours : <K>{"[+1.2\\%,\\,-0.8\\%,\\,+2.1\\%,\\,-1.5\\%,\\,+0.3\\%]"}</K></p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\hat{\\sigma}_{\\text{ann}} = 1.457\\% \\times \\sqrt{252} \\approx 23.12\\%/\\text{an}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Log-rendements" ruleDetail="rᵢ = ln(Sᵢ/Sᵢ₋₁)" accent={ACCENT}>
@@ -738,21 +738,21 @@ export function EstimationTab() {
             <K>{"\\bar{r} = \\frac{1.2 - 0.8 + 2.1 - 1.5 + 0.3}{5} = \\frac{1.3}{5} = 0.26\\%"}</K>
           </DemoStep>
           <DemoStep num={3} rule="Écarts centrés" ruleDetail="rᵢ − r̄" accent={ACCENT}>
-            (rᵢ − r̄) = [+0.94, −1.06, +1.84, −1.76, +0.04]
+            <K>{"(r_i - \\bar{r}) = [+0.94,\\,-1.06,\\,+1.84,\\,-1.76,\\,+0.04]"}</K>
           </DemoStep>
           <DemoStep num={4} rule="Variance de Bessel" ruleDetail="s² = Σ(rᵢ−r̄)²/(n−1)" accent={ACCENT}>
-            Carrés : [0.8836, 1.1236, 3.3856, 3.0976, 0.0016]
+            Carrés : <K>{"[0.8836,\\,1.1236,\\,3.3856,\\,3.0976,\\,0.0016]"}</K>
             <br /><K>{"s^2 = \\frac{8.492}{4} = 2.123\\;(\\%^2)"}</K> ; <K>{"s = \\sqrt{2.123} = 1.457\\%/\\text{jour}"}</K>
           </DemoStep>
           <DemoStep num={5} rule="Annualisation (√252)" ruleDetail="σ_ann = σ_jour × √252" accent={ACCENT}>
             <K>{"\\hat{\\sigma}_{\\text{ann}} = 1.457\\% \\times \\sqrt{252} \\approx 23.12\\%"}</K>
-            <br />Attention : avec 5 obs, l'erreur-type est <K>{"\\sigma/\\sqrt{2n} \\approx 7.3\\%"}</K> — IC 95% = [8%, 38%] !
+            <br />Attention : avec 5 obs, l'erreur-type est <K>{"\\sigma/\\sqrt{2n} \\approx 7.3\\%"}</K> — IC 95% = <K>{"[8\\%,\\,38\\%]"}</K> !
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Comparaison des fenêtres d'estimation" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Un risk manager calcule la vol historique du WTI sur différentes fenêtres. Il trouve σ̂_30j = 45%, σ̂_60j = 32%, σ̂_252j = 28%. Il existe une crise 15 jours auparavant qui a causé des rendements de ±5%. Discutez quelle fenêtre utiliser pour la VaR de demain.
+          Un risk manager calcule la vol historique du WTI sur différentes fenêtres. Il trouve <K>{"\\hat{\\sigma}_{30j} = 45\\%"}</K>, <K>{"\\hat{\\sigma}_{60j} = 32\\%"}</K>, <K>{"\\hat{\\sigma}_{252j} = 28\\%"}</K>. Il existe une crise 15 jours auparavant qui a causé des rendements de <K>{"\\pm 5\\%"}</K>. Discutez quelle fenêtre utiliser pour la VaR de demain.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat">Recommandation : utiliser plusieurs fenêtres + worst-case pour la VaR réglementaire</FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -766,8 +766,8 @@ export function EstimationTab() {
             <K>{"\\hat{\\sigma}_{252j} = 28\\%"}</K> : presque insensible à la crise (15j/252 = 6%). Peut sous-estimer en régime volatile.
           </DemoStep>
           <DemoStep num={4} rule="EWMA (décroissance exponentielle)" ruleDetail="σ²_t = λσ²_{t-1} + (1−λ)r²_{t-1}" accent={ACCENT}>
-            Avec λ=0.94 (RiskMetrics), l'EWMA réagit vite à la crise puis décroît exponentiellement. Probablement ~38-40% juste après la crise.
-            <br />Basel III/IV recommande σ sur 250j + une "stressed VaR" sur période de stress historique (2008, 2020).
+            Avec <K>{"\\lambda = 0.94"}</K> (RiskMetrics), l'EWMA réagit vite à la crise puis décroît exponentiellement. Probablement ~38-40% juste après la crise.
+            <br />Basel III/IV recommande <K>{"\\sigma"}</K> sur 250j + une "stressed VaR" sur période de stress historique (2008, 2020).
           </DemoStep>
         </Demonstration>
       </Accordion>

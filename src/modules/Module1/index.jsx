@@ -49,15 +49,15 @@ export function DerivTab() {
         La dérivée est l'outil fondamental pour mesurer <strong style={{ color: T.text }}>comment une quantité change en réponse à une autre</strong>. Elle apparaît dans tous les domaines : en physique (vitesse, accélération, flux thermique), en biologie (taux de croissance d'une population), en chimie (cinétique de réaction), en économie (coût marginal, élasticité). Partout où l'on pose la question <em>"à quelle vitesse évolue cette grandeur ?"</em>, la dérivée est la réponse.
       </div>
       <IntuitionBlock emoji="🚗" title="La dérivée = vitesse instantanée" accent={ACCENT}>
-        Imaginez que vous conduisez. La position est <strong>f(t)</strong>, la vitesse est <strong>f'(t)</strong>.
-        Si f(t) = t², votre position est le carré du temps. À t=3s, votre vitesse est f'(3) = 6 m/s.
+        Imaginez que vous conduisez. La position est <K>{"f(t)"}</K>, la vitesse est <K>{"f'(t)"}</K>.
+        Si <K>{"f(t) = t^2"}</K>, votre position est le carré du temps. À <K>{"t = 3"}</K>s, votre vitesse est <K>{"f'(3) = 6"}</K> m/s.
         La dérivée mesure <em>à quelle vitesse la fonction change</em> en un point précis.
-        En finance : si C est le prix d'un call et S le prix du sous-jacent, alors Delta = dC/dS
+        En finance : si <K>{"C"}</K> est le prix d'un call et <K>{"S"}</K> le prix du sous-jacent, alors <K>{"\\Delta = \\frac{dC}{dS}"}</K>{" "}
         est "la vitesse" à laquelle le call réagit aux mouvements du sous-jacent.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Définition formelle">
-        f'(x) = lim[h→0] (f(x+h) - f(x)) / h
+        <K display>{"f'(x) = \\lim_{h \\to 0} \\frac{f(x+h) - f(x)}{h}"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -67,72 +67,72 @@ export function DerivTab() {
       ]} />
 
       <IntuitionBlock emoji="⚡" title="Pourquoi h → 0 et pas h = 0 ?" accent={ACCENT}>
-        Si on posait h = 0 directement, on diviserait par zéro — ce qui est indéfini. La limite est une opération de <strong>passage à la limite</strong> : on étudie le comportement quand h devient arbitrairement petit, sans jamais l'atteindre. C'est exactement la distinction entre <strong>vitesse moyenne</strong> et <strong>vitesse instantanée</strong> : la vitesse moyenne sur [t, t+h] vaut (distance parcourue)/h. Quand h→0, on obtient la vitesse à l'instant t. De même, (f(x+h)-f(x))/h est le taux de variation moyen de f sur [x, x+h] ; sa limite en h→0 est le taux de variation instantané, c'est-à-dire la dérivée.
+        Si on posait <K>{"h = 0"}</K> directement, on diviserait par zéro — ce qui est indéfini. La limite est une opération de <strong>passage à la limite</strong> : on étudie le comportement quand <K>{"h"}</K> devient arbitrairement petit, sans jamais l'atteindre. C'est exactement la distinction entre <strong>vitesse moyenne</strong> et <strong>vitesse instantanée</strong> : la vitesse moyenne sur <K>{"[t,\\, t+h]"}</K> vaut (distance parcourue)/<K>{"h"}</K>. Quand <K>{"h \\to 0"}</K>, on obtient la vitesse à l'instant <K>{"t"}</K>. De même, <K>{"\\frac{f(x+h)-f(x)}{h}"}</K> est le taux de variation moyen de <K>{"f"}</K> sur <K>{"[x,\\, x+h]"}</K> ; sa limite en <K>{"h \\to 0"}</K> est le taux de variation instantané, c'est-à-dire la dérivée.
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-        <strong style={{ color: ACCENT }}>Dérivée partielle vs dérivée totale :</strong> Quand une fonction dépend de plusieurs variables — par exemple la température T(x, y, t) d'une plaque chauffante dépend des coordonnées x, y et du temps t — on distingue deux notions. La <strong>dérivée partielle ∂T/∂x</strong> mesure le gradient thermique horizontal en maintenant y et t constants. La <strong>dérivée totale dT</strong> capture la variation complète quand toutes les variables évoluent simultanément : dT = (∂T/∂x)dx + (∂T/∂y)dy + (∂T/∂t)dt. Cette décomposition est universelle : en mécanique, en thermodynamique, en toute discipline multi-variable.
+        <strong style={{ color: ACCENT }}>Dérivée partielle vs dérivée totale :</strong> Quand une fonction dépend de plusieurs variables — par exemple la température <K>{"T(x, y, t)"}</K> d'une plaque chauffante dépend des coordonnées <K>{"x"}</K>, <K>{"y"}</K> et du temps <K>{"t"}</K> — on distingue deux notions. La <strong>dérivée partielle <K>{"\\frac{\\partial T}{\\partial x}"}</K></strong> mesure le gradient thermique horizontal en maintenant <K>{"y"}</K> et <K>{"t"}</K> constants. La <strong>dérivée totale <K>{"dT"}</K></strong> capture la variation complète quand toutes les variables évoluent simultanément : <K>{"dT = \\frac{\\partial T}{\\partial x}dx + \\frac{\\partial T}{\\partial y}dy + \\frac{\\partial T}{\\partial t}dt"}</K>. Cette décomposition est universelle : en mécanique, en thermodynamique, en toute discipline multi-variable.
       </div>
 
       <SectionTitle accent={ACCENT}>Dérivées partielles — Technique pas à pas</SectionTitle>
       <IntuitionBlock emoji="🔒" title='Principe fondamental : "geler" les autres variables' accent={ACCENT}>
-        Pour calculer <strong>∂f/∂x</strong>, on traite toutes les variables autres que x comme des <strong>constantes</strong> et on applique les règles habituelles. C'est tout !
+        Pour calculer <K>{"\\frac{\\partial f}{\\partial x}"}</K>, on traite toutes les variables autres que <K>{"x"}</K> comme des <strong>constantes</strong> et on applique les règles habituelles. C'est tout !
         <br /><br />
-        <strong>Analogie :</strong> imaginez une carte topographique f(x, y). La dérivée ∂f/∂x est la pente quand vous marchez vers l'Est (x croît, y fixe). La dérivée ∂f/∂y est la pente vers le Nord (y croît, x fixe). Deux sensibilités différentes pour la même surface.
+        <strong>Analogie :</strong> imaginez une carte topographique <K>{"f(x, y)"}</K>. La dérivée <K>{"\\frac{\\partial f}{\\partial x}"}</K> est la pente quand vous marchez vers l'Est (<K>{"x"}</K> croît, <K>{"y"}</K> fixe). La dérivée <K>{"\\frac{\\partial f}{\\partial y}"}</K> est la pente vers le Nord (<K>{"y"}</K> croît, <K>{"x"}</K> fixe). Deux sensibilités différentes pour la même surface.
         <br /><br />
-        En physique : ∂P/∂T (pression par rapport à la température, volume fixé) répond à "comment varie la pression si je chauffe à volume constant ?" — c'est la loi de Gay-Lussac.
+        En physique : <K>{"\\frac{\\partial P}{\\partial T}"}</K> (pression par rapport à la température, volume fixé) répond à "comment varie la pression si je chauffe à volume constant ?" — c'est la loi de Gay-Lussac.
       </IntuitionBlock>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 1 — Polynôme à 2 variables : f(x, y) = 3x²y + 2xy³</div>
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>Calcul de <strong style={{ color: T.text }}>∂f/∂x</strong> (on gèle y) :</div>
-        <Step num={1} accent={ACCENT}>Terme <strong>3x²y</strong> : y est une constante multiplicative → dériver x² → 2x → contribution : 3·(2x)·y = <strong>6xy</strong></Step>
-        <Step num={2} accent={ACCENT}>Terme <strong>2xy³</strong> : y³ est une constante multiplicative → dériver x → 1 → contribution : 2·1·y³ = <strong>2y³</strong></Step>
-        <FormulaBox accent={ACCENT}>∂f/∂x = 6xy + 2y³</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, margin: '10px 0 8px' }}>Calcul de <strong style={{ color: T.text }}>∂f/∂y</strong> (on gèle x) :</div>
-        <Step num={3} accent={ACCENT}>Terme <strong>3x²y</strong> : x² est une constante multiplicative → dériver y → 1 → contribution : 3x²·1 = <strong>3x²</strong></Step>
-        <Step num={4} accent={ACCENT}>Terme <strong>2xy³</strong> : x est une constante multiplicative → dériver y³ → 3y² → contribution : 2x·(3y²) = <strong>6xy²</strong></Step>
-        <FormulaBox accent={ACCENT}>∂f/∂y = 3x² + 6xy²</FormulaBox>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 1 — Polynôme à 2 variables : <K>{"f(x,y) = 3x^2y + 2xy^3"}</K></div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>Calcul de <strong style={{ color: T.text }}><K>{"\\frac{\\partial f}{\\partial x}"}</K></strong> (on gèle <K>{"y"}</K>) :</div>
+        <Step num={1} accent={ACCENT}>Terme <K>{"3x^2y"}</K> : <K>{"y"}</K> est une constante multiplicative → dériver <K>{"x^2 \\to 2x"}</K> → contribution : <K>{"3 \\cdot (2x) \\cdot y = 6xy"}</K></Step>
+        <Step num={2} accent={ACCENT}>Terme <K>{"2xy^3"}</K> : <K>{"y^3"}</K> est une constante multiplicative → dériver <K>{"x \\to 1"}</K> → contribution : <K>{"2 \\cdot 1 \\cdot y^3 = 2y^3"}</K></Step>
+        <FormulaBox accent={ACCENT}><K display>{"\\frac{\\partial f}{\\partial x} = 6xy + 2y^3"}</K></FormulaBox>
+        <div style={{ color: T.muted, fontSize: 12, margin: '10px 0 8px' }}>Calcul de <strong style={{ color: T.text }}><K>{"\\frac{\\partial f}{\\partial y}"}</K></strong> (on gèle <K>{"x"}</K>) :</div>
+        <Step num={3} accent={ACCENT}>Terme <K>{"3x^2y"}</K> : <K>{"x^2"}</K> est une constante multiplicative → dériver <K>{"y \\to 1"}</K> → contribution : <K>{"3x^2 \\cdot 1 = 3x^2"}</K></Step>
+        <Step num={4} accent={ACCENT}>Terme <K>{"2xy^3"}</K> : <K>{"x"}</K> est une constante multiplicative → dériver <K>{"y^3 \\to 3y^2"}</K> → contribution : <K>{"2x \\cdot (3y^2) = 6xy^2"}</K></Step>
+        <FormulaBox accent={ACCENT}><K display>{"\\frac{\\partial f}{\\partial y} = 3x^2 + 6xy^2"}</K></FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
-          Vérification en (x=1, y=2) : ∂f/∂x = 6×1×2 + 2×8 = 12 + 16 = <strong>28</strong>. Si x monte de 1 (x: 1→2), f varie d'environ 28.
-          <br />∂f/∂y = 3×1 + 6×1×4 = 3 + 24 = <strong>27</strong>. Si y monte de 1 (y: 2→3), f varie d'environ 27.
+          Vérification en <K>{"(x=1, y=2)"}</K> : <K>{"\\frac{\\partial f}{\\partial x} = 6 \\times 1 \\times 2 + 2 \\times 8 = 12 + 16 = 28"}</K>. Si <K>{"x"}</K> monte de 1 (<K>{"x: 1 \\to 2"}</K>), <K>{"f"}</K> varie d'environ 28.
+          <br /><K>{"\\frac{\\partial f}{\\partial y} = 3 \\times 1 + 6 \\times 1 \\times 4 = 3 + 24 = 27"}</K>. Si <K>{"y"}</K> monte de 1 (<K>{"y: 2 \\to 3"}</K>), <K>{"f"}</K> varie d'environ 27.
         </div>
       </div>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 2 — Énergie cinétique : E(m, v) = ½ · m · v²</div>
-        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>E = énergie cinétique d'un objet de masse m se déplaçant à vitesse v. Deux dérivées partielles, deux sensibilités physiques :</div>
-        <Step num={1} accent={ACCENT}><strong>∂E/∂m</strong> (v constant) : v² est un facteur constant → <strong>∂E/∂m = v²/2</strong>. Interprétation : 1 kg de masse supplémentaire ajoute v²/2 joules d'énergie cinétique.</Step>
-        <Step num={2} accent={ACCENT}><strong>∂E/∂v</strong> (m constant) : règle de puissance sur v² → <strong>∂E/∂v = m·v</strong>. C'est la quantité de mouvement ! Doubler la vitesse quadruple l'énergie, mais la sensibilité marginale (dérivée) est proportionnelle à v.</Step>
-        <FormulaBox accent={ACCENT}>∂E/∂m = v²/2   |   ∂E/∂v = m·v</FormulaBox>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 12 }}>Exemple 2 — Énergie cinétique : <K>{"E(m, v) = \\frac{1}{2} m v^2"}</K></div>
+        <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}><K>{"E"}</K> = énergie cinétique d'un objet de masse <K>{"m"}</K> se déplaçant à vitesse <K>{"v"}</K>. Deux dérivées partielles, deux sensibilités physiques :</div>
+        <Step num={1} accent={ACCENT}><K>{"\\frac{\\partial E}{\\partial m}"}</K> (<K>{"v"}</K> constant) : <K>{"v^2"}</K> est un facteur constant → <K>{"\\frac{\\partial E}{\\partial m} = \\frac{v^2}{2}"}</K>. Interprétation : 1 kg de masse supplémentaire ajoute <K>{"\\frac{v^2}{2}"}</K> joules d'énergie cinétique.</Step>
+        <Step num={2} accent={ACCENT}><K>{"\\frac{\\partial E}{\\partial v}"}</K> (<K>{"m"}</K> constant) : règle de puissance sur <K>{"v^2"}</K> → <K>{"\\frac{\\partial E}{\\partial v} = mv"}</K>. C'est la quantité de mouvement ! Doubler la vitesse quadruple l'énergie, mais la sensibilité marginale (dérivée) est proportionnelle à <K>{"v"}</K>.</Step>
+        <FormulaBox accent={ACCENT}><K display>{"\\frac{\\partial E}{\\partial m} = \\frac{v^2}{2} \\quad|\\quad \\frac{\\partial E}{\\partial v} = mv"}</K></FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
-          Exemple numérique : m = 1 000 kg (voiture), v = 30 m/s. ∂E/∂v = 1000 × 30 = 30 000 N (newtons).
+          Exemple numérique : <K>{"m = 1\\,000"}</K> kg (voiture), <K>{"v = 30"}</K> m/s. <K>{"\\frac{\\partial E}{\\partial v} = 1000 \\times 30 = 30\\,000"}</K> N (newtons).
           Si la vitesse augmente de 1 m/s (de 30 à 31 m/s), l'énergie cinétique augmente d'environ 30 000 J.
         </div>
       </div>
 
       <div style={{ background: T.panel2, borderRadius: 10, padding: 16, margin: '14px 0', border: `1px solid ${ACCENT}33` }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Exemple 3 — Loi des gaz parfaits : P(n, T, V) = nRT / V</div>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 6 }}>Exemple 3 — Loi des gaz parfaits : <K>{"P(n, T, V) = \\frac{nRT}{V}"}</K></div>
         <div style={{ color: T.muted, fontSize: 12, marginBottom: 12 }}>
-          P = pression, n = quantité (moles), T = température (K), V = volume (L), R = 8.314 J/(mol·K) constante.
+          <K>{"P"}</K> = pression, <K>{"n"}</K> = quantité (moles), <K>{"T"}</K> = température (K), <K>{"V"}</K> = volume (L), <K>{"R = 8.314"}</K> J/(mol·K) constante.
           <br />Quatre variables, quatre dérivées partielles — chacune correspond à une loi physique classique.
         </div>
         <Step num={1} accent={ACCENT}>
-          <strong>∂P/∂n</strong> (T, V constants) : RT/V est un facteur constant.
-          → <strong>∂P/∂n = RT/V</strong>. Ajouter une mole de gaz augmente la pression de RT/V.
+          <K>{"\\frac{\\partial P}{\\partial n}"}</K> (<K>{"T"}</K>, <K>{"V"}</K> constants) : <K>{"\\frac{RT}{V}"}</K> est un facteur constant.
+          → <K>{"\\frac{\\partial P}{\\partial n} = \\frac{RT}{V}"}</K>. Ajouter une mole de gaz augmente la pression de <K>{"\\frac{RT}{V}"}</K>.
         </Step>
         <Step num={2} accent={ACCENT}>
-          <strong>∂P/∂T</strong> (n, V constants) : nR/V est constant.
-          → <strong>∂P/∂T = nR/V</strong>. Loi de Gay-Lussac : à volume fixé, P est proportionnelle à T.
+          <K>{"\\frac{\\partial P}{\\partial T}"}</K> (<K>{"n"}</K>, <K>{"V"}</K> constants) : <K>{"\\frac{nR}{V}"}</K> est constant.
+          → <K>{"\\frac{\\partial P}{\\partial T} = \\frac{nR}{V}"}</K>. Loi de Gay-Lussac : à volume fixé, <K>{"P"}</K> est proportionnelle à <K>{"T"}</K>.
         </Step>
         <Step num={3} accent={ACCENT}>
-          <strong>∂P/∂V</strong> (n, T constants) : règle de puissance sur 1/V = V⁻¹.
-          → <strong>∂P/∂V = −nRT/V²</strong>. Loi de Boyle-Mariotte : comprimer le gaz augmente la pression (signe négatif : P décroît quand V croît).
+          <K>{"\\frac{\\partial P}{\\partial V}"}</K> (<K>{"n"}</K>, <K>{"T"}</K> constants) : règle de puissance sur <K>{"\\frac{1}{V} = V^{-1}"}</K>.
+          → <K>{"\\frac{\\partial P}{\\partial V} = -\\frac{nRT}{V^2}"}</K>. Loi de Boyle-Mariotte : comprimer le gaz augmente la pression (signe négatif : <K>{"P"}</K> décroît quand <K>{"V"}</K> croît).
         </Step>
-        <FormulaBox accent={ACCENT}>∂P/∂n = RT/V   |   ∂P/∂T = nR/V   |   ∂P/∂V = −nRT/V²</FormulaBox>
+        <FormulaBox accent={ACCENT}><K display>{"\\frac{\\partial P}{\\partial n} = \\frac{RT}{V} \\quad|\\quad \\frac{\\partial P}{\\partial T} = \\frac{nR}{V} \\quad|\\quad \\frac{\\partial P}{\\partial V} = -\\frac{nRT}{V^2}"}</K></FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
-          Exemple : n=1 mol, T=300 K, V=10 L. P = 1×8.314×300/10 = 249.4 kPa.
-          ∂P/∂T = 8.314/10 = 0.83 kPa/K → chauffer de 1 K augmente la pression d'environ 0.83 kPa.
+          Exemple : <K>{"n=1"}</K> mol, <K>{"T=300"}</K> K, <K>{"V=10"}</K> L. <K>{"P = \\frac{1 \\times 8.314 \\times 300}{10} = 249.4"}</K> kPa.
+          <K>{"\\frac{\\partial P}{\\partial T} = \\frac{8.314}{10} = 0.83"}</K> kPa/K → chauffer de 1 K augmente la pression d'environ 0.83 kPa.
         </div>
       </div>
 
@@ -156,22 +156,22 @@ export function DerivTab() {
 
       <SectionTitle accent={ACCENT}>Applications des dérivées — Développement de Taylor</SectionTitle>
       <IntuitionBlock emoji="💡" title="Approximation locale : le développement de Taylor" accent={ACCENT}>
-        La dérivée permet d'<strong>approximer localement</strong> toute fonction différentiable. Autour d'un point x₀, on peut écrire :
+        La dérivée permet d'<strong>approximer localement</strong> toute fonction différentiable. Autour d'un point <K>{"x_0"}</K>, on peut écrire :
         <br /><br />
-        <strong>f(x₀ + Δx) ≈ f(x₀) + f′(x₀)·Δx + ½·f″(x₀)·Δx²</strong>
+        <K display>{"f(x_0 + \\Delta x) \\approx f(x_0) + f'(x_0) \\cdot \\Delta x + \\frac{1}{2} f''(x_0) \\cdot \\Delta x^2"}</K>
         <br /><br />
-        — Le premier terme <strong>f′(x₀)·Δx</strong> est la contribution linéaire (pente tangente).<br />
-        — Le deuxième terme <strong>½·f″(x₀)·Δx²</strong> est la correction de courbure (dérivée seconde).<br />
+        — Le premier terme <K>{"f'(x_0) \\cdot \\Delta x"}</K> est la contribution linéaire (pente tangente).<br />
+        — Le deuxième terme <K>{"\\frac{1}{2} f''(x_0) \\cdot \\Delta x^2"}</K> est la correction de courbure (dérivée seconde).<br />
         <br />
         Cette décomposition est universelle : en optique (aberrations), en mécanique (oscillateurs), en numérique (méthodes de Newton).
       </IntuitionBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Exemple — Approximation de sin(x) autour de x₀ = 0</div>
-        <Step num={1} accent={ACCENT}><strong>f(x) = sin(x)</strong>. En x₀ = 0 : f(0) = 0, f′(x) = cos(x) → f′(0) = 1, f″(x) = −sin(x) → f″(0) = 0.</Step>
-        <Step num={2} accent={ACCENT}>Taylor ordre 1 : sin(x) ≈ x. Précision : sin(0.1) ≈ 0.100 vs exact 0.0998. Erreur {'<'} 0.2%.</Step>
-        <Step num={3} accent={ACCENT}>Taylor ordre 3 : sin(x) ≈ x − x³/6. Précision : sin(0.5) ≈ 0.479 vs exact 0.479. Erreur {'<'} 0.01%.</Step>
-        <FormulaBox accent={ACCENT}>sin(x) ≈ x − x³/6 + x⁵/120 − …   (série entière autour de 0)</FormulaBox>
+        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Exemple — Approximation de <K>{"\\sin(x)"}</K> autour de <K>{"x_0 = 0"}</K></div>
+        <Step num={1} accent={ACCENT}><K>{"f(x) = \\sin(x)"}</K>. En <K>{"x_0 = 0"}</K> : <K>{"f(0) = 0"}</K>, <K>{"f'(x) = \\cos(x) \\Rightarrow f'(0) = 1"}</K>, <K>{"f''(x) = -\\sin(x) \\Rightarrow f''(0) = 0"}</K>.</Step>
+        <Step num={2} accent={ACCENT}>Taylor ordre 1 : <K>{"\\sin(x) \\approx x"}</K>. Précision : <K>{"\\sin(0.1) \\approx 0.100"}</K> vs exact 0.0998. Erreur {'<'} 0.2%.</Step>
+        <Step num={3} accent={ACCENT}>Taylor ordre 3 : <K>{"\\sin(x) \\approx x - \\frac{x^3}{6}"}</K>. Précision : <K>{"\\sin(0.5) \\approx 0.479"}</K> vs exact 0.479. Erreur {'<'} 0.01%.</Step>
+        <FormulaBox accent={ACCENT}><K display>{"\\sin(x) \\approx x - \\frac{x^3}{6} + \\frac{x^5}{120} - \\cdots"}</K>{" "}(série entière autour de 0)</FormulaBox>
         <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
           Cette approximation est utilisée en ingénierie (petits angles en mécanique), en traitement du signal (analyse spectrale) et en physique quantique.
         </div>
@@ -219,7 +219,7 @@ export function DerivTab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Dérivée de base" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text, marginBottom: 12 }}>Calculez f'(x) pour f(x) = 3x⁴ - 2x² + 5x - 7</p>
+        <p style={{ color: T.text, marginBottom: 12 }}>Calculez <K>{"f'(x)"}</K> pour <K>{"f(x) = 3x^4 - 2x^2 + 5x - 7"}</K></p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"f'(x) = 12x^3 - 4x + 5"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Linéarité de la dérivée" ruleDetail="(af + bg)' = af' + bg'" accent={ACCENT}>
@@ -239,7 +239,7 @@ export function DerivTab() {
       </Accordion>
       <Accordion title="Exercice 2 — Règle de chaîne : vitesse d'une fusée" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          La distance d'une fusée est d(t) = 3t² + 2t. Calculez la vitesse v(t) = d′(t) et l'accélération a(t) = v′(t).
+          La distance d'une fusée est <K>{"d(t) = 3t^2 + 2t"}</K>. Calculez la vitesse <K>{"v(t) = d'(t)"}</K> et l'accélération <K>{"a(t) = v'(t)"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"v(t) = 6t + 2 \\quad|\\quad a(t) = 6"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -253,13 +253,13 @@ export function DerivTab() {
             <K>{"a(t) = v'(t) = \\frac{d}{dt}(6t + 2) = 6"}</K>
           </DemoStep>
           <DemoStep num={4} rule="Évaluation numérique" accent={ACCENT}>
-            À t = 3s : v(3) = 6×3 + 2 = 20 m/s. L'accélération est constante (6 m/s²) : la fusée gagne 6 m/s chaque seconde.
+            À <K>{"t = 3"}</K>s : <K>{"v(3) = 6 \\times 3 + 2 = 20"}</K> m/s. L'accélération est constante (<K>{"6"}</K> m/s²) : la fusée gagne 6 m/s chaque seconde.
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Règle de chaîne : composition de fonctions" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Soit h(x) = sin(x²). Calculez h′(x) par la règle de chaîne.
+          Soit <K>{"h(x) = \\sin(x^2)"}</K>. Calculez <K>{"h'(x)"}</K> par la règle de chaîne.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"h'(x) = 2x \\cdot \\cos(x^2)"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -279,7 +279,7 @@ export function DerivTab() {
       </Accordion>
       <Accordion title="Exercice 4 — Dérivées partielles : surface d'un cylindre" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          La surface latérale d'un cylindre est S(r, h) = 2π·r·h. Calculez ∂S/∂r et ∂S/∂h, puis évaluez-les en r=3, h=10.
+          La surface latérale d'un cylindre est <K>{"S(r, h) = 2\\pi r h"}</K>. Calculez <K>{"\\frac{\\partial S}{\\partial r}"}</K> et <K>{"\\frac{\\partial S}{\\partial h}"}</K>, puis évaluez-les en <K>{"r=3, h=10"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\left.\\frac{\\partial S}{\\partial r}\\right|_{(3,10)} \\approx 62.8 \\quad|\\quad \\left.\\frac{\\partial S}{\\partial h}\\right|_{(3,10)} \\approx 18.8"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -300,7 +300,7 @@ export function DerivTab() {
       </Accordion>
       <Accordion title="Exercice 5 — Taylor : approximation de e^x" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Approximez e^(0.3) avec un développement de Taylor d'ordre 3 autour de x₀ = 0. Comparez à la valeur exacte.
+          Approximez <K>{"e^{0.3}"}</K> avec un développement de Taylor d'ordre 3 autour de <K>{"x_0 = 0"}</K>. Comparez à la valeur exacte.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"e^{0.3} \\approx 1.3495 \\quad (\\text{exact : } 1.34986\\ldots)"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -357,39 +357,39 @@ export function IntegTab() {
         L'intégrale mesure l'<strong style={{ color: T.text }}>accumulation d'une grandeur variable</strong>. Elle apparaît dans tous les domaines : en physique <em>(distance = intégrale de la vitesse, travail = intégrale de la force)</em>, en probabilités <em>(probabilité = aire sous la densité)</em>, en biologie <em>(biomasse totale = intégrale de la densité de population)</em>, en thermodynamique <em>(chaleur échangée = intégrale du flux)</em>. Partout où l'on additionne infiniment de petites contributions, l'intégrale est l'outil.
       </div>
       <IntuitionBlock emoji="📐" title="L'intégrale = superficie sous la courbe" accent={ACCENT}>
-        Imaginez une route avec une vitesse variable v(t). La <strong>distance parcourue</strong> entre t=a et t=b est l'intégrale ∫[a,b] v(t) dt — la somme de toutes les petites distances v(t)×dt.
-        En probabilités : l'intégrale de la densité φ(x) sur [a,b] donne P(a ≤ X ≤ b) — la probabilité d'être dans l'intervalle.
+        Imaginez une route avec une vitesse variable <K>{"v(t)"}</K>. La <strong>distance parcourue</strong> entre <K>{"t=a"}</K> et <K>{"t=b"}</K> est l'intégrale <K>{"\\int_a^b v(t)\\,dt"}</K> — la somme de toutes les petites distances <K>{"v(t) \\times dt"}</K>.
+        En probabilités : l'intégrale de la densité <K>{"\\varphi(x)"}</K> sur <K>{"[a,b]"}</K> donne <K>{"P(a \\le X \\le b)"}</K> — la probabilité d'être dans l'intervalle.
         L'aire sous la courbe est à la fois une surface géométrique et une somme physique.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Intégrale de Riemann">
-        ∫[a,b] f(x) dx = lim[n→∞] Σᵢ f(xᵢ) × Δx
+        <K display>{"\\int_a^b f(x)\\,dx = \\lim_{n \\to \\infty} \\sum_i f(x_i) \\cdot \\Delta x"}</K>
       </FormulaBox>
 
       <FormulaBox accent={ACCENT} label="Théorème fondamental du calcul">
-        ∫[a,b] f(x) dx = F(b) - F(a)   où F' = f (primitive de f)
+        <K display>{"\\int_a^b f(x)\\,dx = F(b) - F(a) \\quad \\text{où } F' = f \\text{ (primitive de } f\\text{)}"}</K>
       </FormulaBox>
 
       <SectionTitle accent={ACCENT}>L'espérance comme intégrale</SectionTitle>
       <FormulaBox accent={ACCENT} label="Espérance d'une variable continue">
-        E[X] = ∫[-∞, +∞] x · f(x) dx
+        <K display>{"E[X] = \\int_{-\\infty}^{+\\infty} x \\cdot f(x)\\,dx"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        C'est la généralisation continue de la moyenne : au lieu de sommer x_i × P(X=x_i), on intègre x × f(x) sur tous les x possibles. Par exemple, si X est la taille d'un individu adulte (densité f gaussienne centrée sur 175 cm), l'espérance E[X] = ∫ x·f(x)dx donne la taille moyenne de la population — une intégrale pondérée par les probabilités.
+        C'est la généralisation continue de la moyenne : au lieu de sommer <K>{"x_i \\times P(X = x_i)"}</K>, on intègre <K>{"x \\times f(x)"}</K> sur tous les <K>{"x"}</K> possibles. Par exemple, si <K>{"X"}</K> est la taille d'un individu adulte (densité <K>{"f"}</K> gaussienne centrée sur 175 cm), l'espérance <K>{"E[X] = \\int x \\cdot f(x)\\,dx"}</K> donne la taille moyenne de la population — une intégrale pondérée par les probabilités.
       </div>
 
       <SectionTitle accent={ACCENT}>Lien avec la probabilité normale</SectionTitle>
       <FormulaBox accent={ACCENT} label="CDF normale standard">
-        Φ(d) = P(Z ≤ d) = ∫[-∞, d] φ(x) dx   où φ(x) = (1/√2π) e^(-x²/2)
+        <K display>{"\\Phi(d) = P(Z \\le d) = \\int_{-\\infty}^{d} \\varphi(x)\\,dx \\quad \\text{où } \\varphi(x) = \\frac{1}{\\sqrt{2\\pi}}\\, e^{-x^2/2}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, marginBottom: 16 }}>
-        La fonction de répartition Φ(d) est une intégrale de la densité gaussienne. Elle ne possède pas de forme fermée analytique — c'est pourquoi les <strong>tables de la loi normale</strong> ont été si précieuses avant l'informatique. Quand vous lisez "Φ(1.96) = 0.975", vous lisez la valeur d'une intégrale : ∫[-∞, 1.96] φ(x) dx = 0.975.
+        La fonction de répartition <K>{"\\Phi(d)"}</K> est une intégrale de la densité gaussienne. Elle ne possède pas de forme fermée analytique — c'est pourquoi les <strong>tables de la loi normale</strong> ont été si précieuses avant l'informatique. Quand vous lisez "<K>{"\\Phi(1.96) = 0.975"}</K>", vous lisez la valeur d'une intégrale : <K>{"\\int_{-\\infty}^{1.96} \\varphi(x)\\,dx = 0.975"}</K>.
       </div>
 
       <IntuitionBlock emoji="∫" title="Φ(d) : une intégrale de la gaussienne" accent={ACCENT}>
-        La densité gaussienne φ(x) = (1/√2π)·e^(-x²/2) est une courbe en cloche symétrique. Son intégrale sur tout ℝ vaut 1 (c'est une densité de probabilité). Sur [-1.96, 1.96] elle vaut 0.95 — c'est l'intervalle de confiance à 95% utilisé en statistiques et en physique (mesures expérimentales, intervalles de tolérance industrielle, tests d'hypothèse).
+        La densité gaussienne <K>{"\\varphi(x) = \\frac{1}{\\sqrt{2\\pi}}\\, e^{-x^2/2}"}</K> est une courbe en cloche symétrique. Son intégrale sur tout <K>{"\\mathbb{R}"}</K> vaut 1 (c'est une densité de probabilité). Sur <K>{"[-1.96,\\, 1.96]"}</K> elle vaut 0.95 — c'est l'intervalle de confiance à 95% utilisé en statistiques et en physique (mesures expérimentales, intervalles de tolérance industrielle, tests d'hypothèse).
         <br /><br />
-        Les approximations numériques de Φ (polynomiales, rationnelles) sont des algorithmes fondamentaux en analyse numérique, indépendamment de toute application sectorielle.
+        Les approximations numériques de <K>{"\\Phi"}</K> (polynomiales, rationnelles) sont des algorithmes fondamentaux en analyse numérique, indépendamment de toute application sectorielle.
       </IntuitionBlock>
 
       <div style={{ background: T.panel2, borderRadius: 8, padding: 14, margin: '10px 0', border: `1px solid ${T.a4}33` }}>
@@ -438,7 +438,7 @@ export function IntegTab() {
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Intégrale simple" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Calculez ∫[0,3] 2x dx</p>
+        <p style={{ color: T.text }}>Calculez <K>{"\\int_0^3 2x\\,dx"}</K></p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\int_0^3 2x\\,dx = 9"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Primitive (règle de puissance intégrale)" ruleDetail="∫ xⁿ dx = xⁿ⁺¹/(n+1) + C" accent={ACCENT}>
@@ -448,12 +448,12 @@ export function IntegTab() {
             <K>{"F(3) - F(0) = 3^2 - 0^2 = 9 - 0 = 9"}</K>
           </DemoStep>
           <DemoStep num={3} rule="Vérification géométrique" accent={ACCENT}>
-            Aire du triangle : base = 3, hauteur = 2×3 = 6 → aire = (3×6)/2 = 9 ✓
+            Aire du triangle : base = 3, hauteur = <K>{"2 \\times 3 = 6"}</K> → aire = <K>{"\\frac{3 \\times 6}{2} = 9"}</K> ✓
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Probabilité et intégrale gaussienne" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text, marginBottom: 8 }}>La taille des adultes suit une loi N(175, 7²) cm. Quelle est la probabilité d'avoir entre 168 et 182 cm ?</p>
+        <p style={{ color: T.text, marginBottom: 8 }}>La taille des adultes suit une loi <K>{"\\mathcal{N}(175, 7^2)"}</K> cm. Quelle est la probabilité d'avoir entre 168 et 182 cm ?</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(168 \\le X \\le 182) = 2 \\times 0.8413 - 1 \\approx 68.3\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Standardisation (Z-score)" ruleDetail="Z = (X − μ) / σ" accent={ACCENT}>
@@ -467,13 +467,13 @@ export function IntegTab() {
           </DemoStep>
           <DemoStep num={4} rule="Calcul final" accent={ACCENT}>
             <K>{"P = \\Phi(1) - (1 - \\Phi(1)) = 2 \\times 0.8413 - 1 = 0.6826 \\approx 68.3\\%"}</K>
-            <br />Règle empirique : ±1σ couvre ~68%, ±2σ couvre ~95%, ±3σ couvre ~99.7%.
+            <br />Règle empirique : <K>{"\\pm 1\\sigma"}</K> couvre ~68%, <K>{"\\pm 2\\sigma"}</K> couvre ~95%, <K>{"\\pm 3\\sigma"}</K> couvre ~99.7%.
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Espérance d'une variable tronquée" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          X suit une loi uniforme sur [0, 4]. Calculez E[X], E[X²], puis E[max(X − 2, 0)] = ∫[2, 4] (x−2) · (1/4) dx.
+          <K>{"X"}</K> suit une loi uniforme sur <K>{"[0, 4]"}</K>. Calculez <K>{"E[X]"}</K>, <K>{"E[X^2]"}</K>, puis <K>{"E[\\max(X - 2, 0)] = \\int_2^4 (x-2) \\cdot \\frac{1}{4}\\,dx"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"E[X] = 2 \\quad|\\quad E[X^2] = \\frac{16}{3} \\quad|\\quad E[\\max(X-2,0)] = 0.5"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -531,22 +531,22 @@ export function ExpLogTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La distinction entre <strong style={{ color: T.text }}>croissance discrète</strong> et <strong style={{ color: T.text }}>croissance continue</strong> est fondamentale en finance. En croissance discrète, un capital C₀ placé à un taux annuel r pendant n périodes devient C₀ × (1 + r/m)^(m×n), où m est le nombre de capitalisations par an. Quand m → ∞ (capitalisation continue), la formule converge vers C₀ × e^(r×n) — c'est la capitalisation continue. Par exemple, 100€ à 5% continu pendant 2 ans donnent 100 × e^(0.10) = 110.52€, contre 100 × (1.05)² = 110.25€ en annuel discret. La capitalisation continue est préférée en finance quantitative car elle simplifie les formules (la somme de log-rendements correspond à la multiplication des facteurs de croissance).
+        La distinction entre <strong style={{ color: T.text }}>croissance discrète</strong> et <strong style={{ color: T.text }}>croissance continue</strong> est fondamentale en finance. En croissance discrète, un capital <K>{"C_0"}</K> placé à un taux annuel <K>{"r"}</K> pendant <K>{"n"}</K> périodes devient <K>{"C_0 \\times \\left(1 + \\frac{r}{m}\\right)^{m \\times n}"}</K>, où <K>{"m"}</K> est le nombre de capitalisations par an. Quand <K>{"m \\to \\infty"}</K> (capitalisation continue), la formule converge vers <K>{"C_0 \\times e^{r \\times n}"}</K> — c'est la capitalisation continue. Par exemple, 100€ à 5% continu pendant 2 ans donnent <K>{"100 \\times e^{0.10} = 110.52"}</K>€, contre <K>{"100 \\times (1.05)^2 = 110.25"}</K>€ en annuel discret. La capitalisation continue est préférée en finance quantitative car elle simplifie les formules (la somme de log-rendements correspond à la multiplication des facteurs de croissance).
       </div>
       <IntuitionBlock emoji="💰" title="Pourquoi log-rendement ?" accent={ACCENT}>
         Si vous avez 100€ et gagnez 10% deux années de suite :
-        Rendement simple : 100 × 1.1 × 1.1 = 121€.
-        Log-rendement : ln(121/100) = ln(1.1) + ln(1.1) — ils s'additionnent !
+        Rendement simple : <K>{"100 \\times 1.1 \\times 1.1 = 121"}</K>€.
+        Log-rendement : <K>{"\\ln(121/100) = \\ln(1.1) + \\ln(1.1)"}</K> — ils s'additionnent !
         Les log-rendements sont <strong>additifs dans le temps</strong>, ce qui est mathématiquement
         très pratique pour modéliser les prix financiers.
       </IntuitionBlock>
 
       <Grid cols={2} gap="12px">
         <FormulaBox accent={ACCENT} label="Rendement simple">
-          r_simple = (S_t - S₀) / S₀
+          <K display>{"r_{\\text{simple}} = \\frac{S_t - S_0}{S_0}"}</K>
         </FormulaBox>
         <FormulaBox accent={ACCENT} label="Log-rendement (rendement continu)">
-          r_log = ln(S_t / S₀) = ln(S_t) - ln(S₀)
+          <K display>{"r_{\\text{log}} = \\ln\\!\\left(\\frac{S_t}{S_0}\\right) = \\ln(S_t) - \\ln(S_0)"}</K>
         </FormulaBox>
       </Grid>
 
@@ -571,7 +571,7 @@ export function ExpLogTab() {
       </Grid>
 
       <FormulaBox accent={ACCENT} label="GBM — Solution exacte (par lemme d'Itô)">
-        S_T = S₀ × exp[(µ - σ²/2)×T + σ×√T×Z]   où Z ~ N(0,1)
+        <K display>{"S_T = S_0 \\times \\exp\\!\\left[\\left(\\mu - \\frac{\\sigma^2}{2}\\right)T + \\sigma\\sqrt{T}\\,Z\\right] \\quad \\text{où } Z \\sim \\mathcal{N}(0,1)"}</K>
       </FormulaBox>
 
       <SymbolLegend accent={ACCENT} symbols={[
@@ -585,11 +585,11 @@ export function ExpLogTab() {
       ]} />
 
       <IntuitionBlock emoji="🔧" title="La correction d'Itô : pourquoi soustraire σ²/2 ?" accent={ACCENT}>
-        Voici l'une des subtilités les plus importantes du modèle GBM. Intuitivement, si S_T = S₀ × e^(µT), on s'attendrait à ce que E[S_T] = S₀ × e^(µT). C'est vrai ! Mais si on demande "quel est le log-rendement moyen ?", la réponse est E[ln(S_T/S₀)] = (µ - σ²/2) × T, <em>pas</em> µ × T. Pourquoi cette différence ?
+        Voici l'une des subtilités les plus importantes du modèle GBM. Intuitivement, si <K>{"S_T = S_0 \\times e^{\\mu T}"}</K>, on s'attendrait à ce que <K>{"E[S_T] = S_0 \\times e^{\\mu T}"}</K>. C'est vrai ! Mais si on demande "quel est le log-rendement moyen ?", la réponse est <K>{"E[\\ln(S_T/S_0)] = (\\mu - \\sigma^2/2) \\times T"}</K>, <em>pas</em> <K>{"\\mu \\times T"}</K>. Pourquoi cette différence ?
         <br /><br />
-        C'est l'<strong>inégalité de Jensen</strong> : pour une fonction convexe f, E[f(X)] ≥ f(E[X]). Ici, exp est convexe, donc E[e^X] ≥ e^(E[X]). En conséquence, E[S_T] = e^(µT + σ²T/2) {'>'} e^(µT). La "correction" -σ²/2 ajuste le drift log pour que E[S_T] = S₀ × e^(µT) reste cohérent.
+        C'est l'<strong>inégalité de Jensen</strong> : pour une fonction convexe <K>{"f"}</K>, <K>{"E[f(X)] \\ge f(E[X])"}</K>. Ici, exp est convexe, donc <K>{"E[e^X] \\ge e^{E[X]}"}</K>. En conséquence, <K>{"E[S_T] = e^{\\mu T + \\sigma^2 T/2}"}</K> {'>'} <K>{"e^{\\mu T}"}</K>. La "correction" <K>{"-\\sigma^2/2"}</K> ajuste le drift log pour que <K>{"E[S_T] = S_0 \\times e^{\\mu T}"}</K> reste cohérent.
         <br /><br />
-        <strong>Exemple chiffré :</strong> imaginez deux scénarios équiprobables : +50% et -50%. La moyenne arithmétique est 0%, mais la moyenne géométrique est √(1.5 × 0.5) - 1 = √0.75 - 1 ≈ -13.4% ! La volatilité détruit de la valeur — c'est l'effet de la correction d'Itô dans le GBM.
+        <strong>Exemple chiffré :</strong> imaginez deux scénarios équiprobables : +50% et -50%. La moyenne arithmétique est 0%, mais la moyenne géométrique est <K>{"\\sqrt{1.5 \\times 0.5} - 1 = \\sqrt{0.75} - 1 \\approx -13.4\\%"}</K> ! La volatilité détruit de la valeur — c'est l'effet de la correction d'Itô dans le GBM.
       </IntuitionBlock>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
@@ -620,29 +620,29 @@ export function ExpLogTab() {
 
       <SectionTitle accent={ACCENT}>Loi log-normale de S_T : propriétés complètes</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Puisque ln(S_T/S₀) ~ N((µ-σ²/2)T, σ²T), S_T suit une loi log-normale dont on peut calculer tous les moments et probabilités.
+        Puisque <K>{"\\ln(S_T/S_0) \\sim \\mathcal{N}((\\mu - \\sigma^2/2)T,\\; \\sigma^2 T)"}</K>, <K>{"S_T"}</K> suit une loi log-normale dont on peut calculer tous les moments et probabilités.
       </div>
       <Grid cols={3} gap="10px">
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Espérance</div>
-          <code style={{ color: T.text, fontSize: 12 }}>E[S_T] = S₀ × e^(µ×T)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}>Le drift µ pilote la croissance moyenne</div>
+          <K>{"E[S_T] = S_0 \\times e^{\\mu T}"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}>Le drift <K>{"\\mu"}</K> pilote la croissance moyenne</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Variance</div>
-          <code style={{ color: T.text, fontSize: 12 }}>Var[S_T] = S₀² × e^(2µT) × (e^(σ²T) - 1)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}>Croît exponentiellement avec T et σ</div>
+          <K>{"\\text{Var}[S_T] = S_0^2 \\times e^{2\\mu T} \\times (e^{\\sigma^2 T} - 1)"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}>Croît exponentiellement avec <K>{"T"}</K> et <K>{"\\sigma"}</K></div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>Probabilité de dépasser K</div>
-          <code style={{ color: T.text, fontSize: 12 }}>P(S_T {'>'} K) = N(d₂)</code>
-          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}>d₂ = [ln(S₀/K) + (µ-σ²/2)T] / (σ√T)</div>
+          <K>{"P(S_T > K) = N(d_2)"}</K>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 4 }}><K>{"d_2 = \\frac{\\ln(S_0/K) + (\\mu - \\sigma^2/2)T}{\\sigma\\sqrt{T}}"}</K></div>
         </div>
       </Grid>
 
       <Accordion title="Exercice — Probabilité de franchir un seuil" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Action avec S₀=100€, µ=8%, σ=25%, T=1 an. Calculez P(S_T {'>'} 120€).
+          Action avec <K>{"S_0 = 100"}</K>€, <K>{"\\mu = 8\\%"}</K>, <K>{"\\sigma = 25\\%"}</K>, <K>{"T = 1"}</K> an. Calculez <K>{"P(S_T > 120\\text{€})"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(S_T > 120\\euro) \\approx 70.3\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -662,9 +662,9 @@ export function ExpLogTab() {
       </Accordion>
 
       <ExampleBlock title="Propriété clé : ln(S_T/S₀) ~ N(µ̃T, σ²T)" accent={ACCENT}>
-        <p>Pour S₀ = 80$/bbl (pétrole brut), µ = 10%, σ = 30%, T = 0.5 an :</p>
+        <p>Pour <K>{"S_0 = 80"}</K>$/bbl (pétrole brut), <K>{"\\mu = 10\\%"}</K>, <K>{"\\sigma = 30\\%"}</K>, <K>{"T = 0.5"}</K> an :</p>
         <FormulaBox accent={ACCENT} label="Résultats">
-          E[ln(S_T/S₀)] = 0.0275 | E[S_T] = 84.1$/bbl | σ(ln) = 0.212
+          <K display>{"E[\\ln(S_T/S_0)] = 0.0275 \\quad|\\quad E[S_T] = 84.1\\text{\\$/bbl} \\quad|\\quad \\sigma_{\\ln} = 0.212"}</K>
         </FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Correction d'Itô" ruleDetail="µ̃ = µ − σ²/2" accent={ACCENT}>
@@ -719,19 +719,18 @@ export function AlgebraTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        L'algèbre linéaire est le langage naturel de la finance multi-actifs. Un <strong style={{ color: T.text }}>portefeuille</strong> est un vecteur de positions w = (w₁, w₂, ..., wₙ) où wᵢ est le poids alloué à l'actif i. Les <strong style={{ color: T.text }}>rendements espérés</strong> forment un vecteur µ = (µ₁, µ₂, ..., µₙ). La <strong style={{ color: T.text }}>matrice de covariance</strong> Σ (de taille n×n) capture toutes les relations entre actifs : Σᵢᵢ = σᵢ² (variance de l'actif i), Σᵢⱼ = Cov(i,j) (covariance entre i et j). La variance du portefeuille s'écrit élégamment σ²_p = wᵀΣw — un simple produit de matrices. L'<strong style={{ color: T.text }}>optimisation de Markowitz</strong> (trouver le portefeuille de variance minimale pour un rendement cible) se résout avec des outils d'algèbre linéaire (multiplicateurs de Lagrange, inversion de matrices). Sur les marchés de l'énergie, Σ regroupe pétrole, gaz, électricité, charbon — des actifs aux dynamiques saisonnières et géopolitiques complexes.
+        L'algèbre linéaire est le langage naturel de la finance multi-actifs. Un <strong style={{ color: T.text }}>portefeuille</strong> est un vecteur de positions <K>{"\\mathbf{w} = (w_1, w_2, \\ldots, w_n)"}</K> où <K>{"w_i"}</K> est le poids alloué à l'actif <K>{"i"}</K>. Les <strong style={{ color: T.text }}>rendements espérés</strong> forment un vecteur <K>{"\\boldsymbol{\\mu} = (\\mu_1, \\mu_2, \\ldots, \\mu_n)"}</K>. La <strong style={{ color: T.text }}>matrice de covariance</strong> <K>{"\\Sigma"}</K> (de taille <K>{"n \\times n"}</K>) capture toutes les relations entre actifs : <K>{"\\Sigma_{ii} = \\sigma_i^2"}</K> (variance de l'actif <K>{"i"}</K>), <K>{"\\Sigma_{ij} = \\text{Cov}(i,j)"}</K> (covariance entre <K>{"i"}</K> et <K>{"j"}</K>). La variance du portefeuille s'écrit élégamment <K>{"\\sigma_p^2 = \\mathbf{w}^\\top \\Sigma\\, \\mathbf{w}"}</K> — un simple produit de matrices. L'<strong style={{ color: T.text }}>optimisation de Markowitz</strong> (trouver le portefeuille de variance minimale pour un rendement cible) se résout avec des outils d'algèbre linéaire (multiplicateurs de Lagrange, inversion de matrices). Sur les marchés de l'énergie, <K>{"\\Sigma"}</K> regroupe pétrole, gaz, électricité, charbon — des actifs aux dynamiques saisonnières et géopolitiques complexes.
       </div>
       <IntuitionBlock emoji="🗺️" title="Les matrices = transformations dans l'espace" accent={ACCENT}>
         Une matrice est un tableau de chiffres qui décrit comment transformer l'espace.
         En finance, la matrice de covariance décrit "comment les actifs bougent ensemble".
-        Si pétrole et gaz montent souvent ensemble : corrélation ρ {'>'} 0 → le risque d'un portefeuille
+        Si pétrole et gaz montent souvent ensemble : corrélation <K>{"\\rho > 0"}</K> → le risque d'un portefeuille
         pétrole+gaz n'est pas simplement la somme des risques individuels !
       </IntuitionBlock>
 
       <SectionTitle accent={ACCENT}>Matrice de covariance (2 actifs)</SectionTitle>
       <FormulaBox accent={ACCENT} label="Σ = matrice de variance-covariance">
-        Σ = [ σ₁²      ρ·σ₁·σ₂ ]
-            [ ρ·σ₁·σ₂  σ₂²     ]
+        <K display>{"\\Sigma = \\begin{bmatrix} \\sigma_1^2 & \\rho\\,\\sigma_1\\,\\sigma_2 \\\\ \\rho\\,\\sigma_1\\,\\sigma_2 & \\sigma_2^2 \\end{bmatrix}"}</K>
       </FormulaBox>
 
       <div style={{ background: T.panel2, borderRadius: 8, padding: 16, margin: '12px 0', fontFamily: 'monospace', color: T.text, fontSize: 13 }}>
@@ -740,7 +739,7 @@ export function AlgebraTab() {
       </div>
 
       <FormulaBox accent={ACCENT} label="Variance de portefeuille (w₁=60%, w₂=40%)">
-        σ²_p = w₁²σ₁² + 2w₁w₂ρσ₁σ₂ + w₂²σ₂² = wᵀΣw
+        <K display>{"\\sigma_p^2 = w_1^2 \\sigma_1^2 + 2 w_1 w_2 \\rho\\,\\sigma_1\\,\\sigma_2 + w_2^2 \\sigma_2^2 = \\mathbf{w}^\\top \\Sigma\\, \\mathbf{w}"}</K>
       </FormulaBox>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
@@ -754,7 +753,7 @@ export function AlgebraTab() {
         Covariance et corrélation mesurent toutes deux la co-variation de deux actifs, mais à des échelles différentes. La corrélation est la covariance "normalisée" : elle est sans unité et toujours comprise entre -1 et +1, ce qui facilite les comparaisons.
       </div>
       <FormulaBox accent={ACCENT} label="Corrélation de Pearson">
-        ρ(X,Y) = Cov(X,Y) / (σ_X × σ_Y)   avec Cov(X,Y) = E[(X-µ_X)(Y-µ_Y)]
+        <K display>{"\\rho(X,Y) = \\frac{\\text{Cov}(X,Y)}{\\sigma_X \\times \\sigma_Y} \\quad \\text{avec } \\text{Cov}(X,Y) = E[(X - \\mu_X)(Y - \\mu_Y)]"}</K>
       </FormulaBox>
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
         <strong style={{ color: ACCENT }}>Mise en garde : corrélation ≠ causalité.</strong> WTI et Brent ont une corrélation de 0.96 car ils sont économiquement liés (mêmes acheteurs, arbitrage physique). Mais deux séries temporelles peuvent être corrélées sans lien causal (ex: corrélation spurieuse entre prix du gaz et ventes de crème glacée en été). En finance de l'énergie, identifier les vraies relations économiques derrière les corrélations statistiques est essentiel pour le hedging.
@@ -781,50 +780,47 @@ export function AlgebraTab() {
 
       <SectionTitle accent={ACCENT}>Valeurs propres, vecteurs propres et ACP</SectionTitle>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        La matrice de covariance Σ peut être décomposée en valeurs propres λᵢ et vecteurs propres vᵢ : Σ = V × Λ × Vᵀ. Cette décomposition a une interprétation géométrique et financière profonde.
+        La matrice de covariance <K>{"\\Sigma"}</K> peut être décomposée en valeurs propres <K>{"\\lambda_i"}</K> et vecteurs propres <K>{"\\mathbf{v}_i"}</K> : <K>{"\\Sigma = V \\Lambda V^\\top"}</K>. Cette décomposition a une interprétation géométrique et financière profonde.
       </div>
       <Grid cols={2} gap="10px">
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>Vecteurs propres = directions de risque</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Chaque vecteur propre vᵢ représente une "direction de risque principal" — une combinaison linéaire des actifs dont les rendements sont décorrélés des autres directions. C'est le principe de l'<strong>Analyse en Composantes Principales (ACP)</strong> appliquée aux marchés financiers.</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>Chaque vecteur propre <K>{"\\mathbf{v}_i"}</K> représente une "direction de risque principal" — une combinaison linéaire des actifs dont les rendements sont décorrélés des autres directions. C'est le principe de l'<strong>Analyse en Composantes Principales (ACP)</strong> appliquée aux marchés financiers.</div>
         </div>
         <div style={{ background: T.panel2, borderRadius: 8, padding: '14px', border: `1px solid ${ACCENT}22` }}>
           <div style={{ color: ACCENT, fontWeight: 700, marginBottom: 6, fontSize: 13 }}>Valeurs propres = variance expliquée</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>La valeur propre λᵢ est la variance du portefeuille aligné sur vᵢ. La part de variance expliquée par la i-ème composante est λᵢ / (Σλⱼ). Sur les marchés de l'énergie, la première composante (niveau général des prix) explique souvent 60-70% de la variance totale.</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>La valeur propre <K>{"\\lambda_i"}</K> est la variance du portefeuille aligné sur <K>{"\\mathbf{v}_i"}</K>. La part de variance expliquée par la i-ème composante est <K>{"\\lambda_i / (\\sum \\lambda_j)"}</K>. Sur les marchés de l'énergie, la première composante (niveau général des prix) explique souvent 60-70% de la variance totale.</div>
         </div>
       </Grid>
 
       <IntuitionBlock emoji="✅" title="Σ doit être semi-définie positive" accent={ACCENT}>
-        Une matrice de covariance valide doit être <strong>semi-définie positive (SDP)</strong> : pour tout vecteur de poids w, la variance du portefeuille wᵀΣw ≥ 0. En termes de valeurs propres, toutes doivent être ≥ 0. En pratique, cette propriété peut être violée quand on estime Σ sur peu de données (matrice dégénérée) ou quand on utilise des corrélations inconsistantes (ex: ρ(A,C) {'>'} ρ(A,B) × ρ(B,C) dans certaines configurations). La décomposition de Cholesky échoue si Σ n'est pas SDP — c'est une vérification utile en pratique.
+        Une matrice de covariance valide doit être <strong>semi-définie positive (SDP)</strong> : pour tout vecteur de poids <K>{"\\mathbf{w}"}</K>, la variance du portefeuille <K>{"\\mathbf{w}^\\top \\Sigma\\, \\mathbf{w} \\ge 0"}</K>. En termes de valeurs propres, toutes doivent être <K>{"\\ge 0"}</K>. En pratique, cette propriété peut être violée quand on estime <K>{"\\Sigma"}</K> sur peu de données (matrice dégénérée) ou quand on utilise des corrélations inconsistantes (ex: <K>{"\\rho(A,C)"}</K> {'>'} <K>{"\\rho(A,B) \\times \\rho(B,C)"}</K> dans certaines configurations). La décomposition de Cholesky échoue si <K>{"\\Sigma"}</K> n'est pas SDP — c'est une vérification utile en pratique.
       </IntuitionBlock>
 
       <SectionTitle accent={ACCENT}>Décomposition de Cholesky</SectionTitle>
       <IntuitionBlock emoji="🔧" title="Cholesky : générer des actifs corrélés" accent={ACCENT}>
-        Pour simuler 2 actifs corrélés, on décompose Σ = L × Lᵀ (Cholesky).
-        Puis : [X, Y] = L × [Z₁, Z₂]ᵀ où Z₁, Z₂ ~ N(0,1) indépendants.
+        Pour simuler 2 actifs corrélés, on décompose <K>{"\\Sigma = L \\times L^\\top"}</K> (Cholesky).
+        Puis : <K>{"[X, Y] = L \\times [Z_1, Z_2]^\\top"}</K> où <K>{"Z_1, Z_2 \\sim \\mathcal{N}(0,1)"}</K> indépendants.
         C'est exactement ce que fait le scatter plot ci-dessus !
       </IntuitionBlock>
       <FormulaBox accent={ACCENT} label="Cholesky pour 2 actifs">
-        L = [ σ₁           0          ]
-            [ ρ·σ₂    σ₂·√(1-ρ²)     ]
-
-        X = σ₁·Z₁
-        Y = ρ·σ₂·Z₁ + σ₂·√(1-ρ²)·Z₂
+        <K display>{"L = \\begin{bmatrix} \\sigma_1 & 0 \\\\ \\rho\\,\\sigma_2 & \\sigma_2\\sqrt{1 - \\rho^2} \\end{bmatrix}"}</K>
+        <K display>{"X = \\sigma_1 Z_1 \\qquad Y = \\rho\\,\\sigma_2\\,Z_1 + \\sigma_2\\sqrt{1 - \\rho^2}\\, Z_2"}</K>
       </FormulaBox>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
         <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie de la décomposition de Cholesky</div>
-        <Step num={1} accent={ACCENT}><strong>L est la matrice triangulaire inférieure</strong> telle que Σ = L·Lᵀ. Elle transforme des bruits indépendants ε ~ N(0,I) en un vecteur corrélé Z = L·ε ayant exactement la structure de covariance cible Σ.</Step>
-        <Step num={2} accent={ACCENT}><strong>Chaque Z_i = Σⱼ L_ij · ε_j</strong> où ε ~ N(0,I) indépendant. Pour 2 actifs : Z₁ = σ₁·ε₁ (indépendant du second) ; Z₂ = ρ·σ₂·ε₁ + σ₂·√(1-ρ²)·ε₂ (mélange des deux bruits).</Step>
-        <Step num={3} accent={ACCENT}><strong>Preuve de la correction :</strong> Cov(L·ε) = L·Cov(ε)·Lᵀ = L·I·Lᵀ = Σ ✓. La matrice identité Cov(ε) = I traduit l'indépendance des bruits ; L encode toute la structure de dépendance.</Step>
+        <Step num={1} accent={ACCENT}><strong>L est la matrice triangulaire inférieure</strong> telle que <K>{"\\Sigma = L \\cdot L^\\top"}</K>. Elle transforme des bruits indépendants <K>{"\\varepsilon \\sim \\mathcal{N}(0, I)"}</K> en un vecteur corrélé <K>{"Z = L \\cdot \\varepsilon"}</K> ayant exactement la structure de covariance cible <K>{"\\Sigma"}</K>.</Step>
+        <Step num={2} accent={ACCENT}><strong>Chaque <K>{"Z_i = \\sum_j L_{ij} \\cdot \\varepsilon_j"}</K></strong> où <K>{"\\varepsilon \\sim \\mathcal{N}(0, I)"}</K> indépendant. Pour 2 actifs : <K>{"Z_1 = \\sigma_1 \\varepsilon_1"}</K> (indépendant du second) ; <K>{"Z_2 = \\rho\\,\\sigma_2\\,\\varepsilon_1 + \\sigma_2\\sqrt{1-\\rho^2}\\, \\varepsilon_2"}</K> (mélange des deux bruits).</Step>
+        <Step num={3} accent={ACCENT}><strong>Preuve de la correction :</strong> <K>{"\\text{Cov}(L\\varepsilon) = L \\cdot \\text{Cov}(\\varepsilon) \\cdot L^\\top = L \\cdot I \\cdot L^\\top = \\Sigma"}</K> ✓. La matrice identité <K>{"\\text{Cov}(\\varepsilon) = I"}</K> traduit l'indépendance des bruits ; <K>{"L"}</K> encode toute la structure de dépendance.</Step>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : Cholesky est l'algorithme clé des simulations Monte Carlo multi-actifs. Si Σ n'est pas semi-définie positive (valeur propre négative), la décomposition échoue — c'est une vérification automatique de la cohérence de la matrice de corrélation.
+          Synthèse : Cholesky est l'algorithme clé des simulations Monte Carlo multi-actifs. Si <K>{"\\Sigma"}</K> n'est pas semi-définie positive (valeur propre négative), la décomposition échoue — c'est une vérification automatique de la cohérence de la matrice de corrélation.
         </div>
       </div>
 
       <ExampleBlock title="Pétrole & Gaz Naturel — Corrélation historique" accent={ACCENT}>
-        <p>σ_oil = 30%, σ_gas = 40%, ρ = 0.5, portefeuille 50%/50%</p>
-        <FormulaBox accent={ACCENT} label="Résultat">σ_p = 30.4%</FormulaBox>
+        <p><K>{"\\sigma_{\\text{oil}} = 30\\%"}</K>, <K>{"\\sigma_{\\text{gas}} = 40\\%"}</K>, <K>{"\\rho = 0.5"}</K>, portefeuille 50%/50%</p>
+        <FormulaBox accent={ACCENT} label="Résultat"><K display>{"\\sigma_p = 30.4\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Covariance" ruleDetail="Cov(X,Y) = ρ·σ_X·σ_Y" accent={ACCENT}>
             <K>{"\\text{Cov} = 0.5 \\times 0.30 \\times 0.40 = 0.060"}</K>
@@ -844,7 +840,7 @@ export function AlgebraTab() {
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 0 — Décomposition de Cholesky à la main (2×2)" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          Soit Σ = [[0.04, 0.018], [0.018, 0.09]] (σ₁=20%, σ₂=30%, ρ=0.3). Calculez la matrice triangulaire inférieure L telle que L×Lᵀ = Σ.
+          Soit Σ = [[0.04, 0.018], [0.018, 0.09]] (<K>{"\\sigma_1 = 20\\%"}</K>, <K>{"\\sigma_2 = 30\\%"}</K>, <K>{"\\rho = 0.3"}</K>). Calculez la matrice triangulaire inférieure <K>{"L"}</K> telle que <K>{"L \\times L^\\top = \\Sigma"}</K>.
         </p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"L = \\begin{bmatrix} 0.20 & 0 \\\\ 0.090 & 0.2862 \\end{bmatrix}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
@@ -859,12 +855,12 @@ export function AlgebraTab() {
           </DemoStep>
           <DemoStep num={4} rule="Équation diagonale (2,2)" ruleDetail="l₂₁² + l₂₂² = Σ₂₂" accent={ACCENT}>
             <K>{"l_{22} = \\sqrt{\\Sigma_{22} - l_{21}^2} = \\sqrt{0.09 - 0.0081} = \\sqrt{0.0819} \\approx 0.2862"}</K>
-            <br />(= σ₂·√(1−ρ²) ✓). Vérification : L×Lᵀ = [[0.04, 0.018], [0.018, 0.09]] ✓
+            <br />(= <K>{"\\sigma_2 \\sqrt{1-\\rho^2}"}</K> ✓). Vérification : <K>{"L \\times L^\\top = [[0.04, 0.018], [0.018, 0.09]]"}</K> ✓
           </DemoStep>
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 1 — Multiplication de matrices" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Calculez A × B avec A = [[1,2],[3,4]] et B = [[5],[6]]</p>
+        <p style={{ color: T.text }}>Calculez <K>{"A \\times B"}</K> avec <K>{"A = \\begin{bmatrix} 1 & 2 \\\\ 3 & 4 \\end{bmatrix}"}</K> et <K>{"B = \\begin{bmatrix} 5 \\\\ 6 \\end{bmatrix}"}</K></p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"A \\times B = \\begin{bmatrix} 17 \\\\ 39 \\end{bmatrix}"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Produit matriciel" ruleDetail="(AB)ᵢⱼ = Σₖ Aᵢₖ·Bₖⱼ" accent={ACCENT}>
@@ -876,7 +872,7 @@ export function AlgebraTab() {
         </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Variance de portefeuille" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>3 actifs : w = [50%, 30%, 20%], σ = [20%, 25%, 35%], ρᵢⱼ = 0.3 ∀ i≠j. Calculez σ_p.</p>
+        <p style={{ color: T.text }}>3 actifs : <K>{"\\mathbf{w} = [50\\%, 30\\%, 20\\%]"}</K>, <K>{"\\boldsymbol{\\sigma} = [20\\%, 25\\%, 35\\%]"}</K>, <K>{"\\rho_{ij} = 0.3 \\; \\forall \\; i \\neq j"}</K>. Calculez <K>{"\\sigma_p"}</K>.</p>
         <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\sigma_p \\approx 18\\%"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Formule de variance de portefeuille" ruleDetail="σ²_p = Σᵢ wᵢ²σᵢ² + 2Σᵢ<j wᵢwⱼρσᵢσⱼ" accent={ACCENT}>
