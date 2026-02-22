@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { T } from '../../design/tokens'
 import { TabBar } from '../../design/components'
 
 // ─── Tab content imports from existing modules ────────────────────────────────
-import { NoArbTab, BSTab, Black76Tab, GreeksTab, ArbreTab, ExotiquesTab } from '../../modules/Module4/index.jsx'
-import { HistVolTab, ImplVolTab, SmileTab, SurfaceTab, HestonTab } from '../../modules/Module5/index.jsx'
-import { VarCovTab, VarHistTab, VarMCTab, EVTTab, MarginalVarTab } from '../../modules/Module6/index.jsx'
-import { EaRTab, RAROCTab, PFETab, CVATab } from '../../modules/Module7/index.jsx'
+import { NoArbTab, BSTab, Black76Tab, ArbreTab, ExotiquesTab } from './tabs/Pricing.jsx'
+import { GreeksTab } from './tabs/Greeks.jsx'
+import { HistVolTab, ImplVolTab, SmileTab, SurfaceTab, HestonTab } from './tabs/Volatilite.jsx'
+import { VarCovTab, VarHistTab, VarMCTab, EVTTab, MarginalVarTab } from './tabs/Risk.jsx'
+import { EaRTab, RAROCTab, PFETab, CVATab } from './tabs/Risk.jsx'
 
 const ACCENT = T.a4  // green
 

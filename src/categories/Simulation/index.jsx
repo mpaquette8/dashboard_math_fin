@@ -1,11 +1,12 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { T } from '../../design/tokens'
 import { TabBar, IntuitionBlock, FormulaBox, SectionTitle } from '../../design/components'
 
 // ─── Tab content imports from existing modules ────────────────────────────────
-import { SimulTab, GBMTab } from '../../modules/Module3/index.jsx'
-import { MonteCarloTab, ArbreTab } from '../../modules/Module4/index.jsx'
+import { SimulTab, GBMTab } from './tabs/MonteCarlo.jsx'
+import { MonteCarloTab } from './tabs/MonteCarlo.jsx'
+import { ArbreTab } from './tabs/Arbres.jsx'
 
 const ACCENT = T.a3  // violet
 

@@ -1,24 +1,49 @@
 import React, { useState, useMemo } from 'react'
 import {
-  LineChart, Line, BarChart, Bar, AreaChart, Area,
-  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ReferenceLine, ResponsiveContainer,
+  LineChart,
+  Line,
+  BarChart,
+  Bar,
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ReferenceLine,
+  ResponsiveContainer,
 } from 'recharts'
-import { T } from '../../design/tokens'
+import { T } from '../../../design/tokens'
 import {
-  ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
-  Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
-  Demonstration, DemoStep, K,
-} from '../../design/components'
+  TabBar,
+  FormulaBox,
+  IntuitionBlock,
+  ExampleBlock,
+  Slider,
+  Accordion,
+  Step,
+  SymbolLegend,
+  SectionTitle,
+  InfoChip,
+  Grid,
+  ChartWrapper,
+  Demonstration,
+  DemoStep,
+  K,
+} from '../../../design/components'
 
 const ACCENT = T.a8
 
+
 function phi(x) { return Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI) }
+
 function normCDF(x) {
   const t = 1 / (1 + 0.2316419 * Math.abs(x))
   const p = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))))
   return x >= 0 ? 1 - phi(x) * p : phi(x) * p
 }
+
 function gaussRand() {
   let u = 0, v = 0
   while (u === 0) u = Math.random()
@@ -26,7 +51,9 @@ function gaussRand() {
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
 }
 
+
 // Black-76 pricer for forward/futures options
+
 function black76(F, K, T, r, sigma, type = 'call') {
   if (T <= 0) return Math.max(type === 'call' ? F - K : K - F, 0)
   const sqrtT = Math.sqrt(T)
@@ -37,518 +64,9 @@ function black76(F, K, T, r, sigma, type = 'call') {
   return df * (K * normCDF(-d2) - F * normCDF(-d1))
 }
 
+
 // ─── Tab: Marchés Énergie ─────────────────────────────────────────────────────
-export function MarchesTab() {
-  const [commodity, setCommodity] = useState('crude')
 
-  const commodities = {
-    crude: {
-      label: 'Pétrole Brut (WTI / Brent)',
-      color: ACCENT,
-      unit: '$/bbl',
-      spot: 82,
-      sigma: '30–45%',
-      exchanges: ['NYMEX (WTI)', 'ICE (Brent)'],
-      drivers: ['OPEC+', 'Inventaires EIA', 'USD', 'Géopolitique'],
-      contracts: ['Futures mensuels', 'Swaps OTC', 'Options sur futures'],
-    },
-    gas: {
-      label: 'Gaz Naturel (Henry Hub / TTF)',
-      color: T.a3,
-      unit: '$/MMBtu',
-      spot: 2.8,
-      sigma: '50–80%',
-      exchanges: ['NYMEX (HH)', 'ICE (TTF)', 'NCG'],
-      drivers: ['Météo', 'LNG export', 'Production shale', 'Stockages'],
-      contracts: ['Futures mensuels', 'Seasonal swaps', 'Options sur futures'],
-    },
-    power: {
-      label: 'Électricité (ERCOT / EEX)',
-      color: T.a5,
-      unit: '$/MWh',
-      spot: 45,
-      sigma: '80–200%',
-      exchanges: ['ERCOT', 'PJM', 'EEX', 'EPEX'],
-      drivers: ['Load', 'Renewable generation', 'Fuel prices', 'Congestion'],
-      contracts: ['Day-ahead', 'Forward peak/base', 'Spark spread options'],
-    },
-  }
-
-  const com = commodities[commodity]
-
-  const priceHistory = useMemo(() => {
-    const pts = []
-    let S = com.spot
-    const sig = parseFloat(com.sigma.split('–')[0]) / 100 || 0.3
-    for (let i = 0; i < 60; i++) {
-      S *= Math.exp((0 - 0.5 * sig * sig) / 52 + sig / Math.sqrt(52) * gaussRand())
-      pts.push({ week: i + 1, price: +S.toFixed(2) })
-    }
-    return pts
-  }, [commodity])
-
-  const seasonalData = [
-    { month: 'Jan', crude: 83, gas: 4.2, power: 65 },
-    { month: 'Fev', crude: 81, gas: 3.8, power: 58 },
-    { month: 'Mar', crude: 80, gas: 2.9, power: 45 },
-    { month: 'Avr', crude: 82, gas: 2.5, power: 38 },
-    { month: 'Mai', crude: 83, gas: 2.3, power: 36 },
-    { month: 'Jun', crude: 85, gas: 2.8, power: 55 },
-    { month: 'Jul', crude: 87, gas: 3.1, power: 72 },
-    { month: 'Aoû', crude: 86, gas: 3.0, power: 68 },
-    { month: 'Sep', crude: 84, gas: 2.9, power: 48 },
-    { month: 'Oct', crude: 82, gas: 3.5, power: 50 },
-    { month: 'Nov', crude: 80, gas: 4.0, power: 60 },
-    { month: 'Dec', crude: 79, gas: 4.8, power: 72 },
-  ]
-
-  return (
-    <div>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        Les marchés de l'énergie présentent des <strong style={{ color: ACCENT }}>caractéristiques fondamentalement différentes</strong> des marchés financiers traditionnels (actions, obligations, devises). Ces spécificités impactent directement la modélisation des prix, la valorisation des dérivés, et les stratégies de couverture.
-      </div>
-      <Grid cols={2} gap="10px" style={{ marginBottom: 14 }}>
-        {[
-          { icon: '🔋', title: 'Stockage limité ou impossible', color: T.error, text: 'L\'électricité ne peut pas être stockée à grande échelle (sauf via barrages ou batteries). Résultat : tout déséquilibre offre/demande en temps réel se reflète immédiatement dans les prix. Les spikes de prix (plusieurs centaines de $/MWh) peuvent survenir en quelques minutes lors de pics de demande ou de pénurie de capacité.' },
-          { icon: '❄️', title: 'Saisonnalité forte et prévisible', color: T.a4, text: 'Le gaz naturel est très demandé en hiver (chauffage). L\'électricité a deux pics : été (climatisation) et hiver (chauffage électrique). Ces patterns saisonniers créent une structure par terme (forward curve) en "escalier" très différente de l\'hypothèse de martingale des marchés financiers.' },
-          { icon: '🗺️', title: 'Infrastructure physique et marchés régionaux', color: T.a3, text: 'Les pipelines et les réseaux électriques créent des contraintes de transport physique. Le gaz à Chicago peut avoir un prix très différent du gaz à New York (basis risk). L\'électricité à Londres n\'est pas celle à Munich. Ces différences de prix géographiques génèrent des "basis" qui compliquent la couverture.' },
-          { icon: '⚖️', title: 'Réglementation et marchés non libéralisés', color: T.a5, text: 'Contrairement aux marchés financiers, les marchés de l\'énergie restent partiellement réglementés (tarifs régulés, obligations de service universel, marchés de capacité). Les décisions politiques (taxes carbone, subventions renouvelables) peuvent changer les prix radicalement du jour au lendemain.' },
-        ].map(s => (
-          <div key={s.title} style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${s.color}33` }}>
-            <div style={{ color: s.color, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>{s.icon} {s.title}</div>
-            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>{s.text}</div>
-          </div>
-        ))}
-      </Grid>
-
-      <IntuitionBlock emoji="⚡" title="L'énergie : des marchés avec des spécificités uniques" accent={ACCENT}>
-        Les marchés de l'énergie ont des caractéristiques radicalement différentes des marchés financiers.
-        L'électricité ne se stocke pas (presque) → prix ultra-volatils avec des spikes.
-        Le gaz est saisonnier (chaud en hiver → demande élevée).
-        Le pétrole est global et dominé par l'OPEC+.
-        Ces spécificités rendent les modèles financiers standards (GBM) insuffisants :
-        on a besoin de <strong>mean-reversion, saisonnalité, et modèles de spikes</strong>.
-      </IntuitionBlock>
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
-        {Object.entries(commodities).map(([k, v]) => (
-          <button key={k} onClick={() => setCommodity(k)} style={{
-            background: commodity === k ? `${v.color}22` : T.panel2,
-            border: `1px solid ${commodity === k ? v.color : T.border}`,
-            color: commodity === k ? v.color : T.muted,
-            borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 12, fontWeight: commodity === k ? 700 : 400,
-          }}>{v.label.split('(')[0].trim()}</button>
-        ))}
-      </div>
-
-      <Grid cols={3} gap="12px">
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 16, border: `1px solid ${com.color}33` }}>
-          <div style={{ color: com.color, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Caractéristiques</div>
-          <div style={{ color: T.text, fontSize: 13, lineHeight: 1.8 }}>
-            <div><span style={{ color: T.muted }}>Unité :</span> {com.unit}</div>
-            <div><span style={{ color: T.muted }}>Spot indicatif :</span> <strong style={{ color: com.color }}>{com.spot} {com.unit}</strong></div>
-            <div><span style={{ color: T.muted }}>Volatilité typique :</span> {com.sigma}/an</div>
-          </div>
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 16, border: `1px solid ${com.color}33` }}>
-          <div style={{ color: com.color, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Places de marché</div>
-          {com.exchanges.map(e => (
-            <div key={e} style={{ color: T.text, fontSize: 13, padding: '2px 0' }}>• {e}</div>
-          ))}
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 16, border: `1px solid ${com.color}33` }}>
-          <div style={{ color: com.color, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', marginBottom: 8 }}>Drivers de prix</div>
-          {com.drivers.map(d => (
-            <div key={d} style={{ color: T.muted, fontSize: 12, padding: '2px 0' }}>• {d}</div>
-          ))}
-        </div>
-      </Grid>
-
-      <Grid cols={2} gap="12px" style={{ marginTop: 16 }}>
-        <ChartWrapper title={`Prix simulé — ${com.label} (60 semaines)`} accent={com.color} height={220}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={priceHistory} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="week" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
-              <Line type="monotone" dataKey="price" stroke={com.color} strokeWidth={2} dot={false} name={com.unit} />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-
-        <ChartWrapper title="Saisonnalité comparative (prix indicatifs)" accent={ACCENT} height={220}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={seasonalData} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="month" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
-              <Legend wrapperStyle={{ color: T.muted, fontSize: 10 }} />
-              <Line type="monotone" dataKey="gas" stroke={T.a3} strokeWidth={2} dot={false} name="Gaz ($/MMBtu×10)" />
-              <Line type="monotone" dataKey="power" stroke={T.a5} strokeWidth={2} dot={false} name="Electricité ($/MWh)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-      </Grid>
-
-      <SectionTitle accent={ACCENT}>Structure des marchés énergie</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Les marchés de l'énergie s'organisent en plusieurs segments qui correspondent à différents horizons temporels et niveaux de risque. Un acteur sophistiqué opère sur tous ces segments simultanément.
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
-        {[
-          { title: 'Marché Spot', color: ACCENT, items: ['Livraison immédiate (J+1 ou J+2)', 'Prix fixé aujourd\'hui', 'Risque de prix élevé', 'Day-ahead market (électricité)', 'Balancing market (temps réel)', 'Utilisateurs : producteurs, utilities, traders'] },
-          { title: 'Marché Forward / Futures', color: T.a5, items: ['Livraison différée', 'Prix fixé aujourd\'hui pour livraison future', 'Futures = standardisés, échangés en bourse', 'Forward = OTC, sur mesure', 'Liquidité maximale à 1-12 mois', 'Utilisateurs : hedgers, spéculateurs, arbitragistes'] },
-          { title: 'Marché Dérivés', color: T.a3, items: ['Options sur futures (Black 76)', 'Swaps de prix (floating vs fixed)', 'Crack spreads (pétrole → produits)', 'Spark spreads (gaz → électricité)', 'Caps/Floors sur prix énergie', 'Utilisateurs : structureurs, risk managers'] },
-        ].map(s => (
-          <div key={s.title} style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${s.color}33` }}>
-            <div style={{ color: s.color, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>{s.title}</div>
-            {s.items.map(item => <div key={item} style={{ color: T.muted, fontSize: 12, padding: '2px 0' }}>• {item}</div>)}
-          </div>
-        ))}
-      </div>
-
-      <SectionTitle accent={ACCENT}>Les 4 grandes commodités énergétiques et leurs spécificités</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Chaque commodité énergétique a ses propres caractéristiques de marché, de volatilité et de saisonnalité. Comprendre ces différences est essentiel pour choisir le bon modèle de pricing et la bonne stratégie de couverture.
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10, marginBottom: 14 }}>
-        {[
-          {
-            name: 'WTI / Brent (Pétrole brut)', color: ACCENT, sigma: 'σ ≈ 25–40%/an',
-            items: [
-              'Marché mondial, très liquide (millions de barils/jour tradés)',
-              'Deux benchmarks : WTI (NYMEX, livraison Cushing OK) et Brent (ICE, mer du Nord)',
-              'Drivers : OPEC+, inventaires EIA (hebdomadaires), USD, géopolitique',
-              'Spread WTI/Brent (basis géographique) : variable selon logistique et pipeline constraints',
-              'Options liquides jusqu\'à 2-3 ans d\'échéance',
-            ],
-          },
-          {
-            name: 'Henry Hub (Gaz naturel US)', color: T.a3, sigma: 'σ ≈ 40–80%/an',
-            items: [
-              'Référence nord-américaine (NYMEX), prix en $/MMBtu',
-              'Très saisonnier : hiver (chauffage) crée des pics de demande',
-              'Fortement influencé par LNG export, production shale (Marcellus, Permian)',
-              'Stockages hebdomadaires EIA : données clés pour la formation des prix',
-              'Basis très importants : prix à Chicago, Algonquin, SoCal Gas diffèrent de Henry Hub',
-            ],
-          },
-          {
-            name: 'TTF (Gaz naturel Europe)', color: T.a4, sigma: 'σ ≈ 60–150%/an (post-2021)',
-            items: [
-              'Référence européenne principale depuis ~2019 (remplace NBP UK)',
-              'Tradé sur ICE, livraison au Title Transfer Facility (Pays-Bas)',
-              'Crise Ukraine 2022 : prix multipliés par 10-15x (pic à 300 €/MWh en août 2022)',
-              'Désormais influencé par LNG spot, demande industrielle, météo, stockages UE',
-              'TTF futures liquides jusqu\'à 2-3 ans, options plus limitées',
-            ],
-          },
-          {
-            name: 'EEX/Phelix (Électricité Europe)', color: T.a5, sigma: 'σ {'>'} 100% spot, 30-60% forward',
-            items: [
-              'Marchés régionaux : Phelix (Allemagne), Powernext (France), EPEX (Europe)',
-              'Non-stockable → spikes de prix extrêmes (pic négatif à -300 €/MWh en 2020 !)',
-              'Produits : Day-Ahead (enchères quotidiennes), base vs peak load',
-              'Spark spread = électricité - coût gaz pour la produire : indicateur de marge des centrales',
-              'Corrélation forte avec prix du gaz (marginal cost pricing dans le merit order)',
-            ],
-          },
-        ].map(c => (
-          <div key={c.name} style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${c.color}33` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-              <div style={{ color: c.color, fontWeight: 700, fontSize: 13 }}>{c.name}</div>
-              <span style={{ background: `${c.color}22`, color: c.color, padding: '2px 8px', borderRadius: 20, fontSize: 11, fontWeight: 700, whiteSpace: 'nowrap' }}>{c.sigma}</span>
-            </div>
-            {c.items.map(item => <div key={item} style={{ color: T.muted, fontSize: 12, padding: '2px 0', lineHeight: 1.5 }}>• {item}</div>)}
-          </div>
-        ))}
-      </div>
-
-      <IntuitionBlock emoji="📅" title="Calendar spreads — L'ADN de la saisonnalité" accent={ACCENT}>
-        Un <strong>calendar spread</strong> est la différence de prix entre deux maturités futures sur la même commodité. Exemple : F(décembre) - F(juillet) sur le gaz naturel.
-        C'est un indicateur clé de l'état des stocks et de la structure du marché :<br />
-        • <strong>Spread Dec-Jul gaz <K>{"\\gt 0"}</K></strong> : le marché anticipe une tension hivernale → les traders "long spread" profitent<br />
-        • <strong>Spread négatif (backwardation inter-saisons)</strong> : surplus de gaz, stockages pleins → incitation à stocker maintenant et livrer plus tard<br />
-        Les calendar spreads permettent de trader la saisonnalité sans prendre de risque de direction sur les prix. Ils sont utilisés par les gestionnaires de stockage de gaz pour optimiser le remplissage des cavernes.
-      </IntuitionBlock>
-
-      <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
-      <Accordion title="Exercice — Identifier la saisonnalité du gaz naturel" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Analysez la courbe forward du gaz Henry Hub : Jan=4.5$/MMBtu, Avr=2.8$, Jul=3.1$, Oct=3.4$, Jan+1=4.8$. Quels patterns observez-vous ?</p>
-        <FormulaBox accent={ACCENT}><K display>{"\\text{Implied storage value} \\approx \\text{Calendar spread Jan-Jul} = 4.5 - 3.1 = 1.4\\$/\\text{MMBtu}"}</K></FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Saisonnalité" ruleDetail="Pattern saisonnier forward curve" accent={ACCENT}>Pattern "dents de scie" saisonnier : hiver (Jan) <K>{"\\gt"}</K> printemps (Avr) <K>{"\\lt"}</K> été (Jul) <K>{"\\lt"}</K> automne/hiver suivant</DemoStep>
-          <DemoStep num={2} rule="Décomposition saisonnière" ruleDetail="Spread = F(hiver) − F(printemps)" accent={ACCENT}>Calendar spread Jan-Avr = <K>{"4.5 - 2.8 = 1.7"}</K> $/MMBtu → prime hivernale élevée</DemoStep>
-          <DemoStep num={3} rule="Saisonnalité" ruleDetail="Coût de stockage inter-saison" accent={ACCENT}>Cette structure traduit le coût de stockage du gaz de l'été vers l'hiver</DemoStep>
-          <DemoStep num={4} rule="Saisonnalité" ruleDetail="Trading de spread saisonnier" accent={ACCENT}>Stratégie : achat futures Avr + vente futures Jan = achat de ce spread à −1.7$ → gagnant si la prime hivernale se réduit</DemoStep>
-        </Demonstration>
-      </Accordion>
-      <Accordion title="Exercice — Calcul d'un basis risk" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Un producteur de gaz au Texas vend au prix Houston Ship Channel (HSC). Il couvre avec des futures Henry Hub (HH). HSC = 2.70$/MMBtu, HH = 2.80$/MMBtu. Il vend 1M MMBtu/mois. Calculez le basis et le P&L si le basis se dégrade.</p>
-        <FormulaBox accent={ACCENT}><K display>{"\\text{Basis} = S_{\\text{local}} - F_{\\text{référence}}"}</K>Pour l'éliminer : couvrir avec des forwards OTC spécifiques à HSC</FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Risque de base" ruleDetail="Basis = Spot − Futures" accent={ACCENT}>Basis actuel = <K>{"\\text{HSC} - \\text{HH} = 2.70 - 2.80 = -0.10"}</K> $/MMBtu (HSC trade à discount)</DemoStep>
-          <DemoStep num={2} rule="Risque de base" ruleDetail="Couverture via futures" accent={ACCENT}>Couverture : vente de 1M MMBtu de futures HH à 2.80$ → revenus de couverture = 2.80M$</DemoStep>
-          <DemoStep num={3} rule="Risque de base" ruleDetail="Revenu physique réel" accent={ACCENT}>Revenus physiques réels = <K>{"\\text{HSC} \\times Q = 2.70 \\times 1\\text{M} = 2.70\\text{M\\$}"}</K></DemoStep>
-          <DemoStep num={4} rule="Risque de base" ruleDetail="P&L total avec basis" accent={ACCENT}>Total = <K>{"2.70 + (2.80 - 2.80) = 2.70\\text{M\\$}"}</K> → le basis absorbe 0.10$/MMBtu</DemoStep>
-          <DemoStep num={5} rule="Risque de base" ruleDetail="Dégradation du basis" accent={ACCENT}>Si le basis se dégrade à −0.30$ (HSC = 2.50$, HH = 2.80$) : revenus = <K>{"2.50 + 0 = 2.50\\text{M\\$}"}</K> → perte de 0.20M$ non couverte</DemoStep>
-        </Demonstration>
-      </Accordion>
-    </div>
-  )
-}
-
-// ─── Tab: Forward Curves ──────────────────────────────────────────────────────
-export function ForwardCurvesTab() {
-  const [spot, setSpot] = useState(80)
-  const [r, setR] = useState(0.05)
-  const [u, setU] = useState(0.03)   // storage cost
-  const [y, setY] = useState(0.04)   // convenience yield
-  const [type, setType] = useState('normal') // normal, contango, backwardation
-
-  const maturities = [1, 2, 3, 6, 9, 12, 18, 24]
-
-  const forwardData = useMemo(() => {
-    return maturities.map(m => {
-      const T = m / 12
-      let F
-      if (type === 'normal') {
-        // Cost of carry: F = S × e^(r+u-y)T
-        F = spot * Math.exp((r + u - y) * T)
-      } else if (type === 'contango') {
-        // Contango: F > S, upward sloping
-        F = spot * Math.exp((r + 0.06 - 0.01) * T)
-      } else {
-        // Backwardation: F < S, downward sloping
-        F = spot * Math.exp((r + 0.01 - 0.08) * T)
-      }
-      return { m, T: T.toFixed(2), F: +F.toFixed(2) }
-    })
-  }, [spot, r, u, y, type])
-
-  const curveColor = type === 'contango' ? T.a5 : type === 'backwardation' ? T.error : ACCENT
-  const lastF = forwardData[forwardData.length - 1]?.F || spot
-  const shape = lastF > spot ? 'Contango ↑' : lastF < spot ? 'Backwardation ↓' : 'Flat'
-  const shapeColor = lastF > spot ? T.a5 : lastF < spot ? T.error : T.muted
-
-  return (
-    <div>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
-        La <strong style={{ color: ACCENT }}>courbe forward (term structure)</strong> est l'ADN du marché des commodités. Elle encode simultanément les anticipations de prix du marché, les coûts de stockage physique, la convenience yield (valeur de détenir la commodité en physique), et la structure de la demande saisonnière.
-        Contrairement aux courbes de taux (où les prix futurs sont fondamentalement liés aux taux courts via les arbitrages), les courbes forward de commodités peuvent avoir des formes très diverses — en "dents de scie" (gaz), en déport prononcé (électricité en heures creuses), ou en report fort (pétrole en période de surstockage).
-        Un trader ou un structureur en énergie lit la courbe forward comme un médecin lit une radiographie : chaque kink, chaque discontinuité, chaque spread inter-saisons raconte une histoire sur l'état du marché physique.
-      </div>
-
-      <IntuitionBlock emoji="📊" title="La courbe forward : la structure par terme des prix" accent={ACCENT}>
-        Le prix d'un forward pétrole à 6 mois est différent du spot.
-        Pourquoi ? Coût de stockage, coût de financement, mais aussi le <strong>convenience yield</strong>
-        (valeur de détenir physiquement la matière première : flexibilité, éviter les ruptures).
-        En <strong>contango</strong> : <K>{"F > S"}</K> (stocker coûte, les stocks sont abondants).
-        En <strong>backwardation</strong> : <K>{"F < S"}</K> (manque de stock, prime pour livraison immédiate).
-        La courbe forward est la prévision implicite de marché et l'outil de base du trader énergie.
-      </IntuitionBlock>
-
-      <FormulaBox accent={ACCENT} label="Théorie du coût de portage (Cost of Carry)">
-        <K display>{"F(0,T) = S_0 \\times e^{(r + u - y) \\times T}"}</K>
-        <K display>{"F(0,T) = S_0 \\times e^{rT} \\times e^{uT} \\times e^{-yT}"}</K>
-      </FormulaBox>
-
-      <SymbolLegend accent={ACCENT} symbols={[
-        ['S₀', 'Prix spot actuel'],
-        ['r', 'Taux d\'intérêt sans risque (coût de financement)'],
-        ['u', 'Storage cost : coût de stockage annualisé'],
-        ['y', 'Convenience yield : valeur de détention physique'],
-        ['r+u-y', 'Si > 0 → Contango ; si < 0 → Backwardation'],
-      ]} />
-
-      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: 16, margin: '16px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 800, fontSize: 14, marginBottom: 10 }}>Anatomie du Cost of Carry — <K>{"F = S \\cdot e^{(r+u-\\delta)T}"}</K></div>
-        <Step num={1} accent={ACCENT}><strong>r</strong> — taux sans risque : coût de financement du stock physique. Détenir 1 000 barils de Brent immobilise du capital qui aurait pu être placé sans risque. Si r = 5%/an et S = 80$/bbl, le coût de financement pour 6 mois est <K>{"80 \\times (e^{0.025} - 1) \\approx 2.03\\$/\\text{bbl}"}</K>.</Step>
-        <Step num={2} accent={ACCENT}><strong>u</strong> — coûts de stockage : location de tank, assurance, perte en ligne. Pour le gaz naturel : 2-5%/an de la valeur du contenu. Pour le pétrole brut en onshore : 0.3-0.6$/bbl/mois. Ces coûts poussent la courbe vers le contango.</Step>
-        <Step num={3} accent={ACCENT}><strong>-δ</strong> — convenience yield négatif : bénéfice d'avoir le physique (flexibilité opérationnelle, éviter une rupture de stock). Si δ est élevé, le marché valorise fortement le stock physique → backwardation (<K>{"F < S"}</K>).</Step>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 10, lineHeight: 1.7 }}>
-          Synthèse : contango = <K>{"r + u > \\delta"}</K> (offre abondante, peu de valeur marginale du physique) ; backwardation = <K>{"\\delta > r + u"}</K> (pénurie spot, prime pour livraison immédiate). En 2022, le TTF gaz a affiché une backwardation extrême <K>{"\\delta > 50\\%/\\text{an}"}</K> reflétant la panique sur les stocks européens.
-        </div>
-      </div>
-
-      <SectionTitle accent={ACCENT}>Théories de la structure par terme des prix forward</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        Pourquoi le prix forward d'une commodité à 6 mois est-il différent du spot ? Plusieurs théories s'affrontent, chacune capturant un aspect de la réalité :
-      </div>
-      <Grid cols={3} gap="10px" style={{ marginBottom: 14 }}>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
-          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie du stockage (Kaldor-Working)</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            <K>{"F(T) = S \\times e^{(r + u - \\delta)T}"}</K><br /><br />
-            u = coûts de stockage annualisés (location, assurance)<br />
-            δ = convenience yield (valeur de détenir le physique)<br /><br />
-            <strong style={{ color: T.a5 }}>Contango</strong> si <K>{"u > \\delta"}</K> (coût de stockage élevé, peu de valeur marginale)<br />
-            <strong style={{ color: T.error }}>Backwardation</strong> si <K>{"\\delta > u"}</K> (pénurie, le physique est précieux)
-          </div>
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a4}33` }}>
-          <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie des hedgers (Keynes)</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Les <strong>producteurs</strong> vendent massivement des forwards pour se couvrir contre la baisse des prix → pression vendeuse sur les forwards → <K>{"F(T) < E[S(T)]"}</K> (backwardation normale).<br /><br />
-            Les <strong>spéculateurs</strong> achètent ces forwards en échange d'une prime de risque → ils gagnent si <K>{"S(T) > F(T)"}</K>.<br /><br />
-            La prime de risque = <K>{"E[S(T)] - F(T)"}</K> = rémunération du risque pris par les spéculateurs.
-          </div>
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a3}33` }}>
-          <div style={{ color: T.a3, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Théorie des anticipations</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            <K>{"F(T) = E^{\\mathbb{Q}}[S(T)]"}</K> sous la mesure risque-neutre Q (no-arbitrage).<br /><br />
-            Mais sous la mesure physique P : <K>{"F(T) = E^{\\mathbb{P}}[S(T)] - \\text{Prime de risque}"}</K><br /><br />
-            La prime de risque peut être positive (backwardation) ou négative (contango) selon la position nette des hedgers vs spéculateurs.
-            En pratique : <K>{"F(T) \\neq E[S(T)]"}</K> → les forwards ne sont pas de bons prédicteurs du spot futur.
-          </div>
-        </div>
-      </Grid>
-
-      <SectionTitle accent={ACCENT}>Convenience Yield — Le bénéfice de détenir la physique</SectionTitle>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        La <strong style={{ color: ACCENT }}>convenience yield (δ)</strong> est le rendement implicite associé à la détention physique d'une commodité plutôt qu'une position en futures. C'est la valeur de la "flexibilité opérationnelle" que procure le stock physique.
-      </div>
-      <Grid cols={2} gap="10px" style={{ marginBottom: 14 }}>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.error}33` }}>
-          <div style={{ color: T.error, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Forte convenience yield → Backwardation</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Contexte : stocks faibles, demande élevée, risque de pénurie<br /><br />
-            Exemple : gaz en hiver après un vague de froid inattendue<br />
-            • Détenir du gaz en physique a une valeur immense (évite les ruptures d'approvisionnement)<br />
-            • δ élevé → <K>{"F(T) < S"}</K> (les futurs sont moins chers que le spot)<br />
-            • Signal pour les traders : "le marché paie pour une livraison immédiate"
-          </div>
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a5}33` }}>
-          <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Faible convenience yield → Contango</div>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
-            Contexte : stocks abondants, demande faible, surplus de production<br /><br />
-            Exemple : pétrole en avril 2020 (COVID, demande effondrée)<br />
-            • Le pétrole physique encombrait les stockages → coût de stockage élevé, valeur marginale faible<br />
-            • δ très faible, u élevé → <K>{"F(T) > S"}</K> (fort contango, jusqu'à -37$/bbl pour le WTI !)<br />
-            • Signal pour les traders : "arbitrage cash-and-carry : acheter spot, stocker, vendre futures"
-          </div>
-        </div>
-      </Grid>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 10 }}>
-        <strong style={{ color: ACCENT }}>Calcul implicite de la convenience yield :</strong> On l'extrait de la courbe forward observée :
-        <K display>{"\\delta = r + u - \\frac{1}{T} \\ln\\!\\left(\\frac{F(T)}{S_0}\\right)"}</K>
-        Si F(T) est observé sur le marché, on peut calculer δ implicitement — c'est l'approche "mark-to-market" de la convenience yield.
-      </div>
-
-      <IntuitionBlock emoji="📍" title="Basis Risk — Quand votre couverture ne couvre pas exactement" accent={ACCENT}>
-        Le <strong>basis</strong> est la différence entre le prix local (ex: gaz à Chicago) et le prix de référence utilisé pour la couverture (ex: Henry Hub). Un producteur de gaz à Chicago qui se couvre avec des futures Henry Hub s'expose au basis risk.
-        Si le basis Chicago-HH est stable à -0.10$/MMBtu, la couverture est efficace. Mais si le basis passe à -0.50$/MMBtu (pipeline congestion, problème logistique), le producteur perd 0.40$/MMBtu sur son volume entier — sans couverture possible sur ce basis.<br />
-        Les bases énergie peuvent être très volatiles : un gel des pipelines peut faire passer le basis de -0.20$ à -5.00$ en 48h.
-        Solutions : (1) Utiliser des forwards OTC locaux au lieu de futures de référence. (2) Acheter des swaps de basis spécifiques. (3) Accepter le basis risk résiduel comme coût de la couverture imparfaite.
-      </IntuitionBlock>
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        {[['normal', 'Coût de portage'], ['contango', 'Contango fort'], ['backwardation', 'Backwardation']].map(([k, label]) => (
-          <button key={k} onClick={() => setType(k)} style={{
-            background: type === k ? `${curveColor}22` : T.panel2,
-            border: `1px solid ${type === k ? curveColor : T.border}`,
-            color: type === k ? curveColor : T.muted,
-            borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: type === k ? 700 : 400,
-          }}>{label}</button>
-        ))}
-      </div>
-
-      {type === 'normal' && (
-        <Grid cols={2} gap="10px">
-          <Slider label="Taux r (%)" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={T.a4} format={v => `${(v * 100).toFixed(1)}%`} />
-          <Slider label="Coût stockage u (%)" value={u} min={0} max={0.15} step={0.005} onChange={setU} accent={T.a5} format={v => `${(v * 100).toFixed(1)}%`} />
-          <Slider label="Convenience yield y (%)" value={y} min={0} max={0.2} step={0.005} onChange={setY} accent={ACCENT} format={v => `${(v * 100).toFixed(1)}%`} />
-          <Slider label="Spot S₀ ($/bbl)" value={spot} min={30} max={150} step={1} onChange={setSpot} accent={T.muted} format={v => `${v}$/bbl`} />
-        </Grid>
-      )}
-      {type !== 'normal' && (
-        <Slider label="Spot S₀ ($/bbl)" value={spot} min={30} max={150} step={1} onChange={setSpot} accent={T.muted} format={v => `${v}$/bbl`} />
-      )}
-
-      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
-        <InfoChip label="Spot S₀" value={`${spot}$/bbl`} accent={T.muted} />
-        <InfoChip label="F(0, 2ans)" value={`${lastF}$/bbl`} accent={curveColor} />
-        <InfoChip label="Structure" value={shape} accent={shapeColor} />
-        <InfoChip label="r+u-y" value={`${((r + u - y) * 100).toFixed(1)}%`} accent={type === 'normal' ? curveColor : T.muted} />
-      </div>
-
-      <ChartWrapper title="Courbe Forward — Prix par maturité" accent={ACCENT} height={280}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={forwardData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-            <XAxis dataKey="m" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Maturité (mois)', fill: T.muted, fontSize: 11 }} />
-            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={['auto', 'auto']} />
-            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} formatter={(v) => [`${v}$/bbl`, 'F(0,T)']} />
-            <ReferenceLine y={spot} stroke={T.muted} strokeDasharray="4 3" label={{ value: `Spot=${spot}`, fill: T.muted, fontSize: 10 }} />
-            <Line type="monotone" dataKey="F" stroke={curveColor} strokeWidth={3} dot={{ fill: curveColor, r: 4 }} name="F(0,T)" />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartWrapper>
-
-      <SectionTitle accent={ACCENT}>Implications pratiques</SectionTitle>
-      <Grid cols={2} gap="10px">
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.a5}33` }}>
-          <div style={{ color: T.a5, fontWeight: 700, marginBottom: 8 }}>📈 Contango</div>
-          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7 }}>
-            <K>{"F > S"}</K> → Stocker est rentable<br />
-            Signal : stocks abondants, demande faible<br />
-            Stratégie : acheter spot + stocker + vendre forward = cash-and-carry arbitrage<br />
-            Exemple WTI : avril 2020 (COVID)
-          </div>
-        </div>
-        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${T.error}33` }}>
-          <div style={{ color: T.error, fontWeight: 700, marginBottom: 8 }}>📉 Backwardation</div>
-          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7 }}>
-            <K>{"F < S"}</K> → Prime pour livraison immédiate<br />
-            Signal : stocks faibles, demande forte<br />
-            Stratégie : rouler la position short futures génère un gain (roll yield positif)<br />
-            Exemple Brent : 2021-2022 (post-COVID)
-          </div>
-        </div>
-      </Grid>
-
-      <ExampleBlock title="Trader pétrole — Arbitrage cash-and-carry" accent={ACCENT}>
-        <p><K>{"S_0 = 80"}</K>$/bbl, <K>{"r = 5\\%"}</K>, <K>{"u = 3\\%"}</K>/an, <K>{"y = 2\\%"}</K>/an, <K>{"T = 6"}</K> mois</p>
-        <FormulaBox accent={ACCENT}><K display>{"\\text{Profit} = 8500 - 8328 = 172\\$ = 1.72\\$/\\text{bbl}"}</K></FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Cost of carry" ruleDetail="F = S₀ × e^{(r+u−y)T}" accent={ACCENT}>F théorique = <K>{"80 \\times e^{(0.05 + 0.03 - 0.02) \\times 0.5} = 80 \\times e^{0.03} = 82.44"}</K> $/bbl</DemoStep>
-          <DemoStep num={2} rule="Contango" ruleDetail="F_marché > F_théorique" accent={ACCENT}>Si F marché = <K>{"85\\$/\\text{bbl} > 82.44"}</K> → Contango excessif → arbitrage possible</DemoStep>
-          <DemoStep num={3} rule="Cost of carry" ruleDetail="Stratégie cash-and-carry" accent={ACCENT}>Acheter 100 barils à 80$ (emprunt 8000$ à 5%), stocker (coût 3%), vendre forward à 85$</DemoStep>
-          <DemoStep num={4} rule="Cost of carry" ruleDetail="Profit = F − S₀·e^{(r+u)T}" accent={ACCENT}>Profit = <K>{"8500 - 8000 \\times e^{0.08 \\times 0.5} = 8500 - 8328 = 172\\$ = 1.72\\$/\\text{bbl}"}</K></DemoStep>
-        </Demonstration>
-      </ExampleBlock>
-
-      <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
-      <Accordion title="Exercice — Calculer le convenience yield implicite" accent={ACCENT} badge="Moyen">
-        <p style={{ color: T.text }}>Brent spot = 85$/bbl, futures 3 mois = 84$/bbl, <K>{"r = 4.5\\%"}</K>/an, coût de stockage <K>{"u = 2\\%"}</K>/an. Calculez la convenience yield implicite.</p>
-        <FormulaBox accent={ACCENT}><K display>{"\\delta = 11.24\\%/\\text{an} > r + u = 6.5\\%/\\text{an}"}</K> → forte backwardation implicite (marché en tension)</FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Convenience yield" ruleDetail="δ = r + u − (1/T)·ln(F/S₀)" accent={ACCENT}>Formule : <K>{"\\delta = r + u - \\frac{1}{T} \\ln\\!\\left(\\frac{F}{S_0}\\right)"}</K></DemoStep>
-          <DemoStep num={2} rule="Rendement de détention" ruleDetail="Conversion maturité" accent={ACCENT}><K>{"T = 3/12 = 0.25"}</K> an</DemoStep>
-          <DemoStep num={3} rule="Rendement de détention" ruleDetail="ln(F/S₀)" accent={ACCENT}><K>{"\\ln(84/85) = \\ln(0.9882) = -0.01186"}</K></DemoStep>
-          <DemoStep num={4} rule="Convenience yield" ruleDetail="δ = r + u − (1/T)·ln(F/S)" accent={ACCENT}><K>{"\\delta = 0.045 + 0.02 - \\frac{1}{0.25} \\times (-0.01186) = 0.065 + 0.04744 = 0.1124 = 11.24\\%"}</K>/an. Interprétation : une convenience yield de 11% signifie que le marché valorise énormément la détention du brut physique — tensions géopolitiques, demande élevée, ou contraintes logistiques.</DemoStep>
-        </Demonstration>
-      </Accordion>
-      <Accordion title="Exercice — Stratégie contango vs backwardation" accent={ACCENT} badge="Avancé">
-        <p style={{ color: T.text }}>Marché gaz naturel : F(Avr) = 2.5$/MMBtu, F(Oct) = 3.2$/MMBtu, r = 5%, coût stockage = 0.30$/MMBtu pour 6 mois. Analysez et proposez une stratégie.</p>
-        <FormulaBox accent={ACCENT}><K display>{"\\text{Profit de stockage} = 0.34\\$/\\text{MMBtu} > 0"}</K>Arbitrage de stockage justifié. Capacité de stockage limitée → prime s'érodera si trop de traders font la même stratégie</FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Contango" ruleDetail="Spread = F(Oct) − F(Avr)" accent={ACCENT}>Calendar spread Oct-Avr = <K>{"3.2 - 2.5 = 0.70"}</K> $/MMBtu sur 6 mois</DemoStep>
-          <DemoStep num={2} rule="Cost of carry" ruleDetail="Coût financement = S·r·T" accent={ACCENT}>Coût de financement sur 6 mois = <K>{"2.5 \\times 0.05 \\times 0.5 = 0.0625"}</K> $/MMBtu</DemoStep>
-          <DemoStep num={3} rule="Cost of carry" ruleDetail="Coût total = stockage + financement" accent={ACCENT}>Coût total du stockage = <K>{"0.30 + 0.0625 = 0.3625"}</K> $/MMBtu</DemoStep>
-          <DemoStep num={4} rule="Contango" ruleDetail="Profit = Spread − Coût" accent={ACCENT}>Profit théorique du stockage = <K>{"3.2 - 2.5 - 0.3625 = 0.3375"}</K> $/MMBtu = 33.75 cts/MMBtu</DemoStep>
-          <DemoStep num={5} rule="Cost of carry" ruleDetail="Stratégie cash-and-carry" accent={ACCENT}>Stratégie cash-and-carry : acheter gaz au spot (ou F Avr) à 2.5$, stocker 6 mois (coût 0.36$), vendre futures Oct à 3.2$</DemoStep>
-        </Demonstration>
-      </Accordion>
-    </div>
-  )
-}
-
-// ─── Tab: Options Énergie (Black 76) ─────────────────────────────────────────
 export function OptionsTab() {
   const [F, setF] = useState(80)
   const [strike, setStrike] = useState(82)
@@ -862,7 +380,6 @@ export function OptionsTab() {
   )
 }
 
-// ─── Tab: Cas Intégrateur ─────────────────────────────────────────────────────
 export function CasIntegrateurTab() {
   const [step, setStep] = useState(1)
   const steps = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -1164,29 +681,6 @@ export function CasIntegrateurTab() {
           <K display>{"\\text{RAROC de la couverture : } 25\\%"}</K>
         </FormulaBox>
       </div>
-    </div>
-  )
-}
-
-// ─── Main Module 8 ────────────────────────────────────────────────────────────
-const TABS = ['Marchés Énergie', 'Forward Curves', 'Options Énergie', 'Cas Intégrateur']
-
-export default function Module8() {
-  const [tab, setTab] = useState('Marchés Énergie')
-
-  return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
-      <ModuleHeader
-        num={8}
-        title="Applications Énergie"
-        subtitle="Marchés spot/forward du pétrole, gaz et électricité — forward curves (contango vs backwardation) — options énergie avec Black 76 — cas intégrateur reliant les 8 modules."
-        accent={ACCENT}
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} accent={ACCENT} />
-      {tab === 'Marchés Énergie' && <MarchesTab />}
-      {tab === 'Forward Curves' && <ForwardCurvesTab />}
-      {tab === 'Options Énergie' && <OptionsTab />}
-      {tab === 'Cas Intégrateur' && <CasIntegrateurTab />}
     </div>
   )
 }

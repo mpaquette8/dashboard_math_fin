@@ -1,12 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { T } from '../../design/tokens'
 import { TabBar, SectionTitle } from '../../design/components'
 
 // ─── Tab content imports from existing modules ────────────────────────────────
-import { DerivTab, IntegTab, ExpLogTab, AlgebraTab } from '../../modules/Module1/index.jsx'
-import { NormalTab, LogNormalTab, CorrelTab, EstimationTab } from '../../modules/Module2/index.jsx'
-import { RandomWalkTab, ItoTab } from '../../modules/Module3/index.jsx'
+import { DerivTab, IntegTab, ExpLogTab } from './tabs/Calcul.jsx'
+import { AlgebraTab } from './tabs/Algebre.jsx'
+import { NormalTab, LogNormalTab, CorrelTab, EstimationTab } from './tabs/Probabilites.jsx'
+import { RandomWalkTab, ItoTab } from './tabs/Stochastique.jsx'
 
 const ACCENT = T.a1  // cyan
 

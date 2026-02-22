@@ -8,16 +8,6 @@ import MathsFinance from './categories/MathsFinance/index.jsx'
 import MathsEnergie from './categories/MathsEnergie/index.jsx'
 import Simulation from './categories/Simulation/index.jsx'
 
-// Legacy module imports (kept for potential direct URL access during transition)
-import Module1 from './modules/Module1/index.jsx'
-import Module2 from './modules/Module2/index.jsx'
-import Module3 from './modules/Module3/index.jsx'
-import Module4 from './modules/Module4/index.jsx'
-import Module5 from './modules/Module5/index.jsx'
-import Module6 from './modules/Module6/index.jsx'
-import Module7 from './modules/Module7/index.jsx'
-import Module8 from './modules/Module8/index.jsx'
-
 // 'mobile'  → < 480px  : hamburger + sidebar slide-in
 // 'compact' → 480-767px: barre d'icônes 56px (paysage téléphone)
 // 'full'    → ≥ 768px  : sidebar complète 240px
@@ -40,6 +30,7 @@ function useLayout() {
 const SIDEBAR_WIDTH = { full: 260, compact: 56, mobile: 0 }
 
 function Home() {
+  useEffect(() => { document.title = 'Dashboard' }, [])
   const layout = useLayout()
   const cols = layout === 'full' ? 2 : 1
   return (
@@ -196,18 +187,7 @@ export default function App() {
 
             {/* Checklist */}
             <Route path="/checklist" element={<Checklist />} />
-
-            {/* Legacy module routes (kept during transition) */}
-            <Route path="/module1" element={<Module1 />} />
-            <Route path="/module2" element={<Module2 />} />
-            <Route path="/module3" element={<Module3 />} />
-            <Route path="/module4" element={<Module4 />} />
-            <Route path="/module5" element={<Module5 />} />
-            <Route path="/module6" element={<Module6 />} />
-            <Route path="/module7" element={<Module7 />} />
-            <Route path="/module8" element={<Module8 />} />
-
-            {/* Fallback */}
+{/* Fallback */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

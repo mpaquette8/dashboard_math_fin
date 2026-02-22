@@ -34,7 +34,7 @@ export const T = {
   gap2: '24px',
 }
 
-export const moduleAccent = (n) => T[`a${n}`]
+
 
 export const moduleInfo = [
   { id: 1, label: 'Fondations Math', short: 'M1', accent: T.a1, path: '/module1' },

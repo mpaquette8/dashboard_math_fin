@@ -1,30 +1,58 @@
 import React, { useState, useMemo } from 'react'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  BarChart, Bar, ScatterChart, Scatter, ResponsiveContainer, ReferenceLine,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  BarChart,
+  Bar,
+  ScatterChart,
+  Scatter,
+  ResponsiveContainer,
+  ReferenceLine,
 } from 'recharts'
-import { T } from '../../design/tokens'
+import { T } from '../../../design/tokens'
 import {
-  ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
-  Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
-  Demonstration, DemoStep, K,
-} from '../../design/components'
+  TabBar,
+  FormulaBox,
+  IntuitionBlock,
+  ExampleBlock,
+  Slider,
+  Accordion,
+  Step,
+  SymbolLegend,
+  SectionTitle,
+  InfoChip,
+  Grid,
+  ChartWrapper,
+  Demonstration,
+  DemoStep,
+  K,
+} from '../../../design/components'
 
 const ACCENT = T.a5
 
+
 // ─── Math helpers ─────────────────────────────────────────────────────────────
+
 function phi(x) { return Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI) }
+
 function normCDF(x) {
   const t = 1 / (1 + 0.2316419 * Math.abs(x))
   const p = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))))
   return x >= 0 ? 1 - phi(x) * p : phi(x) * p
 }
+
 function gaussRand() {
   let u = 0, v = 0
   while (u === 0) u = Math.random()
   while (v === 0) v = Math.random()
   return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * v)
 }
+
 function bsCall(S, K, T, r, sigma) {
   if (T <= 0) return Math.max(S - K, 0)
   const sqrtT = Math.sqrt(T)
@@ -32,7 +60,9 @@ function bsCall(S, K, T, r, sigma) {
   const d2 = d1 - sigma * sqrtT
   return S * normCDF(d1) - K * Math.exp(-r * T) * normCDF(d2)
 }
+
 // Newton-Raphson implied vol
+
 function impliedVol(C, S, K, T, r, tol = 1e-6, maxIter = 100) {
   let sigma = 0.3
   for (let i = 0; i < maxIter; i++) {
@@ -49,7 +79,9 @@ function impliedVol(C, S, K, T, r, tol = 1e-6, maxIter = 100) {
   return sigma
 }
 
+
 // ─── Tab: Vol Historique ──────────────────────────────────────────────────────
+
 export function HistVolTab() {
   const [window2, setWindow2] = useState(21)
   const [sigma, setSigma] = useState(0.25)
@@ -240,7 +272,6 @@ export function HistVolTab() {
   )
 }
 
-// ─── Tab: Vol Implicite ───────────────────────────────────────────────────────
 export function ImplVolTab() {
   const [S, setS] = useState(100)
   const [strike, setStrike] = useState(100)
@@ -373,7 +404,6 @@ export function ImplVolTab() {
   )
 }
 
-// ─── Tab: Smile ───────────────────────────────────────────────────────────────
 export function SmileTab() {
   const [S, setS] = useState(100)
   const [T2, setT2] = useState(0.5)
@@ -546,7 +576,6 @@ export function SmileTab() {
   )
 }
 
-// ─── Tab: Surface ─────────────────────────────────────────────────────────────
 export function SurfaceTab() {
   const [S] = useState(100)
 
@@ -701,7 +730,6 @@ export function SurfaceTab() {
   )
 }
 
-// ─── Tab: Heston ─────────────────────────────────────────────────────────────
 export function HestonTab() {
   const [v0, setV0] = useState(0.04)  // initial variance
   const [kappa, setKappa] = useState(2)
@@ -867,30 +895,6 @@ export function HestonTab() {
           </ResponsiveContainer>
         </ChartWrapper>
       </Grid>
-    </div>
-  )
-}
-
-// ─── Main Module 5 ────────────────────────────────────────────────────────────
-const TABS = ['Vol Historique', 'Vol Implicite', 'Smile', 'Surface', 'Heston']
-
-export default function Module5() {
-  const [tab, setTab] = useState('Smile')
-
-  return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
-      <ModuleHeader
-        num={5}
-        title="Volatilité & Surfaces"
-        subtitle="Vol historique vs implicite, smile de volatilité, surface σ(K,T) et modèle de Heston — les outils avancés du trader options en énergie."
-        accent={ACCENT}
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} accent={ACCENT} />
-      {tab === 'Vol Historique' && <HistVolTab />}
-      {tab === 'Vol Implicite' && <ImplVolTab />}
-      {tab === 'Smile' && <SmileTab />}
-      {tab === 'Surface' && <SurfaceTab />}
-      {tab === 'Heston' && <HestonTab />}
     </div>
   )
 }

@@ -1,26 +1,55 @@
 import React, { useState, useMemo } from 'react'
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ScatterChart, Scatter, BarChart, Bar, ReferenceLine, ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ScatterChart,
+  Scatter,
+  BarChart,
+  Bar,
+  ReferenceLine,
+  ResponsiveContainer,
 } from 'recharts'
-import { T } from '../../design/tokens'
+import { T } from '../../../design/tokens'
 import {
-  ModuleHeader, TabBar, Panel, FormulaBox, IntuitionBlock, ExampleBlock,
-  Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
-  Demonstration, DemoStep, K,
-} from '../../design/components'
+  TabBar,
+  Panel,
+  FormulaBox,
+  IntuitionBlock,
+  ExampleBlock,
+  Slider,
+  Accordion,
+  Step,
+  SymbolLegend,
+  SectionTitle,
+  InfoChip,
+  Grid,
+  ChartWrapper,
+  Demonstration,
+  DemoStep,
+  K,
+} from '../../../design/components'
 
 const ACCENT = T.a2
 
+
 // ─── Helpers ─────────────────────────────────────────────────────────────────
+
 function phi(x) { return Math.exp(-x * x / 2) / Math.sqrt(2 * Math.PI) }
+
 function normCDF(x) {
   const t = 1 / (1 + 0.2316419 * Math.abs(x))
   const p = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))))
   return x >= 0 ? 1 - phi(x) * p : phi(x) * p
 }
 
+
 // ─── Tab: Loi Normale ─────────────────────────────────────────────────────────
+
 export function NormalTab() {
   const [mu, setMu] = useState(0)
   const [sigma, setSigma] = useState(1)
@@ -275,7 +304,6 @@ export function NormalTab() {
   )
 }
 
-// ─── Tab: Log-Normale ─────────────────────────────────────────────────────────
 export function LogNormalTab() {
   const [mu, setMu] = useState(0)
   const [sigma, setSigma] = useState(0.3)
@@ -425,7 +453,6 @@ export function LogNormalTab() {
   )
 }
 
-// ─── Tab: Corrélation ─────────────────────────────────────────────────────────
 export function CorrelTab() {
   const [rho, setRho] = useState(0.7)
   const [nPts, setNPts] = useState(150)
@@ -588,7 +615,6 @@ export function CorrelTab() {
   )
 }
 
-// ─── Tab: Estimation ─────────────────────────────────────────────────────────
 export function EstimationTab() {
   const [n, setN] = useState(50)
 
@@ -771,29 +797,6 @@ export function EstimationTab() {
           </DemoStep>
         </Demonstration>
       </Accordion>
-    </div>
-  )
-}
-
-// ─── Main Module 2 ────────────────────────────────────────────────────────────
-const TABS = ['Loi Normale', 'Log-Normale', 'Corrélation', 'Estimation']
-
-export default function Module2() {
-  const [tab, setTab] = useState('Loi Normale')
-
-  return (
-    <div style={{ maxWidth: 1100, margin: '0 auto', paddingBottom: 60 }}>
-      <ModuleHeader
-        num={2}
-        title="Probabilités & Statistiques"
-        subtitle="Fondements probabilistes : loi normale et log-normale pour les prix, corrélation entre actifs, et estimation des paramètres depuis des données historiques."
-        accent={ACCENT}
-      />
-      <TabBar tabs={TABS} active={tab} onChange={setTab} accent={ACCENT} />
-      {tab === 'Loi Normale' && <NormalTab />}
-      {tab === 'Log-Normale' && <LogNormalTab />}
-      {tab === 'Corrélation' && <CorrelTab />}
-      {tab === 'Estimation' && <EstimationTab />}
     </div>
   )
 }

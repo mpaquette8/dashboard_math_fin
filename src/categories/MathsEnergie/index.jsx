@@ -1,11 +1,13 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { T } from '../../design/tokens'
 import { TabBar } from '../../design/components'
 
 // ─── Tab content imports from existing modules ────────────────────────────────
-import { MarchesTab, ForwardCurvesTab, OptionsTab, CasIntegrateurTab } from '../../modules/Module8/index.jsx'
-import { MeanRevTab, JumpTab } from '../../modules/Module3/index.jsx'
+import { MarchesTab } from './tabs/Marches.jsx'
+import { ForwardCurvesTab } from './tabs/ForwardCurves.jsx'
+import { OptionsTab, CasIntegrateurTab } from './tabs/OptionsEnergie.jsx'
+import { MeanRevTab, JumpTab } from './tabs/MeanReversion.jsx'
 
 const ACCENT = T.a8  // red
 

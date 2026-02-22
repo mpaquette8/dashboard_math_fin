@@ -4,7 +4,15 @@
       "WebFetch(domain:www.mennta.com)",
       "Bash(tail:*)",
       "Bash(grep:*)",
-      "Bash(gh auth:*)"
+      "Bash(gh auth:*)",
+      "Bash(wc:*)",
+      "Bash(cd \"C:/Users/maxim/dashboard_math_fin\" && node refactor.js 2>&1)",
+      "Bash(cd \"C:/Users/maxim/dashboard_math_fin\" && mv refactor.js refactor.cjs && node refactor.cjs 2>&1)",
+      "Bash(cd:*)",
+      "Bash(cd \"C:/Users/maxim/dashboard_math_fin\" && node refactor.cjs 2>&1)",
+      "Bash(echo Restored modules:*)",
+      "Bash(cd /c/Users/maxim/dashboard_math_fin && npm run build 2>&1)",
+      "Bash(cd /c/Users/maxim/dashboard_math_fin && node fix.cjs 2>&1)"
     ]
   }
 }
