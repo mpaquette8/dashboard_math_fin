@@ -26,7 +26,7 @@ function gaussRand() {
 }
 
 // ─── Tab: EaR & CFaR ─────────────────────────────────────────────────────────
-function EaRTab() {
+export function EaRTab() {
   const [mu, setMu] = useState(50)       // moyenne cashflow (M$)
   const [sigma, setSigma] = useState(20) // vol cashflow (M$)
   const [conf, setConf] = useState(0.95)
@@ -252,7 +252,7 @@ function EaRTab() {
 }
 
 // ─── Tab: RAROC ───────────────────────────────────────────────────────────────
-function RAROCTab() {
+export function RAROCTab() {
   const [niacc, setNiacc] = useState(15)   // Net Income After Cost of Capital (M$)
   const [ec, setEc] = useState(100)          // Economic Capital (M$)
   const [revenue, setRevenue] = useState(50)
@@ -514,7 +514,7 @@ function RAROCTab() {
 }
 
 // ─── Tab: PFE ─────────────────────────────────────────────────────────────────
-function PFETab() {
+export function PFETab() {
   const [sigma, setSigma] = useState(0.25)
   const [r, setR] = useState(0.05)
   const [notional, setNotional] = useState(100)
@@ -767,7 +767,7 @@ function PFETab() {
 }
 
 // ─── Tab: CVA ─────────────────────────────────────────────────────────────────
-function CVATab() {
+export function CVATab() {
   const [pd_annual, setPD] = useState(0.02)  // Prob défaut annuelle
   const [lgd, setLgd] = useState(0.6)        // Loss Given Default
   const [r, setR] = useState(0.05)

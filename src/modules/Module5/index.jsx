@@ -49,7 +49,7 @@ function impliedVol(C, S, K, T, r, tol = 1e-6, maxIter = 100) {
 }
 
 // ─── Tab: Vol Historique ──────────────────────────────────────────────────────
-function HistVolTab() {
+export function HistVolTab() {
   const [window2, setWindow2] = useState(21)
   const [sigma, setSigma] = useState(0.25)
   const [nDays, setNDays] = useState(252)
@@ -235,7 +235,7 @@ function HistVolTab() {
 }
 
 // ─── Tab: Vol Implicite ───────────────────────────────────────────────────────
-function ImplVolTab() {
+export function ImplVolTab() {
   const [S, setS] = useState(100)
   const [K, setK] = useState(100)
   const [T2, setT2] = useState(0.5)
@@ -358,7 +358,7 @@ function ImplVolTab() {
 }
 
 // ─── Tab: Smile ───────────────────────────────────────────────────────────────
-function SmileTab() {
+export function SmileTab() {
   const [S, setS] = useState(100)
   const [T2, setT2] = useState(0.5)
   const [r, setR] = useState(0.04)
@@ -526,7 +526,7 @@ function SmileTab() {
 }
 
 // ─── Tab: Surface ─────────────────────────────────────────────────────────────
-function SurfaceTab() {
+export function SurfaceTab() {
   const [S] = useState(100)
 
   // Parameterized surface: σ(K, T) with smile + term structure
@@ -683,7 +683,7 @@ function SurfaceTab() {
 }
 
 // ─── Tab: Heston ─────────────────────────────────────────────────────────────
-function HestonTab() {
+export function HestonTab() {
   const [v0, setV0] = useState(0.04)  // initial variance
   const [kappa, setKappa] = useState(2)
   const [theta, setTheta] = useState(0.04)

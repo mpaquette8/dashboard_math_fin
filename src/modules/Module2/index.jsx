@@ -20,7 +20,7 @@ function normCDF(x) {
 }
 
 // ─── Tab: Loi Normale ─────────────────────────────────────────────────────────
-function NormalTab() {
+export function NormalTab() {
   const [mu, setMu] = useState(0)
   const [sigma, setSigma] = useState(1)
   const [d, setD] = useState(1.0)
@@ -230,7 +230,7 @@ function NormalTab() {
 }
 
 // ─── Tab: Log-Normale ─────────────────────────────────────────────────────────
-function LogNormalTab() {
+export function LogNormalTab() {
   const [mu, setMu] = useState(0)
   const [sigma, setSigma] = useState(0.3)
 
@@ -369,7 +369,7 @@ function LogNormalTab() {
 }
 
 // ─── Tab: Corrélation ─────────────────────────────────────────────────────────
-function CorrelTab() {
+export function CorrelTab() {
   const [rho, setRho] = useState(0.7)
   const [nPts, setNPts] = useState(150)
 
@@ -511,7 +511,7 @@ function CorrelTab() {
 }
 
 // ─── Tab: Estimation ─────────────────────────────────────────────────────────
-function EstimationTab() {
+export function EstimationTab() {
   const [n, setN] = useState(50)
 
   function gaussRand(mu = 0, sigma = 1) {

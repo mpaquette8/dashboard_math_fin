@@ -72,7 +72,7 @@ function black76(F, K, T, r, sigma, type = 'call') {
 }
 
 // ─── Tab: No-Arbitrage ────────────────────────────────────────────────────────
-function NoArbTab() {
+export function NoArbTab() {
   const [S, setS] = useState(100)
   const [K, setK] = useState(100)
   const [r, setR] = useState(0.05)
@@ -204,7 +204,7 @@ function NoArbTab() {
 }
 
 // ─── Tab: Black-Scholes ───────────────────────────────────────────────────────
-function BSTab() {
+export function BSTab() {
   const [S, setS] = useState(100)
   const [K, setK] = useState(100)
   const [T2, setT2] = useState(1)
@@ -440,7 +440,7 @@ function BSTab() {
 }
 
 // ─── Tab: Black-76 ────────────────────────────────────────────────────────────
-function Black76Tab() {
+export function Black76Tab() {
   const [F, setF] = useState(80)
   const [K, setK] = useState(80)
   const [T2, setT2] = useState(0.5)
@@ -585,7 +585,7 @@ function Black76Tab() {
 }
 
 // ─── Tab: Greeks ──────────────────────────────────────────────────────────────
-function GreeksTab() {
+export function GreeksTab() {
   const [S, setS] = useState(100)
   const [K, setK] = useState(100)
   const [T2, setT2] = useState(1)
@@ -762,7 +762,7 @@ function GreeksTab() {
 }
 
 // ─── Tab: Monte Carlo ─────────────────────────────────────────────────────────
-function MonteCarloTab() {
+export function MonteCarloTab() {
   const [S, setS] = useState(100)
   const [K, setK] = useState(105)
   const [T2, setT2] = useState(1)
@@ -923,7 +923,7 @@ function gaussRandM4() {
 }
 
 // ─── Tab: Arbres Binomiaux ────────────────────────────────────────────────────
-function ArbreTab() {
+export function ArbreTab() {
   const [S0, setS0] = useState(100)
   const [K, setK] = useState(100)
   const [r, setR] = useState(0.05)
@@ -1110,7 +1110,7 @@ function ArbreTab() {
 }
 
 // ─── Tab: Options Exotiques (Path-Dependent) ──────────────────────────────────
-function ExotiquesTab() {
+export function ExotiquesTab() {
   const [S0, setS0] = useState(100)
   const [K, setK] = useState(100)
   const [r, setR] = useState(0.05)
