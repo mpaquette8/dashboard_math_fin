@@ -7,6 +7,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a5
@@ -118,18 +119,24 @@ export function HistVolTab() {
         Voici comment calculer concrètement la volatilité historique à partir d'une série de prix :
       </div>
       <ExampleBlock title="Calcul pas à pas — Données journalières" accent={ACCENT}>
-        <Step num={1} accent={ACCENT}>
-          <strong>Calculer les log-rendements :</strong> rᵢ = ln(Sᵢ / Sᵢ₋₁). Par exemple, si S₀ = 100 et S₁ = 102, alors r₁ = ln(102/100) = 0.0198. On utilise les log-rendements (et non les rendements simples) car ils sont additifs dans le temps et symétiques pour les hausses/baisses.
-        </Step>
-        <Step num={2} accent={ACCENT}>
-          <strong>Calculer la moyenne :</strong> r̄ = (1/n) × Σᵢ rᵢ. Sur un horizon court, r̄ ≈ 0 (le drift journalier est négligeable devant la vol). Sur n=252 jours avec µ_ann=5%, r̄_daily ≈ 0.0002.
-        </Step>
-        <Step num={3} accent={ACCENT}>
-          <strong>Calculer la variance quotidienne :</strong> σ̂²_daily = (1/(n-1)) × Σᵢ (rᵢ - r̄)². On divise par (n-1) et non n pour avoir un estimateur sans biais (correction de Bessel). Exemple : avec n=21 jours et Σ(rᵢ - r̄)² = 0.0084, on obtient σ̂²_daily = 0.0084/20 = 0.00042, soit σ̂_daily = 2.05%.
-        </Step>
-        <Step num={4} accent={ACCENT}>
-          <strong>Annualiser :</strong> σ_ann = σ_daily × √252. Si σ_daily = 2.05%, alors σ_ann = 2.05% × √252 ≈ 32.5%. Le facteur √252 vient du scaling de la variance : si les rendements sont iid, Var(rendement annuel) = 252 × Var(rendement daily), donc σ_ann = √252 × σ_daily.
-        </Step>
+        <p style={{ color: T.muted, fontSize: 13 }}>Calculer la volatilité historique annualisée à partir d'une série de prix journaliers.</p>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          σ_ann = σ_daily × √252
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Log-rendements" ruleDetail="rᵢ = ln(Sᵢ/Sᵢ₋₁)" accent={ACCENT}>
+            <strong>Calculer les log-rendements :</strong> <K>{"r_i = \\ln\\!\\left(\\frac{S_i}{S_{i-1}}\\right)"}</K>. Par exemple, si S₀ = 100 et S₁ = 102, alors r₁ = ln(102/100) = 0.0198. On utilise les log-rendements (et non les rendements simples) car ils sont additifs dans le temps et symétriques pour les hausses/baisses.
+          </DemoStep>
+          <DemoStep num={2} rule="Moyenne arithmétique" ruleDetail="r̄ = (1/n) Σ rᵢ" accent={ACCENT}>
+            <strong>Calculer la moyenne :</strong> <K>{"\\bar{r} = \\frac{1}{n} \\sum_i r_i"}</K>. Sur un horizon court, r̄ ≈ 0 (le drift journalier est négligeable devant la vol). Sur n=252 jours avec µ_ann=5%, r̄_daily ≈ 0.0002.
+          </DemoStep>
+          <DemoStep num={3} rule="Variance de Bessel" ruleDetail="σ² = Σ(rᵢ−r̄)²/(n−1)" accent={ACCENT}>
+            <strong>Calculer la variance quotidienne :</strong> <K>{"\\hat{\\sigma}^2_{daily} = \\frac{1}{n-1} \\sum_i (r_i - \\bar{r})^2"}</K>. On divise par (n-1) et non n pour avoir un estimateur sans biais (correction de Bessel). Exemple : avec n=21 jours et Σ(rᵢ - r̄)² = 0.0084, on obtient σ̂²_daily = 0.0084/20 = 0.00042, soit σ̂_daily = 2.05%.
+          </DemoStep>
+          <DemoStep num={4} rule="Annualisation √252" ruleDetail="σ_ann = σ_daily × √252" accent={ACCENT}>
+            <strong>Annualiser :</strong> <K>{"\\sigma_{ann} = \\sigma_{daily} \\times \\sqrt{252}"}</K>. Si σ_daily = 2.05%, alors σ_ann = 2.05% × √252 ≈ 32.5%. Le facteur √252 vient du scaling de la variance : si les rendements sont iid, Var(rendement annuel) = 252 × Var(rendement daily), donc σ_ann = √252 × σ_daily.
+          </DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
@@ -282,10 +289,15 @@ export function ImplVolTab() {
       </div>
       <ExampleBlock title="Newton-Raphson — Recherche de σ_impl" accent={ACCENT}>
         <p>Call sur WTI : S=80, K=80, T=0.25an, r=4%, C_marché=4.50$. Chercher σ_impl.</p>
-        <Step num={1} accent={ACCENT}>Initialisation : σ₀ = 0.30 (30%). Calculer BS(σ₀) = 3.86$. Erreur = 3.86 - 4.50 = -0.64$. Vega(σ₀) = S × ϕ(d₁) × √T = 80 × 0.3989 × 0.5 = 15.96. Correction : Δσ = -(-0.64)/15.96 = +0.040.</Step>
-        <Step num={2} accent={ACCENT}>Itération 1 : σ₁ = 0.30 + 0.040 = 0.340 (34%). BS(σ₁) ≈ 4.48$. Erreur = -0.02$. Très proche ! Vega ≈ 16.1. Correction : Δσ = 0.02/16.1 ≈ +0.001.</Step>
-        <Step num={3} accent={ACCENT}>Itération 2 : σ₂ = 0.341 (34.1%). BS(σ₂) ≈ 4.498$ ≈ 4.50$. Convergence atteinte en seulement 2-3 itérations !</Step>
-        <Step num={4} accent={ACCENT}>Résultat : σ_impl ≈ 34.1%. Interprétation : le marché anticipe une volatilité annualisée de 34% pour le WTI sur les 3 prochains mois.</Step>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          σ_impl ≈ 34.1%
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Newton-Raphson" ruleDetail="σₙ₊₁ = σₙ − (BS−C)/Vega" accent={ACCENT}>Initialisation : σ₀ = 0.30 (30%). Calculer BS(σ₀) = 3.86$. Erreur = 3.86 - 4.50 = -0.64$. Vega(σ₀) = S × ϕ(d₁) × √T = 80 × 0.3989 × 0.5 = 15.96. Correction : Δσ = -(-0.64)/15.96 = +0.040.</DemoStep>
+          <DemoStep num={2} rule="Newton-Raphson" ruleDetail="Itération convergente" accent={ACCENT}>Itération 1 : σ₁ = 0.30 + 0.040 = 0.340 (34%). BS(σ₁) ≈ 4.48$. Erreur = -0.02$. Très proche ! Vega ≈ 16.1. Correction : Δσ = 0.02/16.1 ≈ +0.001.</DemoStep>
+          <DemoStep num={3} rule="Newton-Raphson" ruleDetail="Convergence quadratique" accent={ACCENT}>Itération 2 : σ₂ = 0.341 (34.1%). BS(σ₂) ≈ 4.498$ ≈ 4.50$. Convergence atteinte en seulement 2-3 itérations !</DemoStep>
+          <DemoStep num={4} rule="Vega" ruleDetail="∂C/∂σ = S·ϕ(d₁)·√T" accent={ACCENT}>Résultat : σ_impl ≈ 34.1%. Le marché anticipe une volatilité annualisée de 34% pour le WTI sur les 3 prochains mois.</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Vol historique vs Vol implicite — Comparaison</SectionTitle>
@@ -306,10 +318,15 @@ export function ImplVolTab() {
 
       <ExampleBlock title="VIX — l'indice de peur du marché" accent={ACCENT}>
         <p>Le VIX mesure la volatilité implicite du S&P500 à 30 jours. C'est le "baromètre de la peur" des marchés.</p>
-        <Step num={1} accent={ACCENT}>Construction : on observe les prix de toutes les options (calls et puts) sur le S&P500 avec maturité proche de 30 jours.</Step>
-        <Step num={2} accent={ACCENT}>Calcul : VIX² ≈ (2/T) × Σ [ΔK/K² × e^(rT) × Q(K)] — une moyenne pondérée des prix d'options pour tous les strikes, sans hypothèse de modèle.</Step>
-        <Step num={3} accent={ACCENT}>Interprétation : VIX=20 signifie que le marché anticipe une vol annualisée de 20% pour le S&P500 sur le prochain mois. VIX{'>'}30 = anxiété. VIX{'>'}40 = panique (ex: Covid mars 2020).</Step>
-        <Step num={4} accent={ACCENT}>En énergie : l'OVX (Oil VIX) joue le même rôle pour le WTI. Il peut atteindre 80-100% lors des crises pétrolières majeures (Covid 2020 : OVX à 325% !)</Step>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          VIX² ≈ (2/T) × Σ [ΔK/K² × e^(rT) × Q(K)]
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Implied vol" ruleDetail="Extraction depuis prix d'options" accent={ACCENT}>Construction : on observe les prix de toutes les options (calls et puts) sur le S&P500 avec maturité proche de 30 jours.</DemoStep>
+          <DemoStep num={2} rule="Implied vol" ruleDetail="VIX² = (2/T) Σ ΔK/K² · e^(rT) · Q(K)" accent={ACCENT}>Calcul : VIX² ≈ (2/T) × Σ [ΔK/K² × e^(rT) × Q(K)] — une moyenne pondérée des prix d'options pour tous les strikes, sans hypothèse de modèle.</DemoStep>
+          <DemoStep num={3} rule="Implied vol" ruleDetail="Baromètre de la peur" accent={ACCENT}>Interprétation : VIX=20 signifie que le marché anticipe une vol annualisée de 20% pour le S&P500 sur le prochain mois. VIX{'>'}30 = anxiété. VIX{'>'}40 = panique (ex: Covid mars 2020).</DemoStep>
+          <DemoStep num={4} rule="Implied vol" ruleDetail="OVX = VIX pétrole" accent={ACCENT}>En énergie : l'OVX (Oil VIX) joue le même rôle pour le WTI. Il peut atteindre 80-100% lors des crises pétrolières majeures (Covid 2020 : OVX à 325% !)</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Calculer σ_impl par bisection step-by-step" accent={ACCENT} badge="Moyen">
@@ -472,10 +489,15 @@ export function SmileTab() {
 
       <ExampleBlock title="Skew pétrole brut — Analyse typique" accent={ACCENT}>
         <p>WTI à S=80$/bbl, σ_ATM=30%, T=3 mois. Observations marché :</p>
-        <Step num={1} accent={ACCENT}>Put K=70 (OTM -12.5%) : σ_impl = 38% (protection crash pétrolier)</Step>
-        <Step num={2} accent={ACCENT}>Call K=80 (ATM) : σ_impl = 30% (par définition)</Step>
-        <Step num={3} accent={ACCENT}>Call K=90 (OTM +12.5%) : σ_impl = 27% (anticipation haussière moins chère)</Step>
-        <Step num={4} accent={ACCENT}>Skew = (σ_25Δput - σ_25Δcall) / 2 ≈ -5% → skew négatif fort = marché craint les baisses</Step>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          Skew 25Δ ≈ −5% → fort skew négatif
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Smile de volatilité" ruleDetail="σ_impl varie selon K" accent={ACCENT}>Put K=70 (OTM -12.5%) : <K>{"\\sigma_{impl} = 38\\%"}</K> (protection crash pétrolier)</DemoStep>
+          <DemoStep num={2} rule="Smile de volatilité" ruleDetail="σ_ATM = référence" accent={ACCENT}>Call K=80 (ATM) : <K>{"\\sigma_{impl} = 30\\%"}</K> (par définition)</DemoStep>
+          <DemoStep num={3} rule="Skew" ruleDetail="Asymétrie put/call OTM" accent={ACCENT}>Call K=90 (OTM +12.5%) : <K>{"\\sigma_{impl} = 27\\%"}</K> (anticipation haussière moins chère)</DemoStep>
+          <DemoStep num={4} rule="Risk reversal" ruleDetail="Skew = (σ_put − σ_call)/2" accent={ACCENT}>Skew = <K>{"\\frac{\\sigma_{25\\Delta\\,put} - \\sigma_{25\\Delta\\,call}}{2} \\approx -5\\%"}</K> → skew négatif fort = marché craint les baisses</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Lire un smile de vol" accent={ACCENT} badge="Facile">

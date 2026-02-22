@@ -8,6 +8,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a7
@@ -196,11 +197,14 @@ export function EaRTab() {
 
       <ExampleBlock title="Producteur de gaz naturel — EaR annuel" accent={ACCENT}>
         <p>Production : 10 Bcf/an, prix spot moyen = 3$/MMBtu (σ=0.8$/MMBtu), vol = 30%</p>
-        <Step num={1} accent={ACCENT}>Revenus espérés = 10 × 3 = 30M$ par trimestre (E[CF])</Step>
-        <Step num={2} accent={ACCENT}>σ_CF = 10 × 0.8 = 8M$/trimestre (risque de prix × volume)</Step>
-        <Step num={3} accent={ACCENT}>EaR 95% = 1.645 × 8M$ = 13.2M$/trimestre</Step>
-        <Step num={4} accent={ACCENT}>CFaR 95% sur 4T = 1.645 × 8 × √4 = 26.3M$</Step>
-        <Step num={5} accent={ACCENT}>Revenus minimaux cumulés (95%) = 120M$ - 26.3M$ = 93.7M$</Step>
+        <FormulaBox accent={ACCENT}>Revenus minimaux cumulés (95%) = 93.7M$</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="EaR énergie" ruleDetail="Volume × Prix" accent={ACCENT}>Revenus espérés = <K>{"10 \\times 3 = 30"}</K> M$ par trimestre (E[CF])</DemoStep>
+          <DemoStep num={2} rule="Risque de prix" ruleDetail="σ_CF = Vol × σ_prix" accent={ACCENT}><K>{"\\sigma_{CF} = 10 \\times 0.8 = 8"}</K> M$/trimestre (risque de prix × volume)</DemoStep>
+          <DemoStep num={3} rule="EaR" ruleDetail="z_α × σ_CF" accent={ACCENT}><K>{"EaR_{95\\%} = 1.645 \\times 8 = 13.2"}</K> M$/trimestre</DemoStep>
+          <DemoStep num={4} rule="CFaR" ruleDetail="z_α × σ_CF × √T" accent={ACCENT}><K>{"CFaR_{95\\%} = 1.645 \\times 8 \\times \\sqrt{4} = 26.3"}</K> M$</DemoStep>
+          <DemoStep num={5} rule="Perte attendue sur revenus" ruleDetail="E[CF] × T − CFaR" accent={ACCENT}>Revenus minimaux cumulés (95%) = <K>{"120 - 26.3 = 93.7"}</K> M$</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <IntuitionBlock emoji="🤔" title="Couvrir ou ne pas couvrir — le dilemme corporate" accent={ACCENT}>
@@ -215,37 +219,39 @@ export function EaRTab() {
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Calcul EaR basique" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>E[CF] = 100M$, σ = 25M$. Calculez EaR 95% et le CF plancher.</p>
-        <Step num={1} accent={ACCENT}>EaR = 1.645 × 25M$ = 41.1M$</Step>
         <FormulaBox accent={ACCENT}>CF_plancher = 100 - 41.1 = 58.9M$ (avec 95% de confiance)</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="EaR" ruleDetail="z_α × σ_CF" accent={ACCENT}><K>{"EaR = 1.645 \\times 25 = 41.1"}</K> M$ → CF plancher = <K>{"100 - 41.1 = 58.9"}</K> M$</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — CFaR multi-périodes" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Une raffinerie a E[CF] = 50M$/trim, σ = 15M$/trim. CFaR 99% sur 8 trimestres ?</p>
-        <Step num={1} accent={ACCENT}>CFaR = z_99% × σ × √T = 2.326 × 15 × √8</Step>
-        <Step num={2} accent={ACCENT}>= 2.326 × 15 × 2.828 = 98.7M$</Step>
         <FormulaBox accent={ACCENT}>CF cumulé plancher = 8×50M$ - 98.7M$ = 301.3M$</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="CFaR" ruleDetail="z_α × σ × √T" accent={ACCENT}><K>{"CFaR = z_{99\\%} \\times \\sigma \\times \\sqrt{T} = 2.326 \\times 15 \\times \\sqrt{8}"}</K></DemoStep>
+          <DemoStep num={2} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 2.326 \\times 15 \\times 2.828 = 98.7"}</K> M$ → CF cumulé plancher = <K>{"400 - 98.7 = 301.3"}</K> M$</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — EaR d'un producteur de gaz naturel" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Producteur de gaz : 50 Bcf/an de production, prix Henry Hub = 3.5$/MMBtu, σ_prix = 1.0$/MMBtu. Calculez l'EaR trimestriel à 95% et le CFaR annuel (4 trimestres).</p>
-        <Step num={1} accent={ACCENT}>Volume trimestriel = 50 Bcf / 4 = 12.5 Bcf = 12,500,000 MMBtu</Step>
-        <Step num={2} accent={ACCENT}>E[CF_trim] = 12,500,000 × 3.5$ = 43.75M$ par trimestre</Step>
-        <Step num={3} accent={ACCENT}>σ_CF_trim = Volume × σ_prix = 12,500,000 × 1.0$ = 12.5M$</Step>
-        <Step num={4} accent={ACCENT}>EaR 95% = 1.645 × 12.5M$ = 20.6M$ → CF plancher = 43.75 - 20.6 = 23.15M$/T</Step>
-        <Step num={5} accent={ACCENT}>CFaR 95% sur 4T = 1.645 × 12.5 × √4 = 41.1M$</Step>
         <FormulaBox accent={ACCENT}>CF annuel plancher = 4×43.75 - 41.1 = 175 - 41.1 = 133.9M$ (vs budget 175M$)</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Point clé :</strong> L'EaR de 20.6M$ représente 47% du CF trimestriel espéré — énorme ! Cela justifie une politique de couverture active. Avec une couverture à 70% de la production via des swaps forward, σ_CF se réduit à 12.5 × 0.30 = 3.75M$, et l'EaR devient seulement 6.2M$.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="EaR énergie" ruleDetail="Volume trimestriel" accent={ACCENT}>Volume trimestriel = <K>{"50 / 4 = 12.5"}</K> Bcf = 12 500 000 MMBtu</DemoStep>
+          <DemoStep num={2} rule="Revenu espéré" ruleDetail="Vol × Prix" accent={ACCENT}><K>{"E[CF_{trim}] = 12\\,500\\,000 \\times 3.5 = 43.75"}</K> M$/trimestre</DemoStep>
+          <DemoStep num={3} rule="Risque de prix" ruleDetail="σ_CF = Vol × σ_prix" accent={ACCENT}><K>{"\\sigma_{CF} = 12\\,500\\,000 \\times 1.0 = 12.5"}</K> M$</DemoStep>
+          <DemoStep num={4} rule="EaR" ruleDetail="z_α × σ_CF" accent={ACCENT}><K>{"EaR_{95\\%} = 1.645 \\times 12.5 = 20.6"}</K> M$ → CF plancher = <K>{"43.75 - 20.6 = 23.15"}</K> M$/T</DemoStep>
+          <DemoStep num={5} rule="CFaR" ruleDetail="z_α × σ × √T" accent={ACCENT}><K>{"CFaR_{95\\%} = 1.645 \\times 12.5 \\times \\sqrt{4} = 41.1"}</K> M$. L'EaR de 20.6M$ représente 47% du CF trimestriel espéré — cela justifie une couverture active. Avec couverture à 70%, σ_CF = 3.75M$ et EaR = 6.2M$.</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 4 — Stratégie de couverture 50% vs 100%" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Même producteur de gaz. Comparez l'impact d'une couverture à 50% vs 100% de la production sur l'EaR et sur les revenus upside perdus.</p>
-        <Step num={1} accent={ACCENT}>Sans couverture : σ_CF = 12.5M$/T, EaR 95% = 20.6M$, upside illimité</Step>
-        <Step num={2} accent={ACCENT}>Couverture 50% : σ_CF_résid = 12.5 × 0.50 = 6.25M$, EaR = 1.645 × 6.25 = 10.3M$</Step>
-        <Step num={3} accent={ACCENT}>Couverture 100% via swap : σ_CF = 0, EaR = 0 → revenus certains = 43.75M$/T</Step>
-        <Step num={4} accent={ACCENT}>Coût de la couverture 100% : si prix monte à 4.5$/MMBtu, on rate 1.0$ × 12.5M MMBtu = 12.5M$ d'upside par trimestre</Step>
         <FormulaBox accent={ACCENT}>Compromis optimal : 50-70% couvert = protection contre la baisse, participation à la hausse</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Point clé :</strong> La couverture à 100% élimine le risque mais supprime aussi l'upside. Dans un secteur cyclique comme l'énergie, un producteur qui couvre 100% en période de bas prix peut manquer le rebond. La plupart des compagnies visent 50-80% de couverture pour les 12-18 prochains mois.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Hedge ratio" ruleDetail="0% couverture" accent={ACCENT}>Sans couverture : <K>{"\\sigma_{CF} = 12.5"}</K> M$/T, EaR 95% = 20.6M$, upside illimité</DemoStep>
+          <DemoStep num={2} rule="Hedge ratio" ruleDetail="50% couverture" accent={ACCENT}>Couverture 50% : <K>{"\\sigma_{résid} = 12.5 \\times 0.50 = 6.25"}</K> M$, <K>{"EaR = 1.645 \\times 6.25 = 10.3"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="Hedge ratio" ruleDetail="100% couverture" accent={ACCENT}>Couverture 100% via swap : σ_CF = 0, EaR = 0 → revenus certains = 43.75M$/T</DemoStep>
+          <DemoStep num={4} rule="Ratio de couverture" ruleDetail="Coût d'opportunité" accent={ACCENT}>Coût de la couverture 100% : si prix monte à 4.5$/MMBtu, on rate <K>{"1.0 \\times 12.5M = 12.5"}</K> M$ d'upside/T. La plupart des compagnies visent 50-80% de couverture pour les 12-18 prochains mois.</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -390,14 +396,16 @@ export function RAROCTab() {
 
       <ExampleBlock title="Décision RAROC — Projet de trading en énergie" accent={ACCENT}>
         <p>Une banque d'énergie évalue un nouveau desk de trading de dérivés gaz. Budget capital = 50M$.</p>
-        <Step num={1} accent={ACCENT}>Revenus estimés : 18M$/an (spread bid-ask + positions directionnelles)</Step>
-        <Step num={2} accent={ACCENT}>Coûts opérationnels : 6M$/an (salaires traders, systèmes, back-office)</Step>
-        <Step num={3} accent={ACCENT}>Expected Loss : PD = 1.5%, LGD = 55%, EAD = 80M$ → EL = 0.015 × 0.55 × 80 = 0.66M$/an</Step>
-        <Step num={4} accent={ACCENT}>Capital économique (VaR 99.9% 1 an) : 50M$ (estimé par modèle interne)</Step>
-        <Step num={5} accent={ACCENT}>Coût du capital : 12% × 50M$ = 6M$/an</Step>
-        <Step num={6} accent={ACCENT}>NIACC = 18 - 6 - 0.66 - 6 = 5.34M$</Step>
-        <Step num={7} accent={ACCENT}>RAROC = 5.34 / 50 = 10.68% vs Hurdle Rate = 12% → RAROC {'<'} Hurdle → à refuser ou renégocier</Step>
-        <FormulaBox accent={ACCENT}>Levier possible : réduire les coûts à 4M$ → NIACC = 7.34M$ → RAROC = 14.7% {'>'} 12% → acceptable</FormulaBox>
+        <FormulaBox accent={ACCENT}>RAROC = 10.68% {'<'} Hurdle 12% → REFUSÉ. Levier : coûts à 4M$ → RAROC = 14.7% → acceptable</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="RAROC" ruleDetail="Revenus bruts" accent={ACCENT}>Revenus estimés : 18M$/an (spread bid-ask + positions directionnelles)</DemoStep>
+          <DemoStep num={2} rule="RAROC" ruleDetail="Coûts opérationnels" accent={ACCENT}>Coûts opérationnels : 6M$/an (salaires traders, systèmes, back-office)</DemoStep>
+          <DemoStep num={3} rule="RAROC" ruleDetail="EL = PD × LGD × EAD" accent={ACCENT}>Expected Loss : <K>{"EL = 0.015 \\times 0.55 \\times 80 = 0.66"}</K> M$/an</DemoStep>
+          <DemoStep num={4} rule="RAROC" ruleDetail="EC = VaR 99.9%" accent={ACCENT}>Capital économique (VaR 99.9% 1 an) : 50M$</DemoStep>
+          <DemoStep num={5} rule="RAROC" ruleDetail="CoC × EC" accent={ACCENT}>Coût du capital : <K>{"12\\% \\times 50 = 6"}</K> M$/an</DemoStep>
+          <DemoStep num={6} rule="RAROC" ruleDetail="NIACC = Rev − Coûts − EL − CoC" accent={ACCENT}><K>{"NIACC = 18 - 6 - 0.66 - 6 = 5.34"}</K> M$</DemoStep>
+          <DemoStep num={7} rule="Rendement ajusté au risque" ruleDetail="RAROC vs Hurdle" accent={ACCENT}><K>{"RAROC = 5.34 / 50 = 10.68\\%"}</K> vs Hurdle Rate = 12% → RAROC {'<'} Hurdle → à refuser ou renégocier</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Calculateur RAROC interactif</SectionTitle>
@@ -451,29 +459,33 @@ export function RAROCTab() {
 
       <ExampleBlock title="Décision d'investissement — Pétrole vs Renouvelables" accent={ACCENT}>
         <p>Compagnie pétrolière avec CoC = 10%. Quel projet privilégier ?</p>
-        <Step num={1} accent={ACCENT}>Offshore : RAROC = (80-35-8-15)/150 = 22/150 = 14.7% {'>'} 10% → ✓</Step>
-        <Step num={2} accent={ACCENT}>Renouvelables : RAROC = (30-10-1-4.8)/60 = 14.2/60 = 23.7% {'>'} 10% → ✓✓</Step>
-        <Step num={3} accent={ACCENT}>Les renouvelables créent plus de valeur RAROC malgré des revenus bruts inférieurs</Step>
-        <Step num={4} accent={ACCENT}>Raison : EC plus faible (60 vs 150M$) = moins de capital mobilisé pour le risque</Step>
+        <FormulaBox accent={ACCENT}>Renouvelables (RAROC 23.7%) {'>'} Offshore (14.7%) → privilégier les renouvelables malgré des revenus bruts inférieurs</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="RAROC" ruleDetail="NIACC / EC" accent={ACCENT}>Offshore : <K>{"RAROC = (80-35-8-15)/150 = 14.7\\%"}</K> {'>'} 10% → ✓</DemoStep>
+          <DemoStep num={2} rule="RAROC" ruleDetail="NIACC / EC" accent={ACCENT}>Renouvelables : <K>{"RAROC = (30-10-1-4.8)/60 = 23.7\\%"}</K> {'>'} 10% → ✓✓</DemoStep>
+          <DemoStep num={3} rule="Allocation de capital" ruleDetail="Comparer RAROC" accent={ACCENT}>Les renouvelables créent plus de valeur RAROC malgré des revenus bruts inférieurs</DemoStep>
+          <DemoStep num={4} rule="Allocation de capital" ruleDetail="EC plus faible" accent={ACCENT}>Raison : EC plus faible (60 vs 150M$) = moins de capital mobilisé pour le risque</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Allocation de capital optimal" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Budget EC total = 250M$. Quelle allocation entre les 4 projets maximise la valeur ?</p>
-        <Step num={1} accent={ACCENT}>Classer par RAROC décroissant : Renouvelables (23.7%) {'>'} Gaz Pipeline (21.25%) {'>'} Offshore (14.7%) {'>'} Trading (10.8%)</Step>
-        <Step num={2} accent={ACCENT}>Allouer en priorité aux projets à RAROC le plus élevé</Step>
-        <Step num={3} accent={ACCENT}>Renouvelables (60M$) + Gaz (80M$) + Offshore (110M$ partiel) = 250M$</Step>
         <FormulaBox accent={ACCENT}>Principe : allouer capital là où le RAROC marginal est le plus élevé</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Allocation de capital" ruleDetail="Trier par RAROC" accent={ACCENT}>Classer par RAROC décroissant : Renouvelables (23.7%) {'>'} Gaz Pipeline (21.25%) {'>'} Offshore (14.7%) {'>'} Trading (10.8%)</DemoStep>
+          <DemoStep num={2} rule="Allocation de capital" ruleDetail="Priorité RAROC" accent={ACCENT}>Allouer en priorité aux projets à RAROC le plus élevé</DemoStep>
+          <DemoStep num={3} rule="Allocation de capital" ruleDetail="Budget contraint" accent={ACCENT}>Renouvelables (60M$) + Gaz (80M$) + Offshore (110M$ partiel) = 250M$</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Calculer le RAROC et décider" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Un desk de trading pétrole génère 25M$ de revenus bruts, 10M$ de coûts. PD = 2%, LGD = 60%, EAD = 100M$. Capital éco = 80M$. Coût du capital = 11%. Faut-il accepter ce projet ?</p>
-        <Step num={1} accent={ACCENT}>Expected Loss = PD × LGD × EAD = 0.02 × 0.60 × 100 = 1.2M$</Step>
-        <Step num={2} accent={ACCENT}>Coût du capital = 11% × 80M$ = 8.8M$</Step>
-        <Step num={3} accent={ACCENT}>NIACC = 25 - 10 - 1.2 - 8.8 = 5.0M$</Step>
-        <Step num={4} accent={ACCENT}>RAROC = 5.0 / 80 = 6.25% vs Hurdle 11%</Step>
         <FormulaBox accent={ACCENT}>RAROC = 6.25% {'<'} 11% → Projet REFUSÉ — détruit de la valeur pour les actionnaires</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Comment améliorer ?</strong> Réduire le capital éco (moins de positions risquées), augmenter les revenus (plus de volume ou meilleur spread), ou réduire les coûts. Par exemple, réduire l'EC à 40M$ avec une stratégie plus conservatrice : RAROC = 5.0 / 40 = 12.5% {'>'} 11% → acceptable.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="RAROC" ruleDetail="EL = PD × LGD × EAD" accent={ACCENT}><K>{"EL = 0.02 \\times 0.60 \\times 100 = 1.2"}</K> M$</DemoStep>
+          <DemoStep num={2} rule="RAROC" ruleDetail="CoC × EC" accent={ACCENT}>Coût du capital = <K>{"11\\% \\times 80 = 8.8"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="RAROC" ruleDetail="NIACC = Rev − Coûts − EL − CoC" accent={ACCENT}><K>{"NIACC = 25 - 10 - 1.2 - 8.8 = 5.0"}</K> M$</DemoStep>
+          <DemoStep num={4} rule="Rendement ajusté au risque" ruleDetail="RAROC vs Hurdle" accent={ACCENT}><K>{"RAROC = 5.0 / 80 = 6.25\\%"}</K> vs Hurdle 11%. Pour améliorer : réduire EC à 40M$ → RAROC = 5.0/40 = 12.5% {'>'} 11% → acceptable.</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Optimisation RAROC multi-activité" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Une compagnie énergétique a un budget de capital économique de 200M$. Elle doit choisir entre 5 activités. Optimisez l'allocation.</p>
@@ -504,10 +516,12 @@ export function RAROCTab() {
             </tbody>
           </table>
         </div>
-        <Step num={1} accent={ACCENT}>Trier par RAROC : Gas (22%) {'>'} Power (18%) {'>'} LNG (13%) {'>'} E&P (15%) {'>'} Coal (9%)</Step>
-        <Step num={2} accent={ACCENT}>Allouer : Gas 60M$ + Power 40M$ + E&P 80M$ + LNG 20M$ = 200M$ (budget épuisé)</Step>
-        <Step num={3} accent={ACCENT}>Coal est refusé (RAROC 9% {'<'} hurdle 11%) même si EC disponible</Step>
         <FormulaBox accent={ACCENT}>Capital alloué optimal = 200M$ → Valeur NIACC maximisée en excluant les activités sous-performantes</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="RAROC multi-activité" ruleDetail="Trier par RAROC" accent={ACCENT}>Trier par RAROC : Gas (22%) {'>'} Power (18%) {'>'} LNG (13%) {'>'} E&P (15%) {'>'} Coal (9%)</DemoStep>
+          <DemoStep num={2} rule="Allocation de capital" ruleDetail="Budget contraint" accent={ACCENT}>Allouer : Gas 60M$ + Power 40M$ + E&P 80M$ + LNG 20M$ = 200M$ (budget épuisé)</DemoStep>
+          <DemoStep num={3} rule="RAROC multi-activité" ruleDetail="Refus si RAROC < hurdle" accent={ACCENT}>Coal est refusé (RAROC 9% {'<'} hurdle 11%) même si EC disponible</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -733,34 +747,35 @@ export function PFETab() {
 
       <ExampleBlock title="Swap de taux 5 ans — Profil d'exposition" accent={ACCENT}>
         <p>Notionnel = 200M$, durée = 5 ans, σ_taux = 1% (100bps), couverture 97%</p>
-        <Step num={1} accent={ACCENT}>PFE pic ≈ à ~2-3 ans (milieu de vie du swap)</Step>
-        <Step num={2} accent={ACCENT}>PFE max 97% ≈ 200M$ × N(1.88 × 0.01 × √2.5) ≈ 200M$ × 0.06 ≈ 12M$</Step>
-        <Step num={3} accent={ACCENT}>Cette exposition conduit à une limite de crédit de contrepartie</Step>
-        <Step num={4} accent={ACCENT}>Si limite = 15M$ → la transaction est acceptée sans netting agreement</Step>
+        <FormulaBox accent={ACCENT}>PFE max 97% ≈ 12M$ → transaction acceptée si limite contrepartie ≥ 15M$</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="PFE" ruleDetail="Profil en bosse" accent={ACCENT}>PFE pic ≈ à ~2-3 ans (milieu de vie du swap)</DemoStep>
+          <DemoStep num={2} rule="PFE" ruleDetail="Quantile × Notionnel" accent={ACCENT}><K>{"PFE_{97\\%} \\approx 200 \\times N(1.88 \\times 0.01 \\times \\sqrt{2.5}) \\approx 12"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="Potential Future Exposure" ruleDetail="Limite de crédit" accent={ACCENT}>Cette exposition conduit à une limite de crédit de contrepartie</DemoStep>
+          <DemoStep num={4} rule="PFE" ruleDetail="Décision" accent={ACCENT}>Si limite = 15M$ → la transaction est acceptée sans netting agreement</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice — PFE d'un forward sur pétrole" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Forward pétrole 1 an : notionnel = 100M$ (1M bbl à 100$/bbl), σ = 35%, r = 5%, PFE à 95%.</p>
-        <Step num={1} accent={ACCENT}>Pour un forward, l'exposition positive est max(S_T - K, 0) — similaire à un call européen</Step>
-        <Step num={2} accent={ACCENT}>PFE 95% (approximation log-normale) : S_T au percentile 95% = 100 × exp[(0.05 - 0.5×0.35²)×1 + 1.645×0.35×1]</Step>
-        <Step num={3} accent={ACCENT}>= 100 × exp[0.05 - 0.0613 + 0.575] = 100 × exp[0.564] = 100 × 1.757 = 175.7$/bbl</Step>
-        <Step num={4} accent={ACCENT}>Exposition en $ = max(175.7 - 100, 0) × 1M bbl = 75.7M$</Step>
         <FormulaBox accent={ACCENT}>PFE 95% ≈ 75.7M$ sur 100M$ de notionnel = 75.7% du notionnel (volatilité élevée !)</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Interprétation :</strong> Une PFE de 75.7M$ signifie que la banque doit réserver de la capacité de crédit contre cette contrepartie. Si la limite est 50M$, ce trade n'est pas autorisé sans netting ou collatéral préalable.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="PFE" ruleDetail="Exposition forward" accent={ACCENT}>Pour un forward, l'exposition positive est max(S_T - K, 0) — similaire à un call européen</DemoStep>
+          <DemoStep num={2} rule="Potential Future Exposure" ruleDetail="Quantile log-normal" accent={ACCENT}>PFE 95% : <K>{"S_T = 100 \\times e^{(0.05 - 0.5 \\times 0.35^2) + 1.645 \\times 0.35}"}</K></DemoStep>
+          <DemoStep num={3} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 100 \\times e^{0.564} = 100 \\times 1.757 = 175.7"}</K> $/bbl</DemoStep>
+          <DemoStep num={4} rule="PFE" ruleDetail="Exposition en $" accent={ACCENT}>Exposition = <K>{"\\max(175.7 - 100, 0) \\times 1M = 75.7"}</K> M$. La banque doit réserver cette capacité de crédit. Si limite = 50M$, trade non autorisé sans netting ou collatéral.</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Impact du netting sur l'exposition" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Même contrepartie, 3 trades : Trade A (MtM = +15M$), Trade B (MtM = -8M$), Trade C (MtM = +4M$). Comparez l'exposition brute vs nette.</p>
-        <Step num={1} accent={ACCENT}>Exposition brute = max(+15, 0) + max(-8, 0) + max(+4, 0) = 15 + 0 + 4 = 19M$</Step>
-        <Step num={2} accent={ACCENT}>Exposition nette avec ISDA = max(15 - 8 + 4, 0) = max(11, 0) = 11M$</Step>
-        <Step num={3} accent={ACCENT}>Réduction = (19 - 11) / 19 = 42%</Step>
-        <Step num={4} accent={ACCENT}>Si Trade B avait MtM = -20M$ : exposition nette = max(15 - 20 + 4, 0) = max(-1, 0) = 0M$</Step>
         <FormulaBox accent={ACCENT}>Netting ratio = Exposition nette / Exposition brute = 11/19 = 58% (plus bas = meilleure efficacité)</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Point clé :</strong> L'ISDA Master Agreement est un des documents contractuels les plus précieux en finance des dérivés. Sans lui, chaque trade est traité isolément en cas de défaut, ce qui peut multiplier l'exposition par 3 ou 4. Toutes les grandes contreparties financières opèrent sous ISDA.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Netting" ruleDetail="Exposition brute" accent={ACCENT}>Exposition brute = <K>{"\\max(15,0) + \\max(-8,0) + \\max(4,0) = 19"}</K> M$</DemoStep>
+          <DemoStep num={2} rule="Compensation bilatérale" ruleDetail="ISDA netting" accent={ACCENT}>Exposition nette = <K>{"\\max(15 - 8 + 4, 0) = 11"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="Netting" ruleDetail="Ratio de réduction" accent={ACCENT}>Réduction = <K>{"(19 - 11)/19 = 42\\%"}</K></DemoStep>
+          <DemoStep num={4} rule="Netting" ruleDetail="Cas extrême" accent={ACCENT}>Si Trade B = -20M$ : exposition nette = <K>{"\\max(15-20+4,0) = 0"}</K> M$. L'ISDA Master Agreement est essentiel — sans lui, chaque trade est traité isolément en cas de défaut, multipliant l'exposition par 3-4×.</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -944,45 +959,53 @@ export function CVATab() {
 
       <ExampleBlock title="CVA sur un swap énergie — Contrepartie BBB" accent={ACCENT}>
         <p>Swap pétrole 3 ans, EE_moy = 8M$, PD_ann = 1.5% (rating BBB), LGD = 60%, r = 4%</p>
-        <Step num={1} accent={ACCENT}>CVA ≈ LGD × EE_moy × ∫₀³ PD_ann × e^(-rt) dt</Step>
-        <Step num={2} accent={ACCENT}>≈ 0.60 × 8M$ × 0.015 × [(1-e^(-0.04×3))/0.04]</Step>
-        <Step num={3} accent={ACCENT}>≈ 0.60 × 8 × 0.015 × 2.78 = 0.200M$</Step>
-        <Step num={4} accent={ACCENT}>Soit 0.2% du notionnel → ajustement de prix sur le trade</Step>
-        <Step num={5} accent={ACCENT}>Si PD monte à 5% (downgrade BB) → CVA ≈ 0.66M$ (+230%)</Step>
+        <FormulaBox accent={ACCENT}>CVA ≈ 0.200M$ soit 0.2% du notionnel. Si downgrade BB (PD=5%) → CVA ≈ 0.66M$ (+230%)</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="CVA" ruleDetail="LGD × EE × ∫PD×DF" accent={ACCENT}><K>{"CVA \\approx LGD \\times EE_{moy} \\times \\int_0^3 PD \\times e^{-rt}\\,dt"}</K></DemoStep>
+          <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Intégrale actualisée" accent={ACCENT}><K>{"\\approx 0.60 \\times 8 \\times 0.015 \\times \\frac{1-e^{-0.04 \\times 3}}{0.04}"}</K></DemoStep>
+          <DemoStep num={3} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 0.60 \\times 8 \\times 0.015 \\times 2.78 = 0.200"}</K> M$</DemoStep>
+          <DemoStep num={4} rule="CVA" ruleDetail="% du notionnel" accent={ACCENT}>Soit 0.2% du notionnel → ajustement de prix sur le trade</DemoStep>
+          <DemoStep num={5} rule="Probabilité de défaut" ruleDetail="Sensibilité PD" accent={ACCENT}>Si PD monte à 5% (downgrade BB) → CVA ≈ 0.66M$ (+230%)</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Calcul CVA simplifié" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Options énergie 1 an, EE=5M$, PD=2%, LGD=60%, r=5%</p>
-        <Step num={1} accent={ACCENT}>CVA = PD × LGD × EE × DF = 0.02 × 0.60 × 5 × e^(-0.05)</Step>
-        <Step num={2} accent={ACCENT}>= 0.02 × 0.60 × 5 × 0.951 = 0.0571M$</Step>
         <FormulaBox accent={ACCENT}>CVA = 57,100$ soit 1.14% de l'EE</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="CVA" ruleDetail="PD × LGD × EE × DF" accent={ACCENT}><K>{"CVA = 0.02 \\times 0.60 \\times 5 \\times e^{-0.05}"}</K></DemoStep>
+          <DemoStep num={2} rule="Application numérique" ruleDetail="calcul" accent={ACCENT}><K>{"= 0.02 \\times 0.60 \\times 5 \\times 0.951 = 0.0571"}</K> M$</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Impact du netting" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>2 trades avec même contrepartie : Trade A valeur +10M$, Trade B valeur -7M$. CVA sans vs avec netting ?</p>
-        <Step num={1} accent={ACCENT}>Sans netting : EE = max(10,0) + max(-7,0) = 10M$ + 0 = 10M$</Step>
-        <Step num={2} accent={ACCENT}>Avec netting : EE = max(10-7, 0) = max(3, 0) = 3M$</Step>
-        <Step num={3} accent={ACCENT}>Réduction CVA = (10-3)/10 = 70% !</Step>
         <FormulaBox accent={ACCENT}>Le netting agreement réduit dramatiquement le CVA → intérêt de l'ISDA Master Agreement</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Netting" ruleDetail="Exposition brute" accent={ACCENT}>Sans netting : <K>{"EE = \\max(10,0) + \\max(-7,0) = 10"}</K> M$</DemoStep>
+          <DemoStep num={2} rule="Compensation bilatérale" ruleDetail="ISDA netting" accent={ACCENT}>Avec netting : <K>{"EE = \\max(10-7, 0) = 3"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="Netting" ruleDetail="Réduction CVA" accent={ACCENT}>Réduction CVA = <K>{"(10-3)/10 = 70\\%"}</K></DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Calculer le CVA d'un swap simple" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Swap pétrole 2 ans, notionnel 50M$, EE moyen = 6M$, contrepartie rating BBB (PD = 1.8%/an), LGD = 60%, r = 4%. Calculez le CVA total.</p>
-        <Step num={1} accent={ACCENT}>CVA discret sur 2 ans (annuel) : CVA = Σ PD × LGD × EE × DF</Step>
-        <Step num={2} accent={ACCENT}>Période 1 (t=1) : 0.018 × 0.60 × 6 × e^(-0.04) = 0.018 × 0.60 × 6 × 0.9608 = 0.0625M$</Step>
-        <Step num={3} accent={ACCENT}>Période 2 (t=2) : 0.018 × 0.60 × 6 × e^(-0.08) = 0.018 × 0.60 × 6 × 0.9231 = 0.0600M$</Step>
-        <Step num={4} accent={ACCENT}>CVA total = 0.0625 + 0.0600 = 0.1225M$ = 122,500$</Step>
         <FormulaBox accent={ACCENT}>CVA = 0.245% du notionnel → ajustement du prix de vente du swap de 12.5 bps/an</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="CVA" ruleDetail="Σ PD × LGD × EE × DF" accent={ACCENT}>CVA discret sur 2 ans (annuel) : <K>{"CVA = \\sum PD \\times LGD \\times EE \\times DF"}</K></DemoStep>
+          <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Période 1" accent={ACCENT}>t=1 : <K>{"0.018 \\times 0.60 \\times 6 \\times e^{-0.04} = 0.0625"}</K> M$</DemoStep>
+          <DemoStep num={3} rule="Credit Valuation Adjustment" ruleDetail="Période 2" accent={ACCENT}>t=2 : <K>{"0.018 \\times 0.60 \\times 6 \\times e^{-0.08} = 0.0600"}</K> M$</DemoStep>
+          <DemoStep num={4} rule="CVA" ruleDetail="Total" accent={ACCENT}>CVA total = <K>{"0.0625 + 0.0600 = 0.1225"}</K> M$ = 122,500$</DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 4 — Wrong-Way Risk" accent={ACCENT} badge="Avancé">
         <p style={{ color: T.text }}>Un producteur pétrolier achète un put WTI à une contrepartie dont la santé financière est corrélée positivement au prix du pétrole. Expliquez le "Wrong-Way Risk" et son impact sur le CVA.</p>
-        <Step num={1} accent={ACCENT}>Dans un marché normal, EE(t) et PD(t) sont indépendants → CVA = LGD × E[EE] × E[PD cumul]</Step>
-        <Step num={2} accent={ACCENT}>Wrong-Way Risk (WWR) : EE et PD sont positivement corrélés — quand le put est le plus précieux (prix pétrole bas), la contrepartie (dépend du pétrole) est aussi en détresse → PD élevée</Step>
-        <Step num={3} accent={ACCENT}>Impact : CVA_WWR = LGD × E[EE × PD] {'>'} LGD × E[EE] × E[PD] (corrélation positive amplifie)</Step>
-        <Step num={4} accent={ACCENT}>Exemple : si corr(EE, PD) = 0.5, CVA peut doubler ou tripler par rapport au cas indépendant</Step>
         <FormulaBox accent={ACCENT}>WWR = CVA_réel / CVA_indépendant {'>'} 1 → toujours vérifier si la contrepartie est exposée au même risque que vous !</FormulaBox>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.7 }}>
-          <strong style={{ color: ACCENT }}>Point clé :</strong> Le WWR est une des raisons pour lesquelles les banques et les régulateurs imposent des majorations ("add-on") sur le CVA lorsque la contrepartie est dans le même secteur que le sous-jacent du dérivé. Exemple : acheter une option gaz à une compagnie gazière = WWR fort.
-        </div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="CVA" ruleDetail="Cas indépendant" accent={ACCENT}>Dans un marché normal, EE(t) et PD(t) sont indépendants → <K>{"CVA = LGD \\times E[EE] \\times E[PD_{cumul}]"}</K></DemoStep>
+          <DemoStep num={2} rule="Credit Valuation Adjustment" ruleDetail="Wrong-Way Risk" accent={ACCENT}>WWR : EE et PD sont positivement corrélés — quand le put est le plus précieux (prix pétrole bas), la contrepartie est aussi en détresse → PD élevée</DemoStep>
+          <DemoStep num={3} rule="CVA" ruleDetail="Corrélation positive" accent={ACCENT}>Impact : <K>{"CVA_{WWR} = LGD \\times E[EE \\times PD] > LGD \\times E[EE] \\times E[PD]"}</K></DemoStep>
+          <DemoStep num={4} rule="Probabilité de défaut" ruleDetail="Amplification WWR" accent={ACCENT}>Si corr(EE, PD) = 0.5, CVA peut doubler ou tripler. Les régulateurs imposent des majorations ("add-on") lorsque la contrepartie est dans le même secteur que le sous-jacent.</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )

@@ -1,5 +1,73 @@
 import React, { useState } from 'react'
+import katex from 'katex'
 import { T } from './tokens'
+
+// ─── KaTeX Inline / Block ────────────────────────────────────────────────────
+export function K({ children, display = false }) {
+  const html = katex.renderToString(String(children), { displayMode: display, throwOnError: false })
+  return <span dangerouslySetInnerHTML={{ __html: html }} />
+}
+
+// ─── Rule Badge ──────────────────────────────────────────────────────────────
+export function RuleBadge({ rule, detail, accent = T.a1 }) {
+  return (
+    <div style={{
+      display: 'inline-flex', alignItems: 'center', gap: 8,
+      background: `${accent}18`, border: `1px solid ${accent}44`,
+      borderRadius: 6, padding: '4px 12px', marginBottom: 6,
+    }}>
+      <span style={{ fontSize: 12 }}>📏</span>
+      <span style={{ color: accent, fontSize: 12, fontWeight: 700 }}>{rule}</span>
+      {detail && <span style={{ color: T.muted, fontSize: 11 }}>— {detail}</span>}
+    </div>
+  )
+}
+
+// ─── Demo Step (Step + Rule Badge) ───────────────────────────────────────────
+export function DemoStep({ num, rule, ruleDetail, children, accent = T.a1 }) {
+  return (
+    <div style={{ margin: '8px 0' }}>
+      {rule && <RuleBadge rule={rule} detail={ruleDetail} accent={accent} />}
+      <Step num={num} accent={accent}>{children}</Step>
+    </div>
+  )
+}
+
+// ─── Demonstration (collapsible wrapper) ─────────────────────────────────────
+export function Demonstration({ children, accent = T.a1, title = 'Voir la démonstration' }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div style={{ margin: '14px 0', border: `1px solid ${accent}33`, borderRadius: 10, overflow: 'hidden' }}>
+      <button
+        onClick={() => setOpen(!open)}
+        style={{
+          width: '100%', display: 'flex', alignItems: 'center', gap: 10,
+          background: open ? `${accent}15` : `${accent}0a`, border: 'none',
+          padding: '12px 18px', cursor: 'pointer', color: accent,
+          fontSize: 13, fontWeight: 700, textAlign: 'left',
+          transition: 'background 0.15s',
+        }}
+      >
+        <span style={{ fontSize: 16, transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s' }}>▸</span>
+        <span>📐 {title}</span>
+      </button>
+      {open && (
+        <div style={{
+          padding: '16px 20px', background: `${accent}08`,
+          borderTop: `1px solid ${accent}22`,
+        }}>
+          <div style={{
+            color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1,
+            marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span>📏</span> Règles & étapes de résolution
+          </div>
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
 
 // ─── Panel ───────────────────────────────────────────────────────────────────
 export function Panel({ children, style, accent }) {

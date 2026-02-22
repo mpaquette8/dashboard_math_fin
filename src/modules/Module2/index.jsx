@@ -7,6 +7,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, Panel, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a2
@@ -184,46 +185,91 @@ export function NormalTab() {
 
       <ExampleBlock title="N(d₁) dans Black-Scholes" accent={ACCENT}>
         <p>S=100, K=100, r=5%, σ=20%, T=1 an :</p>
-        <Step num={1} accent={ACCENT}>d₁ = [ln(100/100) + (0.05 + 0.02)×1] / (0.2×√1) = 0.07 / 0.2 = 0.35</Step>
-        <Step num={2} accent={ACCENT}>d₂ = d₁ - σ√T = 0.35 - 0.20 = 0.15</Step>
-        <Step num={3} accent={ACCENT}>N(d₁) = N(0.35) ≈ 0.6368 — probabilité risque-neutre que le call finisse ITM</Step>
-        <Step num={4} accent={ACCENT}>N(d₂) = N(0.15) ≈ 0.5596 — probabilité risque-neutre que S_T {'>'} K</Step>
-        <FormulaBox accent={ACCENT}>C = 100 × 0.6368 - 100 × e^(-0.05) × 0.5596 = 63.68 - 53.16 = 10.52€</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"C = 100 \\times 0.6368 - 100 e^{-0.05} \\times 0.5596 = 10.52\\euro"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Formule de d₁ (Black-Scholes)" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T] / (σ√T)" accent={ACCENT}>
+            <K>{"d_1 = \\frac{\\ln(100/100) + (0.05 + 0.02) \\times 1}{0.2 \\times \\sqrt{1}} = \\frac{0.07}{0.2} = 0.35"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Relation d₁ → d₂" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>
+            <K>{"d_2 = 0.35 - 0.20 = 0.15"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="CDF normale standard" ruleDetail="N(z) = Φ(z)" accent={ACCENT}>
+            <K>{"N(d_1) = N(0.35) \\approx 0.6368"}</K> (= Delta du call) et <K>{"N(d_2) = N(0.15) \\approx 0.5596"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>
+            <K>{"C = 100 \\times 0.6368 - 100 \\times e^{-0.05} \\times 0.5596 = 63.68 - 53.16 = 10.52\\euro"}</K>
+          </DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Standardisation" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Si X ~ N(µ=5, σ²=4), calculez P(X ≤ 7)</p>
-        <Step num={1} accent={ACCENT}>Z = (7 - 5) / 2 = 1</Step>
-        <Step num={2} accent={ACCENT}>P(X ≤ 7) = P(Z ≤ 1) = N(1)</Step>
-        <FormulaBox accent={ACCENT}>N(1) ≈ 84.13%</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"N(1) \\approx 84.13\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Z-score (standardisation)" ruleDetail="Z = (X − µ) / σ" accent={ACCENT}>
+            <K>{"Z = \\frac{7 - 5}{\\sqrt{4}} = \\frac{2}{2} = 1"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Transformation de la CDF" ruleDetail="P(X ≤ x) = P(Z ≤ z) = Φ(z)" accent={ACCENT}>
+            <K>{"P(X \\le 7) = P(Z \\le 1) = \\Phi(1) \\approx 0.8413 = 84.13\\%"}</K>
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Intervalle de confiance VaR" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Un P&L suit N(µ=0, σ=100k€). VaR 95% et VaR 99% ?</p>
-        <Step num={1} accent={ACCENT}>VaR_95 = 1.645 × σ = 1.645 × 100k = 164.5k€</Step>
-        <Step num={2} accent={ACCENT}>VaR_99 = 2.326 × σ = 2.326 × 100k = 232.6k€</Step>
-        <FormulaBox accent={ACCENT}>P(Perte {'>'} VaR_95) = 5% ; P(Perte {'>'} VaR_99) = 1%</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\text{VaR}_{95\\%} = 164.5k\\euro \\quad|\\quad \\text{VaR}_{99\\%} = 232.6k\\euro"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="VaR paramétrique" ruleDetail="VaRₐ = zₐ · σ (quand µ=0)" accent={ACCENT}>
+            <K>{"\\text{VaR}_{95\\%} = z_{0.95} \\times \\sigma = 1.645 \\times 100k = 164.5k\\euro"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Quantile normal" ruleDetail="z₀.₉₉ = 2.326" accent={ACCENT}>
+            <K>{"\\text{VaR}_{99\\%} = 2.326 \\times 100k = 232.6k\\euro"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Interprétation probabiliste" accent={ACCENT}>
+            P(Perte {'>'} VaR₉₅) = 5% ; P(Perte {'>'} VaR₉₉) = 1%. Le ratio VaR99/VaR95 = 1.41 — passer de 95% à 99% augmente la VaR de 41%.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Z-score et VaR d'une position énergie" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
           Un trader est long 50 000 barils de Brent. Le rendement quotidien du Brent suit N(0, σ=1.8%/jour). Prix actuel : 80$/bbl. Calculez la VaR 99% quotidienne en dollars.
         </p>
-        <Step num={1} accent={ACCENT}>Valeur de la position : 50 000 × 80$ = 4 000 000$ (4M$)</Step>
-        <Step num={2} accent={ACCENT}>Pour la VaR 99% : z = 2.326 (on cherche le quantile à 1% dans la queue gauche)</Step>
-        <Step num={3} accent={ACCENT}>VaR 99% en % = 2.326 × 1.8% = 4.19% de la valeur de la position</Step>
-        <Step num={4} accent={ACCENT}>VaR 99% en $ = 4.19% × 4 000 000 = 167 400$</Step>
-        <FormulaBox accent={ACCENT}>VaR 99% = 2.326 × σ × Valeur_position = 2.326 × 1.8% × 4M$ ≈ 167k$</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Interprétation : il y a 1% de probabilité que la position perde plus de 167 000$ en une seule journée — c'est la perte qui ne devrait survenir qu'environ 2.5 fois par an.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\text{VaR}_{99\\%} = 2.326 \\times 1.8\\% \\times 4M\\$ \\approx 167k\\$"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Valorisation de la position" ruleDetail="V = Q × P" accent={ACCENT}>
+            <K>{"V = 50\\,000 \\times 80\\$ = 4\\,000\\,000\\$ \\;(4M\\$)"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Quantile normal" ruleDetail="z₀.₉₉ = 2.326" accent={ACCENT}>
+            Pour la VaR 99% : <K>{"z = 2.326"}</K> (quantile à 1% dans la queue gauche)
+          </DemoStep>
+          <DemoStep num={3} rule="VaR en pourcentage" ruleDetail="VaR% = zₐ · σ" accent={ACCENT}>
+            <K>{"\\text{VaR}_{99\\%}\\% = 2.326 \\times 1.8\\% = 4.19\\%"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="VaR en dollars" ruleDetail="VaR$ = VaR% × V" accent={ACCENT}>
+            <K>{"\\text{VaR}\\$ = 4.19\\% \\times 4\\,000\\,000 = 167\\,400\\$"}</K>
+            <br />Il y a 1% de probabilité de perdre plus de 167k$ en un seul jour (≈ 2.5 fois/an).
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 4 — Règle des 3-sigma appliquée aux chocs gaziers" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text, marginBottom: 12 }}>
           Le rendement quotidien du gaz naturel Henry Hub suit approximativement N(0, σ=2.5%/jour). La règle des 3σ prédit qu'une variation supérieure à 7.5%/jour (=3σ) ne devrait survenir que 0.3% du temps (≈1 jour sur 333). Vérifiez le calcul, puis discutez pourquoi ce chiffre sous-estime la réalité.
         </p>
-        <Step num={1} accent={ACCENT}>3σ = 3 × 2.5% = 7.5%. Selon la normale : P(|Z| {'>'} 3) = 1 - 0.997 = 0.3% = 1 jour sur 333</Step>
-        <Step num={2} accent={ACCENT}>Sur 252 jours de trading par an : 0.3% × 252 ≈ 0.76 jour par an prédit par le modèle</Step>
-        <Step num={3} accent={ACCENT}>En réalité : le gaz naturel connaît des chocs {'>'} 3σ plusieurs fois par an (publications EIA, météo froide, pipeline incidents)</Step>
-        <FormulaBox accent={ACCENT}>P_théorique(|r| {'>'} 7.5%) = 0.3% ≪ P_empirique ≈ 2-5%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Conclusion : la loi normale sous-estime les queues de 7 à 17 fois sur le gaz naturel. D'où l'importance des modèles à sauts (Merton, Kou) et des distributions à queues épaisses en marchés de l'énergie.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"P_{\\text{théorique}}(|r| > 7.5\\%) = 0.3\\% \\ll P_{\\text{empirique}} \\approx 2\\text{-}5\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Règle des 3σ (loi normale)" ruleDetail="P(|Z| > 3) = 1 − 0.997 = 0.3%" accent={ACCENT}>
+            <K>{"3\\sigma = 3 \\times 2.5\\% = 7.5\\%"}</K>. Sous la normale : <K>{"P(|Z| > 3) = 0.3\\%"}</K> = 1 jour sur 333
+          </DemoStep>
+          <DemoStep num={2} rule="Fréquence attendue" ruleDetail="Nᵉᵛ = P × n jours" accent={ACCENT}>
+            Sur 252 jours/an : <K>{"0.3\\% \\times 252 \\approx 0.76"}</K> jour par an prédit par le modèle
+          </DemoStep>
+          <DemoStep num={3} rule="Queues épaisses (leptokurtose)" ruleDetail="Kurtosis > 3 → fat tails" accent={ACCENT}>
+            En réalité : le gaz naturel connaît des chocs {'>'} 3σ plusieurs fois par an (EIA, météo, incidents pipeline). La loi normale sous-estime les queues de 7 à 17×.
+          </DemoStep>
+          <DemoStep num={4} rule="Implication pour la modélisation" accent={ACCENT}>
+            Conclusion : utiliser des modèles à sauts (Merton, Kou) ou des distributions à queues épaisses (Student-t, GEV) pour les marchés énergétiques.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -355,14 +401,25 @@ export function LogNormalTab() {
 
       <ExampleBlock title="Prix du Brent à 6 mois — Calcul complet P(S_T {'>'} 90) et P(S_T {'<'} 70)" accent={ACCENT}>
         <p>S₀ = 80$/bbl, µ_GBM = 0% (risque-neutre), σ = 30%, T = 0.5 an</p>
-        <Step num={1} accent={ACCENT}>Paramètre log-normal : µ_ln = (r - σ²/2)T = (0 - 0.045)×0.5 = -0.0225</Step>
-        <Step num={2} accent={ACCENT}>Paramètre log-normal : σ_ln = σ√T = 0.30×√0.5 = 0.2121</Step>
-        <Step num={3} accent={ACCENT}>P(S_T {'>'} 90) : z = (ln(90/80) - (-0.0225)) / 0.2121 = (0.1178 + 0.0225) / 0.2121 = 0.661 → P = 1-N(0.661) ≈ 25.4%</Step>
-        <Step num={4} accent={ACCENT}>P(S_T {'<'} 70) : z = (ln(70/80) - (-0.0225)) / 0.2121 = (-0.1335 + 0.0225) / 0.2121 = -0.524 → P = N(-0.524) ≈ 30.0%</Step>
-        <FormulaBox accent={ACCENT}>P(70 ≤ S_T ≤ 90) ≈ 100% - 25.4% - 30.0% = 44.6%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Asymétrie visible : P(hausse {'>'} +12.5%) = 25.4% mais P(baisse {'>'} -12.5%) = 30.0%. La log-normale est asymétrique — les baisses sont plus probables que les hausses symétriques en termes de prix absolus, même avec µ=0.
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(70 \\le S_T \\le 90) \\approx 44.6\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Drift log-normal (correction d'Itô)" ruleDetail="µ_ln = (r − σ²/2)·T" accent={ACCENT}>
+            <K>{"\\mu_{\\ln} = (0 - 0.045) \\times 0.5 = -0.0225"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Écart-type du log-rendement" ruleDetail="σ_ln = σ√T" accent={ACCENT}>
+            <K>{"\\sigma_{\\ln} = 0.30 \\times \\sqrt{0.5} = 0.2121"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Z-score + CDF complémentaire" ruleDetail="P(S_T > K) = 1 − N(z)" accent={ACCENT}>
+            <K>{"z = \\frac{\\ln(90/80) - (-0.0225)}{0.2121} = \\frac{0.1178 + 0.0225}{0.2121} = 0.661"}</K> → P = 1−N(0.661) ≈ 25.4%
+          </DemoStep>
+          <DemoStep num={4} rule="Z-score + CDF" ruleDetail="P(S_T < K) = N(z)" accent={ACCENT}>
+            <K>{"z = \\frac{\\ln(70/80) + 0.0225}{0.2121} = \\frac{-0.1335 + 0.0225}{0.2121} = -0.524"}</K> → P = N(−0.524) ≈ 30.0%
+          </DemoStep>
+          <DemoStep num={5} rule="Règle du complément" ruleDetail="P(a ≤ X ≤ b) = 1 − P(X>b) − P(X<a)" accent={ACCENT}>
+            <K>{"P(70 \\le S_T \\le 90) = 100\\% - 25.4\\% - 30.0\\% = 44.6\\%"}</K>
+            <br />Asymétrie visible : P(hausse {'>'}+12.5%) = 25.4% mais P(baisse {'>'}−12.5%) = 30.0%. La log-normale est asymétrique.
+          </DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -488,23 +545,44 @@ export function CorrelTab() {
 
       <Accordion title="Exercice 1 — Corrélation pétrole/gaz" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>σ_oil=25%, σ_gas=35%, ρ=0.45. Calculez Cov et σ_p (50/50).</p>
-        <Step num={1} accent={ACCENT}>Cov(oil,gas) = 0.45 × 0.25 × 0.35 = 0.039375</Step>
-        <Step num={2} accent={ACCENT}>σ²_p = 0.25×0.0625 + 2×0.25×0.039375 + 0.25×0.1225</Step>
-        <Step num={3} accent={ACCENT}>= 0.015625 + 0.0196875 + 0.030625 = 0.065938</Step>
-        <FormulaBox accent={ACCENT}>σ_p = √0.065938 ≈ 25.68%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Comparaison sans diversification : (0.5×25% + 0.5×35%) = 30% → la diversification économise 4.32% de vol !</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\sigma_p = \\sqrt{0.065938} \\approx 25.68\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Covariance à partir de la corrélation" ruleDetail="Cov = ρ·σ_X·σ_Y" accent={ACCENT}>
+            <K>{"\\text{Cov}(\\text{oil,gas}) = 0.45 \\times 0.25 \\times 0.35 = 0.039375"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Variance de portefeuille (2 actifs)" ruleDetail="σ²_p = w¹²σ¹² + 2w¹w²Cov + w²²σ²²" accent={ACCENT}>
+            <K>{"\\sigma_p^2 = 0.25 \\times 0.0625 + 2 \\times 0.25 \\times 0.039375 + 0.25 \\times 0.1225"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Addition des composantes" accent={ACCENT}>
+            <K>{"= 0.015625 + 0.019688 + 0.030625 = 0.065938"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Effet de diversification" ruleDetail="σ_p < w₁σ₁ + w₂σ₂ si ρ < 1" accent={ACCENT}>
+            <K>{"\\sigma_p \\approx 25.68\\%"}</K> vs sans diversification : 0.5×25% + 0.5×35% = 30% → économie de 4.32% de vol !
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Calcul de corrélation à partir de données" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
           On observe 4 rendements hebdomadaires pour le WTI (X) et le Henry Hub Gaz (Y) en % : X = [+3, -2, +5, -1] et Y = [+2, -1, +4, +1]. Calculez la corrélation empirique r̂.
         </p>
-        <Step num={1} accent={ACCENT}>Moyennes : x̄ = (3-2+5-1)/4 = 5/4 = 1.25% ; ȳ = (2-1+4+1)/4 = 6/4 = 1.50%</Step>
-        <Step num={2} accent={ACCENT}>Écarts : (xᵢ-x̄) = [1.75, -3.25, 3.75, -2.25] ; (yᵢ-ȳ) = [0.50, -2.50, 2.50, -0.50]</Step>
-        <Step num={3} accent={ACCENT}>Cov = Σ(xᵢ-x̄)(yᵢ-ȳ)/(n-1) = (0.875 + 8.125 + 9.375 + 1.125)/3 = 19.5/3 = 6.5</Step>
-        <Step num={4} accent={ACCENT}>s_x = √[Σ(xᵢ-x̄)²/(n-1)] = √[(3.0625+10.5625+14.0625+5.0625)/3] = √(32.75/3) = √10.917 ≈ 3.304</Step>
-        <Step num={5} accent={ACCENT}>s_y = √[(0.25+6.25+6.25+0.25)/3] = √(13/3) = √4.333 ≈ 2.082</Step>
-        <FormulaBox accent={ACCENT}>r̂ = 6.5 / (3.304 × 2.082) ≈ 6.5 / 6.879 ≈ 0.945</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Corrélation très forte (0.945) sur ces 4 semaines — les deux énergetiques ont bougé dans le même sens. Attention : 4 observations est très peu pour estimer une corrélation fiable (intervalle de confiance très large).</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\hat{r} = \\frac{6.5}{3.304 \\times 2.082} \\approx 0.945"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Moyenne échantillonnale" ruleDetail="x̄ = (1/n)Σxᵢ" accent={ACCENT}>
+            <K>{"\\bar{x} = \\frac{3-2+5-1}{4} = 1.25\\%"}</K> ; <K>{"\\bar{y} = \\frac{2-1+4+1}{4} = 1.50\\%"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Écarts centrés" ruleDetail="xᵢ − x̄" accent={ACCENT}>
+            (xᵢ−x̄) = [1.75, −3.25, 3.75, −2.25] ; (yᵢ−ȳ) = [0.50, −2.50, 2.50, −0.50]
+          </DemoStep>
+          <DemoStep num={3} rule="Covariance de Bessel" ruleDetail="Cov = Σ(xᵢ−x̄)(yᵢ−ȳ)/(n−1)" accent={ACCENT}>
+            <K>{"\\text{Cov} = \\frac{0.875 + 8.125 + 9.375 + 1.125}{3} = \\frac{19.5}{3} = 6.5"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Écart-type (correction de Bessel)" ruleDetail="s = √[Σ(xᵢ−x̄)²/(n−1)]" accent={ACCENT}>
+            <K>{"s_x = \\sqrt{\\frac{32.75}{3}} \\approx 3.304"}</K> ; <K>{"s_y = \\sqrt{\\frac{13}{3}} \\approx 2.082"}</K>
+          </DemoStep>
+          <DemoStep num={5} rule="Corrélation de Pearson" ruleDetail="r̂ = Cov/(s_x·s_y)" accent={ACCENT}>
+            <K>{"\\hat{r} = \\frac{6.5}{3.304 \\times 2.082} \\approx 0.945"}</K>. Attention : 4 observations est très peu pour une estimation fiable.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -651,29 +729,47 @@ export function EstimationTab() {
 
       <Accordion title="Exercice 1 — Calcul de volatilité historique step-by-step" accent={ACCENT} badge="Pratique">
         <p style={{ color: T.text }}>Rendements log-quotidiens du Brent sur 5 jours : [+1.2%, -0.8%, +2.1%, -1.5%, +0.3%]</p>
-        <Step num={1} accent={ACCENT}>Vérifier qu'il s'agit de log-rendements : rᵢ = ln(Sᵢ/Sᵢ₋₁) × 100%. Si on avait les prix, il faudrait les calculer d'abord.</Step>
-        <Step num={2} accent={ACCENT}>Moyenne : r̄ = (1.2 - 0.8 + 2.1 - 1.5 + 0.3)/5 = 1.3/5 = 0.26%</Step>
-        <Step num={3} accent={ACCENT}>Écarts centrés (rᵢ - r̄) : [+0.94, -1.06, +1.84, -1.76, +0.04]</Step>
-        <Step num={4} accent={ACCENT}>Carrés des écarts : [0.8836, 1.1236, 3.3856, 3.0976, 0.0016]</Step>
-        <Step num={5} accent={ACCENT}>Variance de Bessel : s² = (0.8836+1.1236+3.3856+3.0976+0.0016) / (5-1) = 8.492/4 = 2.123 (%²)</Step>
-        <Step num={6} accent={ACCENT}>s = √2.123 = 1.457%/jour (volatilité quotidienne)</Step>
-        <FormulaBox accent={ACCENT}>σ̂_ann = 1.457% × √252 ≈ 23.12%/an</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Remarque : avec seulement 5 observations, cet estimateur est très bruité. L'erreur-type de σ̂ est σ/√(2n) ≈ 23%/√10 ≈ 7.3% — l'intervalle de confiance 95% est [23% ± 2×7.3%] = [8%, 38%] ! Il faut beaucoup de données pour estimer σ précisément.
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\hat{\\sigma}_{\\text{ann}} = 1.457\\% \\times \\sqrt{252} \\approx 23.12\\%/\\text{an}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Log-rendements" ruleDetail="rᵢ = ln(Sᵢ/Sᵢ₋₁)" accent={ACCENT}>
+            Vérifier qu'il s'agit de log-rendements. Si on avait les prix, il faudrait calculer <K>{"r_i = \\ln(S_i/S_{i-1})"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Moyenne échantillonnale" ruleDetail="r̄ = (1/n)Σrᵢ" accent={ACCENT}>
+            <K>{"\\bar{r} = \\frac{1.2 - 0.8 + 2.1 - 1.5 + 0.3}{5} = \\frac{1.3}{5} = 0.26\\%"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Écarts centrés" ruleDetail="rᵢ − r̄" accent={ACCENT}>
+            (rᵢ − r̄) = [+0.94, −1.06, +1.84, −1.76, +0.04]
+          </DemoStep>
+          <DemoStep num={4} rule="Variance de Bessel" ruleDetail="s² = Σ(rᵢ−r̄)²/(n−1)" accent={ACCENT}>
+            Carrés : [0.8836, 1.1236, 3.3856, 3.0976, 0.0016]
+            <br /><K>{"s^2 = \\frac{8.492}{4} = 2.123\\;(\\%^2)"}</K> ; <K>{"s = \\sqrt{2.123} = 1.457\\%/\\text{jour}"}</K>
+          </DemoStep>
+          <DemoStep num={5} rule="Annualisation (√252)" ruleDetail="σ_ann = σ_jour × √252" accent={ACCENT}>
+            <K>{"\\hat{\\sigma}_{\\text{ann}} = 1.457\\% \\times \\sqrt{252} \\approx 23.12\\%"}</K>
+            <br />Attention : avec 5 obs, l'erreur-type est <K>{"\\sigma/\\sqrt{2n} \\approx 7.3\\%"}</K> — IC 95% = [8%, 38%] !
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Comparaison des fenêtres d'estimation" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
           Un risk manager calcule la vol historique du WTI sur différentes fenêtres. Il trouve σ̂_30j = 45%, σ̂_60j = 32%, σ̂_252j = 28%. Il existe une crise 15 jours auparavant qui a causé des rendements de ±5%. Discutez quelle fenêtre utiliser pour la VaR de demain.
         </p>
-        <Step num={1} accent={ACCENT}>σ̂_30j = 45% : fortement impacté par la crise récente. Peut surestimer la vol future si la crise est passée.</Step>
-        <Step num={2} accent={ACCENT}>σ̂_60j = 32% : compromise — la crise représente 25% de la fenêtre, dilution partielle.</Step>
-        <Step num={3} accent={ACCENT}>σ̂_252j = 28% : presque insensible à la crise (15 jours sur 252 = 6%). Peut sous-estimer si on est encore en régime volatile.</Step>
-        <Step num={4} accent={ACCENT}>Alternative EWMA (λ=0.94) : σ̂_EWMA réagit rapidement à la crise puis décroît exponentiellement. Probablement autour de 38-40% juste après la crise.</Step>
-        <FormulaBox accent={ACCENT}>Recommandation : utiliser plusieurs fenêtres + worst-case pour la VaR réglementaire</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Basel III/IV recommande d'utiliser la vol sur 250 jours, mais les banques calculent souvent une "stressed VaR" avec une fenêtre correspondant à une période de stress historique identifiée (ex: 2008, 2020).
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat">Recommandation : utiliser plusieurs fenêtres + worst-case pour la VaR réglementaire</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Fenêtre courte (30j)" ruleDetail="Haute variance, faible biais" accent={ACCENT}>
+            <K>{"\\hat{\\sigma}_{30j} = 45\\%"}</K> : fortement impacté par la crise récente. Peut surestimer la vol future si la crise est passée.
+          </DemoStep>
+          <DemoStep num={2} rule="Fenêtre moyenne (60j)" ruleDetail="Compromis biais-variance" accent={ACCENT}>
+            <K>{"\\hat{\\sigma}_{60j} = 32\\%"}</K> : la crise représente 25% de la fenêtre, dilution partielle.
+          </DemoStep>
+          <DemoStep num={3} rule="Fenêtre longue (252j)" ruleDetail="Faible variance, biais potentiel" accent={ACCENT}>
+            <K>{"\\hat{\\sigma}_{252j} = 28\\%"}</K> : presque insensible à la crise (15j/252 = 6%). Peut sous-estimer en régime volatile.
+          </DemoStep>
+          <DemoStep num={4} rule="EWMA (décroissance exponentielle)" ruleDetail="σ²_t = λσ²_{t-1} + (1−λ)r²_{t-1}" accent={ACCENT}>
+            Avec λ=0.94 (RiskMetrics), l'EWMA réagit vite à la crise puis décroît exponentiellement. Probablement ~38-40% juste après la crise.
+            <br />Basel III/IV recommande σ sur 250j + une "stressed VaR" sur période de stress historique (2008, 2020).
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )

@@ -22,6 +22,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a4
@@ -184,20 +185,25 @@ export function NoArbTab() {
 
       <Accordion title="Exercice — Détecter et exploiter l'arbitrage" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Situation : Call ATM = 8€, Put ATM = 6€, S = 100€, K = 100€, r = 4%, T = 0.5 an. Y a-t-il arbitrage ?</p>
-        <Step num={1} accent={ACCENT}>Calculer K·e^(-rT) = 100 × e^(-0.04 × 0.5) = 100 × e^(-0.02) = 100 × 0.9802 = 98.02€</Step>
-        <Step num={2} accent={ACCENT}>Parité théorique : C - P = S - K·e^(-rT) = 100 - 98.02 = 1.98€</Step>
-        <Step num={3} accent={ACCENT}>Observé : C - P = 8 - 6 = 2€ ≠ 1.98€ → écart de 0.02€ → ARBITRAGE !</Step>
-        <Step num={4} accent={ACCENT}>Stratégie : vendre le call (recevoir 8€), acheter le put (payer 6€), acheter l'action (payer 100€), emprunter 98.02€</Step>
-        <Step num={5} accent={ACCENT}>Cash initial : -8 + 6 - 100 + 98.02 + 0 = -3.98€. À maturité, le portefeuille vaut exactement 0 dans tous les cas.</Step>
-        <FormulaBox accent={ACCENT}>Profit = 0.02€ pour 100€ de notionnel → 2 points de base de profit sans risque (à exploiter en taille !)</FormulaBox>
+        <FormulaBox accent={ACCENT}>Profit = 0.02€ pour 100€ de notionnel → 2 points de base de profit sans risque</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Parité put-call" ruleDetail="K·e^(−rT)" accent={ACCENT}>Calculer K·e^(-rT) = 100 × e^(-0.04 × 0.5) = 100 × e^(-0.02) = 100 × 0.9802 = 98.02€</DemoStep>
+          <DemoStep num={2} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité théorique : C - P = S - K·e^(-rT) = 100 - 98.02 = 1.98€</DemoStep>
+          <DemoStep num={3} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : C - P = 8 - 6 = 2€ ≠ 1.98€ → écart de 0.02€ → ARBITRAGE !</DemoStep>
+          <DemoStep num={4} rule="No-arbitrage" ruleDetail="Stratégie de réplication" accent={ACCENT}>Stratégie : vendre le call (recevoir 8€), acheter le put (payer 6€), acheter l'action (payer 100€), emprunter 98.02€</DemoStep>
+          <DemoStep num={5} rule="No-arbitrage" ruleDetail="Profit sans risque" accent={ACCENT}>Cash initial : -8 + 6 - 100 + 98.02 + 0 = -3.98€. À maturité, le portefeuille vaut exactement 0 dans tous les cas. Profit = 0.02€ à exploiter en taille !</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ExampleBlock title="Arbitrage détecté !" accent={ACCENT}>
         <p>Call ATM C=12€, Put ATM P=8€, S=100€, K=100€, r=5%, T=1an</p>
-        <Step num={1} accent={ACCENT}>Parité : C - P = S - K×e^(-rT) = 100 - 100×e^(-0.05) = 100 - 95.12 = 4.88€</Step>
-        <Step num={2} accent={ACCENT}>Observé : C - P = 12 - 8 = 4€ ≠ 4.88€ → ARBITRAGE !</Step>
-        <Step num={3} accent={ACCENT}>Stratégie : Acheter call (payer 12€), Vendre put (recevoir 8€), Vendre S (recevoir 100€), Investir 95.12€ à r=5%</Step>
-        <Step num={4} accent={ACCENT}>Profit initial = -12 + 8 + 100 - 95.12 = +0.88€ sans risque !</Step>
+        <FormulaBox accent={ACCENT}>Profit d'arbitrage = +0.88€ sans risque</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Parité put-call" ruleDetail="C − P = S − K·e^(−rT)" accent={ACCENT}>Parité : C - P = S - K×e^(-rT) = 100 - 100×e^(-0.05) = 100 - 95.12 = 4.88€</DemoStep>
+          <DemoStep num={2} rule="No-arbitrage" ruleDetail="Même payoff → même prix" accent={ACCENT}>Observé : C - P = 12 - 8 = 4€ ≠ 4.88€ → ARBITRAGE !</DemoStep>
+          <DemoStep num={3} rule="No-arbitrage" ruleDetail="Stratégie de réplication" accent={ACCENT}>Stratégie : Acheter call (payer 12€), Vendre put (recevoir 8€), Vendre S (recevoir 100€), Investir 95.12€ à r=5%</DemoStep>
+          <DemoStep num={4} rule="No-arbitrage" ruleDetail="Profit sans risque" accent={ACCENT}>Profit initial = -12 + 8 + 100 - 95.12 = +0.88€ sans risque !</DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -419,21 +425,25 @@ export function BSTab() {
 
       <Accordion title="Exercice — Sensibilité au temps (dégradation temporelle)" accent={ACCENT} badge="Entraînement">
         <p style={{ color: T.text }}>S = 100€, K = 100€, r = 5%, σ = 25%. Calculez le prix du call pour T = 3, 2, 1, 0.5, 0 mois.</p>
-        <Step num={1} accent={ACCENT}>T = 3 mois = 0.25 an : d₁ = [0 + (0.05 + 0.03125)×0.25]/(0.25×0.5) = 0.025/0.125 = 0.2 → C ≈ 5.00€</Step>
-        <Step num={2} accent={ACCENT}>T = 2 mois ≈ 0.167 an : d₁ ≈ 0.163 → C ≈ 4.06€</Step>
-        <Step num={3} accent={ACCENT}>T = 1 mois ≈ 0.083 an : d₁ ≈ 0.115 → C ≈ 2.87€</Step>
-        <Step num={4} accent={ACCENT}>T = 0.5 mois ≈ 0.042 an : d₁ ≈ 0.082 → C ≈ 2.03€</Step>
-        <Step num={5} accent={ACCENT}>T = 0 : C = max(100-100, 0) = 0€ (l'option expire sans valeur si ATM)</Step>
         <FormulaBox accent={ACCENT}>La valeur temps disparaît non-linéairement — elle s'accélère près de la maturité (Theta plus négatif)</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>C'est le "time decay" (Theta) : un vendeur d'option profite de cette érosion, un acheteur la subit.</div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>T = 3 mois = 0.25 an : d₁ = [0 + (0.05 + 0.03125)×0.25]/(0.25×0.5) = 0.025/0.125 = 0.2 → C ≈ 5.00€</DemoStep>
+          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 2 mois ≈ 0.167 an : d₁ ≈ 0.163 → C ≈ 4.06€</DemoStep>
+          <DemoStep num={3} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 1 mois ≈ 0.083 an : d₁ ≈ 0.115 → C ≈ 2.87€</DemoStep>
+          <DemoStep num={4} rule="d₁ et d₂" ruleDetail="d₁ = [ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>T = 0.5 mois ≈ 0.042 an : d₁ ≈ 0.082 → C ≈ 2.03€</DemoStep>
+          <DemoStep num={5} rule="Formule de Black-Scholes" ruleDetail="Payoff à maturité" accent={ACCENT}>T = 0 : C = max(100-100, 0) = 0€ (l'option expire sans valeur si ATM). C'est le "time decay" (Theta) : un vendeur d'option profite de cette érosion, un acheteur la subit.</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ExampleBlock title="Calcul step-by-step — Call sur Brent" accent={ACCENT}>
         <p>F=80$/bbl, K=85, T=0.25a, r=4%, σ=32%</p>
-        <Step num={1} accent={ACCENT}>d₁ = [ln(80/85) + (0.04+0.0512)×0.25] / (0.32×√0.25) = (-0.0606+0.023)/0.16 = -0.237</Step>
-        <Step num={2} accent={ACCENT}>d₂ = -0.237 - 0.16 = -0.397</Step>
-        <Step num={3} accent={ACCENT}>N(d₁) = N(-0.237) ≈ 0.4063 ; N(d₂) = N(-0.397) ≈ 0.3457</Step>
-        <Step num={4} accent={ACCENT}>C = 80×0.4063 - 85×e^(-0.04×0.25)×0.3457 = 32.50 - 85×0.9900×0.3457 = 32.50 - 29.07 = 3.43$/bbl</Step>
+        <FormulaBox accent={ACCENT}>C = 3.43 $/bbl</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="d₁ et d₂" ruleDetail="[ln(S/K)+(r+σ²/2)T]/(σ√T)" accent={ACCENT}>d₁ = [ln(80/85) + (0.04+0.0512)×0.25] / (0.32×√0.25) = (-0.0606+0.023)/0.16 = -0.237</DemoStep>
+          <DemoStep num={2} rule="d₁ et d₂" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = -0.237 - 0.16 = -0.397</DemoStep>
+          <DemoStep num={3} rule="Formule de Black-Scholes" ruleDetail="N(·) = CDF normale" accent={ACCENT}>N(d₁) = N(-0.237) ≈ 0.4063 ; N(d₂) = N(-0.397) ≈ 0.3457</DemoStep>
+          <DemoStep num={4} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁) − K·e^(−rT)·N(d₂)" accent={ACCENT}>C = 80×0.4063 - 85×e^(-0.04×0.25)×0.3457 = 32.50 - 85×0.9900×0.3457 = 32.50 - 29.07 = 3.43$/bbl</DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -556,14 +566,16 @@ export function Black76Tab() {
           Un producteur de gaz veut acheter un cap (call) sur le prix du gaz naturel.
           F = 3.50 $/MMBtu (futures à 6 mois), K = 4.00 $/MMBtu, T = 0.5 an, r = 3%, σ = 45%.
         </p>
-        <Step num={1} accent={ACCENT}>d₁ = [ln(3.50/4.00) + (0.45²/2) × 0.5] / (0.45 × √0.5)</Step>
-        <Step num={2} accent={ACCENT}>= [ln(0.875) + 0.05063] / (0.45 × 0.7071) = [-0.13353 + 0.05063] / 0.31820</Step>
-        <Step num={3} accent={ACCENT}>= -0.08290 / 0.31820 = -0.2604</Step>
-        <Step num={4} accent={ACCENT}>d₂ = -0.2604 - 0.31820 = -0.5786</Step>
-        <Step num={5} accent={ACCENT}>N(d₁) = N(-0.2604) ≈ 0.3973 ; N(d₂) = N(-0.5786) ≈ 0.2814</Step>
-        <Step num={6} accent={ACCENT}>Call B76 = e^(-0.03×0.5) × [3.50 × 0.3973 - 4.00 × 0.2814]</Step>
-        <Step num={7} accent={ACCENT}>= 0.9851 × [1.3906 - 1.1256] = 0.9851 × 0.2650 = 0.261 $/MMBtu</Step>
-        <FormulaBox accent={ACCENT}>Prime du cap = 0.261 $/MMBtu. Pour 10 000 MMBtu/mois × 6 mois = 60 000 MMBtu → coût total = 15 660$</FormulaBox>
+        <FormulaBox accent={ACCENT}>Prime du cap = 0.261 $/MMBtu → coût total = 15 660$ pour 60 000 MMBtu</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Black-76 (futures)" ruleDetail="d₁ = [ln(F/K)+σ²T/2]/(σ√T)" accent={ACCENT}>d₁ = [ln(3.50/4.00) + (0.45²/2) × 0.5] / (0.45 × √0.5)</DemoStep>
+          <DemoStep num={2} rule="Black-76 (futures)" ruleDetail="F au lieu de S" accent={ACCENT}>= [ln(0.875) + 0.05063] / (0.45 × 0.7071) = [-0.13353 + 0.05063] / 0.31820</DemoStep>
+          <DemoStep num={3} rule="Black-76 (futures)" ruleDetail="d₁ numérique" accent={ACCENT}>= -0.08290 / 0.31820 = -0.2604</DemoStep>
+          <DemoStep num={4} rule="Black-76 (futures)" ruleDetail="d₂ = d₁ − σ√T" accent={ACCENT}>d₂ = -0.2604 - 0.31820 = -0.5786</DemoStep>
+          <DemoStep num={5} rule="Black-76 (futures)" ruleDetail="N(·) = CDF normale" accent={ACCENT}>N(d₁) = N(-0.2604) ≈ 0.3973 ; N(d₂) = N(-0.5786) ≈ 0.2814</DemoStep>
+          <DemoStep num={6} rule="Black-76 (futures)" ruleDetail="C = e^(−rT)[F·N(d₁)−K·N(d₂)]" accent={ACCENT}>Call B76 = e^(-0.03×0.5) × [3.50 × 0.3973 - 4.00 × 0.2814]</DemoStep>
+          <DemoStep num={7} rule="Black-76 (futures)" ruleDetail="Résultat final" accent={ACCENT}>= 0.9851 × [1.3906 - 1.1256] = 0.9851 × 0.2650 = 0.261 $/MMBtu</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ChartWrapper title="Black-76 : prix Call & Put en fonction de F (forward price)" accent={ACCENT} height={260}>
@@ -694,13 +706,14 @@ export function GreeksTab() {
           Δ = 0.58, Γ = 0.021, ν = 0.22 (par 1% vol), Θ = -0.08 (par jour).
           Le lendemain : S → 82$, σ implicite → 31%. Calculez le P&L du call.
         </p>
-        <Step num={1} accent={ACCENT}>Contribution Delta : Δ × ΔS = 0.58 × (+2) = +1.16 $/bbl</Step>
-        <Step num={2} accent={ACCENT}>Contribution Gamma : ½Γ(ΔS)² = ½ × 0.021 × 4 = +0.042 $/bbl</Step>
-        <Step num={3} accent={ACCENT}>Contribution Vega : ν × Δσ = 0.22 × (+1%) = +0.22 $/bbl</Step>
-        <Step num={4} accent={ACCENT}>Contribution Theta : Θ × Δt = -0.08 × 1 = -0.08 $/bbl</Step>
-        <Step num={5} accent={ACCENT}>P&L total ≈ 1.16 + 0.042 + 0.22 - 0.08 = +1.342 $/bbl</Step>
         <FormulaBox accent={ACCENT}>P&L = Δ·ΔS + ½Γ(ΔS)² + ν·Δσ + Θ·Δt ≈ +1.342 $/bbl par bbl de notionnel</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Pour 1 000 barils de notionnel : P&L total ≈ +1 342$</div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="P&L attribution" ruleDetail="Δ × ΔS" accent={ACCENT}>Contribution Delta : Δ × ΔS = 0.58 × (+2) = +1.16 $/bbl</DemoStep>
+          <DemoStep num={2} rule="Taylor expansion" ruleDetail="½Γ(ΔS)²" accent={ACCENT}>Contribution Gamma : ½Γ(ΔS)² = ½ × 0.021 × 4 = +0.042 $/bbl</DemoStep>
+          <DemoStep num={3} rule="P&L attribution" ruleDetail="ν × Δσ" accent={ACCENT}>Contribution Vega : ν × Δσ = 0.22 × (+1%) = +0.22 $/bbl</DemoStep>
+          <DemoStep num={4} rule="P&L attribution" ruleDetail="Θ × Δt" accent={ACCENT}>Contribution Theta : Θ × Δt = -0.08 × 1 = -0.08 $/bbl</DemoStep>
+          <DemoStep num={5} rule="Taylor expansion" ruleDetail="Somme des contributions" accent={ACCENT}>P&L total ≈ 1.16 + 0.042 + 0.22 - 0.08 = +1.342 $/bbl. Pour 1 000 barils de notionnel : P&L total ≈ +1 342$</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <Grid cols={5} gap="8px">
@@ -889,14 +902,15 @@ export function MonteCarloTab() {
           Un straddle = call + put (même strike, même maturité). S₀ = 100€, K = 100€, T = 0.5 an, r = 3%, σ = 25%.
           Calculez le prix du straddle par Monte Carlo et par B-S.
         </p>
-        <Step num={1} accent={ACCENT}>Payoff straddle = max(S_T - 100, 0) + max(100 - S_T, 0) = |S_T - 100|</Step>
-        <Step num={2} accent={ACCENT}>Simulation : S_T = 100 × exp[(0.03 - 0.03125) × 0.5 + 0.25 × √0.5 × Z]</Step>
-        <Step num={3} accent={ACCENT}>= 100 × exp[-0.00063 + 0.17678 × Z]</Step>
-        <Step num={4} accent={ACCENT}>Par B-S : C_BS = bs(100, 100, 0.5, 0.03, 0.25, 'call') ≈ 6.88€</Step>
-        <Step num={5} accent={ACCENT}>P_BS = bs(100, 100, 0.5, 0.03, 0.25, 'put') ≈ 5.42€ (parité put-call)</Step>
-        <Step num={6} accent={ACCENT}>Prix straddle B-S = C + P ≈ 6.88 + 5.42 = 12.30€</Step>
         <FormulaBox accent={ACCENT}>Straddle ≈ 12.30€ = 12.3% de S₀ — "le marché anticipe un mouvement de ±12.3% sur 6 mois"</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Le prix du straddle est une mesure directe de la volatilité attendue par le marché.</div>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Loi des grands nombres" ruleDetail="Payoff = |S_T − K|" accent={ACCENT}>Payoff straddle = max(S_T - 100, 0) + max(100 - S_T, 0) = |S_T - 100|</DemoStep>
+          <DemoStep num={2} rule="Actualisation risque-neutre" ruleDetail="S_T = S₀·exp[(r−σ²/2)T+σ√TZ]" accent={ACCENT}>Simulation : S_T = 100 × exp[(0.03 - 0.03125) × 0.5 + 0.25 × √0.5 × Z]</DemoStep>
+          <DemoStep num={3} rule="Actualisation risque-neutre" ruleDetail="Drift risque-neutre" accent={ACCENT}>= 100 × exp[-0.00063 + 0.17678 × Z]</DemoStep>
+          <DemoStep num={4} rule="Formule de Black-Scholes" ruleDetail="C = S·N(d₁)−K·e^(−rT)·N(d₂)" accent={ACCENT}>Par B-S : C_BS = bs(100, 100, 0.5, 0.03, 0.25, 'call') ≈ 6.88€</DemoStep>
+          <DemoStep num={5} rule="Parité put-call" ruleDetail="P = C − S + K·e^(−rT)" accent={ACCENT}>P_BS = bs(100, 100, 0.5, 0.03, 0.25, 'put') ≈ 5.42€ (parité put-call)</DemoStep>
+          <DemoStep num={6} rule="Loi des grands nombres" ruleDetail="Convergence MC → BS" accent={ACCENT}>Prix straddle B-S = C + P ≈ 6.88 + 5.42 = 12.30€. Le prix du straddle est une mesure directe de la volatilité attendue par le marché.</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ChartWrapper title={`Distribution des payoffs du call (${nSim} simulations)`} accent={ACCENT} height={260}>
@@ -1091,19 +1105,24 @@ export function ArbreTab() {
 
       <ExampleBlock title="Put américain vs européen — Exercice anticipé optimal" accent={ACCENT}>
         <p>S₀=100€, K=110€, r=5%, σ=20%, T=1an — put profondément dans la monnaie</p>
-        <Step num={1} accent={ACCENT}>Put européen : on ne peut pas exercer tôt même si intrinsic = 10€</Step>
-        <Step num={2} accent={ACCENT}>Put américain : si la valeur de continuation {'<'} intrinsic = max(K-S,0), on exerce immédiatement</Step>
-        <Step num={3} accent={ACCENT}>Le put américain vaut toujours ≥ put européen (early exercise premium ≥ 0)</Step>
-        <Step num={4} accent={ACCENT}>Pour un call américain sur actif sans dividende : jamais optimal d'exercer tôt → même prix que call européen</Step>
+        <FormulaBox accent={ACCENT}>Put américain ≥ Put européen (early exercise premium ≥ 0)</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Arbre CRR" ruleDetail="Exercice européen" accent={ACCENT}>Put européen : on ne peut pas exercer tôt même si intrinsic = 10€</DemoStep>
+          <DemoStep num={2} rule="Probabilité risque-neutre p" ruleDetail="V = max(intrinsic, continuation)" accent={ACCENT}>Put américain : si la valeur de continuation {'<'} intrinsic = max(K-S,0), on exerce immédiatement</DemoStep>
+          <DemoStep num={3} rule="Arbre CRR" ruleDetail="Early exercise premium" accent={ACCENT}>Le put américain vaut toujours ≥ put européen (early exercise premium ≥ 0)</DemoStep>
+          <DemoStep num={4} rule="Arbre CRR" ruleDetail="Call américain sans dividende" accent={ACCENT}>Pour un call américain sur actif sans dividende : jamais optimal d'exercer tôt → même prix que call européen</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Arbre à 2 étapes (call européen)" accent={ACCENT} badge="Entraînement">
         <p style={{ color: T.text }}>S₀=100, K=100, r=5%, σ=20%, T=0.5an, N=2. Calculez le prix du call.</p>
-        <Step num={1} accent={ACCENT}>Δt=0.25 ; u=e^(0.2×√0.25)=e^(0.10)=1.1052 ; d=0.9048 ; p=(e^(0.0125)-0.9048)/0.2004=0.5359</Step>
-        <Step num={2} accent={ACCENT}>Terminaux : S_uu=122.1→C=22.1 ; S_ud=100→C=0 ; S_dd=81.9→C=0</Step>
-        <Step num={3} accent={ACCENT}>Nœud u : C_u = e^(-0.0125)×(0.5359×22.1+0.4641×0) = 11.69</Step>
-        <Step num={4} accent={ACCENT}>Nœud d : C_d = 0</Step>
         <FormulaBox accent={ACCENT}>C₀ = e^(-0.0125)×(0.5359×11.69+0) = 6.18€</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Arbre CRR" ruleDetail="u = e^(σ√Δt), d = 1/u" accent={ACCENT}>Δt=0.25 ; u=e^(0.2×√0.25)=e^(0.10)=1.1052 ; d=0.9048 ; p=(e^(0.0125)-0.9048)/0.2004=0.5359</DemoStep>
+          <DemoStep num={2} rule="Arbre CRR" ruleDetail="Payoffs terminaux" accent={ACCENT}>Terminaux : S_uu=122.1→C=22.1 ; S_ud=100→C=0 ; S_dd=81.9→C=0</DemoStep>
+          <DemoStep num={3} rule="Probabilité risque-neutre p" ruleDetail="V = e^(−rΔt)[p·V_up+(1−p)·V_down]" accent={ACCENT}>Nœud u : C_u = e^(-0.0125)×(0.5359×22.1+0.4641×0) = 11.69</DemoStep>
+          <DemoStep num={4} rule="Probabilité risque-neutre p" ruleDetail="Backward induction" accent={ACCENT}>Nœud d : C_d = 0</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -1270,10 +1289,13 @@ export function ExotiquesTab() {
 
       <ExampleBlock title="Couverture carburant — Compagnie aérienne (option asiatique)" accent={ACCENT}>
         <p>Une compagnie achète du kérosène au <em>prix moyen mensuel</em>. Elle veut se couvrir contre une hausse.</p>
-        <Step num={1} accent={ACCENT}>Option vanilla : payoff sur le prix spot à une date → inadaptée (elle achète tout le mois)</Step>
-        <Step num={2} accent={ACCENT}>Option asiatique : payoff = max(Ā_mois - K, 0) → parfaitement alignée avec son exposition</Step>
-        <Step num={3} accent={ACCENT}>Asian moins chère que vanilla (σ_Ā {'<'} σ_S_T car lissage) → réduction de coût de 20-40% typique</Step>
-        <Step num={4} accent={ACCENT}>Prix MC Asian ≈ {results.asian}€ vs Vanilla ≈ {results.vanilla}€ (avec les paramètres actuels)</Step>
+        <FormulaBox accent={ACCENT}>Asian moins chère que vanilla : réduction de coût de 20-40% typique</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Asian option averaging" ruleDetail="Payoff sur prix moyen" accent={ACCENT}>Option vanilla : payoff sur le prix spot à une date → inadaptée (elle achète tout le mois)</DemoStep>
+          <DemoStep num={2} rule="Asian option averaging" ruleDetail="Ā = (1/n)Σ S(tᵢ)" accent={ACCENT}>Option asiatique : payoff = max(Ā_mois - K, 0) → parfaitement alignée avec son exposition</DemoStep>
+          <DemoStep num={3} rule="Asian option averaging" ruleDetail="σ_Ā < σ_S" accent={ACCENT}>Asian moins chère que vanilla (σ_Ā {'<'} σ_S_T car lissage) → réduction de coût de 20-40% typique</DemoStep>
+          <DemoStep num={4} rule="Asian option averaging" ruleDetail="Résultat MC" accent={ACCENT}>Prix MC Asian ≈ {results.asian}€ vs Vanilla ≈ {results.vanilla}€ (avec les paramètres actuels)</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>3. Swing Options — Le contrat le plus courant en énergie gaz</SectionTitle>
@@ -1320,11 +1342,12 @@ export function ExotiquesTab() {
 
       <Accordion title="Exercice — Parité KO + KI = Vanilla" accent={ACCENT} badge="Conceptuel">
         <p style={{ color: T.text }}>Expliquez pourquoi un KO call + un KI call (mêmes paramètres) = vanilla call.</p>
-        <Step num={1} accent={ACCENT}>KO call paie si S_T {'>'} K ET le prix n'a jamais touché H</Step>
-        <Step num={2} accent={ACCENT}>KI call paie si S_T {'>'} K ET le prix a touché H à un moment</Step>
-        <Step num={3} accent={ACCENT}>Ces deux cas sont mutuellement exclusifs et exhaustifs (soit H touché, soit non)</Step>
-        <FormulaBox accent={ACCENT}>KO + KI = P(S_T {'>'} K | jamais H) + P(S_T {'>'} K | au moins H) = P(S_T {'>'} K) = Vanilla ✓</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Vérification : KO={results.ko}€ + KI={results.ki}€ = {(parseFloat(results.ko) + parseFloat(results.ki)).toFixed(2)}€ ≈ Vanilla={results.vanilla}€</div>
+        <FormulaBox accent={ACCENT}>KO + KI = Vanilla ✓</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Parité KO+KI=Vanilla" ruleDetail="Knock-Out condition" accent={ACCENT}>KO call paie si S_T {'>'} K ET le prix n'a jamais touché H</DemoStep>
+          <DemoStep num={2} rule="Parité KO+KI=Vanilla" ruleDetail="Knock-In condition" accent={ACCENT}>KI call paie si S_T {'>'} K ET le prix a touché H à un moment</DemoStep>
+          <DemoStep num={3} rule="Parité KO+KI=Vanilla" ruleDetail="Partition exhaustive" accent={ACCENT}>Ces deux cas sont mutuellement exclusifs et exhaustifs (soit H touché, soit non). KO + KI = P(S_T {'>'} K | jamais H) + P(S_T {'>'} K | au moins H) = P(S_T {'>'} K) = Vanilla ✓. Vérification : KO={results.ko}€ + KI={results.ki}€ = {(parseFloat(results.ko) + parseFloat(results.ki)).toFixed(2)}€ ≈ Vanilla={results.vanilla}€</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )

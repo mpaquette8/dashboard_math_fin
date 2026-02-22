@@ -7,6 +7,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a6
@@ -100,10 +101,15 @@ export function VarCovTab() {
 
       <SectionTitle accent={ACCENT}>Dérivation step-by-step de la VaR paramétrique</SectionTitle>
       <ExampleBlock title="Dérivation de la formule VaR" accent={ACCENT}>
-        <Step num={1} accent={ACCENT}><strong>Hypothèse de normalité :</strong> On suppose ΔP ~ N(µ_ΔP, σ_ΔP²), c'est-à-dire que le P&L du portefeuille est distribué normalement avec moyenne µ_ΔP et variance σ_ΔP².</Step>
-        <Step num={2} accent={ACCENT}><strong>Définition de la VaR :</strong> VaR_α est le seuil tel que P(ΔP {'<'} -VaR_α) = 1-α. En d'autres termes, VaR_α est le (1-α)-quantile de la distribution des pertes.</Step>
-        <Step num={3} accent={ACCENT}><strong>Standardisation :</strong> P(ΔP {'<'} -VaR_α) = P(Z {'<'} (-VaR_α - µ_ΔP)/σ_ΔP) = 1-α, où Z ~ N(0,1). Donc (-VaR_α - µ_ΔP)/σ_ΔP = -z_α, soit VaR_α = µ_ΔP + z_α × σ_ΔP... mais en convention perte positive : VaR_α = -µ_ΔP + z_α × σ_ΔP.</Step>
-        <Step num={4} accent={ACCENT}><strong>Portefeuille :</strong> Pour un portefeuille multi-actifs, σ_ΔP = √(wᵀΣw) × Valeur, où Σ est la matrice de variance-covariance des rendements. En pratique : σ_p = √(Σᵢ Σⱼ wᵢ wⱼ σᵢ σⱼ ρᵢⱼ) × Valeur.</Step>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          <K>{"\\text{VaR}_{\\alpha} = -\\mu_{\\Delta P} + z_{\\alpha} \\cdot \\sigma_{\\Delta P}"}</K>
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="VaR paramétrique" ruleDetail="ΔP ~ N(µ, σ²)" accent={ACCENT}><strong>Hypothèse de normalité :</strong> On suppose <K>{"\\Delta P \\sim \\mathcal{N}(\\mu_{\\Delta P},\\, \\sigma_{\\Delta P}^2)"}</K>, c'est-à-dire que le P&L du portefeuille est distribué normalement avec moyenne µ_ΔP et variance σ_ΔP².</DemoStep>
+          <DemoStep num={2} rule="Quantile de risque" ruleDetail="P(ΔP < −VaR) = 1−α" accent={ACCENT}><strong>Définition de la VaR :</strong> <K>{"\\text{VaR}_{\\alpha}"}</K> est le seuil tel que <K>{"P(\\Delta P < -\\text{VaR}_{\\alpha}) = 1 - \\alpha"}</K>. En d'autres termes, VaR_α est le (1-α)-quantile de la distribution des pertes.</DemoStep>
+          <DemoStep num={3} rule="Standardisation" ruleDetail="Z = (X−µ)/σ" accent={ACCENT}><strong>Standardisation :</strong> <K>{"P(\\Delta P < -\\text{VaR}_{\\alpha}) = P\\!\\left(Z < \\frac{-\\text{VaR}_{\\alpha} - \\mu}{\\sigma}\\right) = 1-\\alpha"}</K>, où Z ~ N(0,1). Donc <K>{"\\text{VaR}_{\\alpha} = -\\mu_{\\Delta P} + z_{\\alpha} \\cdot \\sigma_{\\Delta P}"}</K> en convention perte positive.</DemoStep>
+          <DemoStep num={4} rule="Corrélation" ruleDetail="σ_p = √(wᵀΣw)" accent={ACCENT}><strong>Portefeuille :</strong> Pour un portefeuille multi-actifs, <K>{"\\sigma_{\\Delta P} = \\sqrt{\\mathbf{w}^\\top \\Sigma \\mathbf{w}} \\times V"}</K>, où Σ est la matrice de variance-covariance des rendements. En pratique : <K>{"\\sigma_p = \\sqrt{\\sum_i \\sum_j w_i w_j \\sigma_i \\sigma_j \\rho_{ij}} \\times V"}</K>.</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '14px 0', color: T.text, fontSize: 13, lineHeight: 1.9 }}>
@@ -206,11 +212,15 @@ export function VarCovTab() {
 
       <ExampleBlock title="VaR d'un portefeuille pétrole" accent={ACCENT}>
         <p>Portefeuille WTI : 100 000 barils @ 80$/bbl = 8M$, σ_daily=2%, H=1j, α=99%</p>
-        <Step num={1} accent={ACCENT}>σ_position = 8M$ × 2% = 160 000$/j</Step>
-        <Step num={2} accent={ACCENT}>z_99% = 2.326</Step>
-        <Step num={3} accent={ACCENT}>VaR(99%, 1j) = 2.326 × 160 000 = 372 160$</Step>
-        <Step num={4} accent={ACCENT}>VaR(99%, 10j) = 372 160 × √10 = 1 176 810$ ≈ 1.18M$</Step>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>→ La "règle √T" (racine du temps) suppose des rendements iid normaux.</div>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          <K>{"\\text{VaR}(99\\%,\\,10j) \\approx 1{,}18\\,\\text{M\\$}"}</K>
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="VaR paramétrique" ruleDetail="σ_pos = V × σ" accent={ACCENT}><K>{"\\sigma_{\\text{pos}} = 8\\text{M\\$} \\times 2\\% = 160\\,000\\text{\\$/j}"}</K></DemoStep>
+          <DemoStep num={2} rule="Quantile normal" ruleDetail="z = Φ⁻¹(α)" accent={ACCENT}><K>{"z_{99\\%} = \\Phi^{-1}(0.99) = 2.326"}</K></DemoStep>
+          <DemoStep num={3} rule="VaR paramétrique" ruleDetail="VaR = z × σ" accent={ACCENT}><K>{"\\text{VaR}(99\\%,\\,1j) = 2.326 \\times 160\\,000 = 372\\,160\\$"}</K></DemoStep>
+          <DemoStep num={4} rule="Diversification" ruleDetail="VaR(H) = VaR(1)×√H" accent={ACCENT}><K>{"\\text{VaR}(99\\%,\\,10j) = 372\\,160 \\times \\sqrt{10} = 1\\,176\\,810\\$ \\approx 1{,}18\\,\\text{M\\$}"}</K>. La « règle √T » (racine du temps) suppose des rendements iid normaux.</DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -442,10 +452,15 @@ export function VarMCTab() {
 
       <SectionTitle accent={ACCENT}>Étapes de la VaR Monte Carlo</SectionTitle>
       <ExampleBlock title="Procédure complète VaR MC" accent={ACCENT}>
-        <Step num={1} accent={ACCENT}><strong>Calibrer les paramètres du modèle :</strong> Estimer µ, σ, ρ pour chaque actif à partir des données historiques. Pour un portefeuille énergie : µ_WTI, σ_WTI, µ_Gaz, σ_Gaz, ρ(WTI, Gaz). Utiliser éventuellement des modèles plus sophistiqués (GARCH pour la vol, mean-reversion pour les spreads).</Step>
-        <Step num={2} accent={ACCENT}><strong>Simuler N scénarios de prix à l'horizon T :</strong> Pour chaque simulation i, tirer des aléas corrélés via la décomposition de Cholesky. Pour 2 actifs : W₁_i = Z₁, W₂_i = ρ×Z₁ + √(1-ρ²)×Z₂ avec Z₁,Z₂ ~ N(0,1). Pour n actifs, utiliser la décomposition complète de Cholesky de la matrice de corrélation.</Step>
-        <Step num={3} accent={ACCENT}><strong>Valoriser le portefeuille dans chaque scénario :</strong> Calculer la valeur du portefeuille à t+H sous chaque scénario. Pour des positions simples (futures) : P&L_i = Σ wⱼ × rⱼ_i × Valeur. Pour des options : recalculer le prix BS ou regreek dans chaque scénario.</Step>
-        <Step num={4} accent={ACCENT}><strong>Lire le quantile :</strong> Trier les N P&L simulés. VaR_MC(α) = -P&L₍⌊(1-α)×N⌋₎. CVaR_MC = -moyenne des ⌊(1-α)×N⌋ pires P&L. L'erreur d'estimation MC sur la VaR est de l'ordre de VaR/√(N×(1-α)).</Step>
+        <FormulaBox accent={ACCENT} label="Résultat">
+          <K>{"\\text{VaR}_{MC}(\\alpha) = -\\text{PnL}_{\\lfloor(1-\\alpha)N\\rfloor}"}</K>
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Monte Carlo" ruleDetail="Calibration µ, σ, ρ" accent={ACCENT}><strong>Calibrer les paramètres du modèle :</strong> Estimer <K>{"\\mu,\\,\\sigma,\\,\\rho"}</K> pour chaque actif à partir des données historiques. Pour un portefeuille énergie : µ_WTI, σ_WTI, µ_Gaz, σ_Gaz, ρ(WTI, Gaz). Utiliser éventuellement des modèles plus sophistiqués (GARCH pour la vol, mean-reversion pour les spreads).</DemoStep>
+          <DemoStep num={2} rule="Simulation" ruleDetail="Cholesky : W = LZ" accent={ACCENT}><strong>Simuler N scénarios de prix à l'horizon T :</strong> Pour chaque simulation i, tirer des aléas corrélés via la décomposition de Cholesky. Pour 2 actifs : <K>{"W_1 = Z_1,\\; W_2 = \\rho Z_1 + \\sqrt{1-\\rho^2}\\,Z_2"}</K> avec <K>{"Z_1, Z_2 \\sim \\mathcal{N}(0,1)"}</K>. Pour n actifs, utiliser la décomposition complète de Cholesky de la matrice de corrélation.</DemoStep>
+          <DemoStep num={3} rule="Simulation" ruleDetail="PnL = Σ wⱼ rⱼ V" accent={ACCENT}><strong>Valoriser le portefeuille dans chaque scénario :</strong> Calculer la valeur du portefeuille à t+H sous chaque scénario. Pour des positions simples (futures) : <K>{"\\text{PnL}_i = \\sum_j w_j \\cdot r_{j,i} \\cdot V"}</K>. Pour des options : recalculer le prix BS ou regreek dans chaque scénario.</DemoStep>
+          <DemoStep num={4} rule="Quantile empirique" ruleDetail="VaR = −PnL₍ₖ₎" accent={ACCENT}><strong>Lire le quantile :</strong> Trier les N P&L simulés. <K>{"\\text{VaR}_{MC}(\\alpha) = -\\text{PnL}_{\\lfloor(1-\\alpha)N\\rfloor}"}</K>. <K>{"\\text{CVaR}_{MC} = -\\frac{1}{k}\\sum_{i=1}^{k} \\text{PnL}_{(i)}"}</K>. L'erreur d'estimation MC est de l'ordre de <K>{"\\frac{\\text{VaR}}{\\sqrt{N(1-\\alpha)}}"}</K>.</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Corrélations en Monte Carlo — l'outil Cholesky</SectionTitle>

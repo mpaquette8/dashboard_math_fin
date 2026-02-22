@@ -7,6 +7,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a3
@@ -144,23 +145,25 @@ export function RandomWalkTab() {
 
       <Accordion title="Exercice — Propriétés du brownien" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Soit W(t) un brownien standard. Calculez E[W(3)], Var[W(3)-W(1)], et P(W(1) {'>'} 1).</p>
-        <Step num={1} accent={ACCENT}>E[W(3)] = 0 (propriété fondamentale : espérance nulle à tout instant)</Step>
-        <Step num={2} accent={ACCENT}>W(3) - W(1) ~ N(0, 3-1) = N(0, 2) → Var[W(3)-W(1)] = 2</Step>
-        <Step num={3} accent={ACCENT}>W(1) ~ N(0,1) → P(W(1) {'>'} 1) = P(Z {'>'} 1) = 1 - N(1) ≈ 1 - 0.8413 = 15.87%</Step>
-        <Step num={4} accent={ACCENT}>Bonus : Cov[W(2), W(5)] = min(2,5) = 2 (propriété du brownien : Cov[W(s),W(t)] = min(s,t))</Step>
-        <FormulaBox accent={ACCENT}>E[W(t)] = 0, Var[W(t)] = t, Cov[W(s),W(t)] = min(s,t)</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"E[W(t)] = 0,\\; \\mathrm{Var}[W(t)] = t,\\; \\mathrm{Cov}[W(s),W(t)] = \\min(s,t)"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Propriétés du brownien" ruleDetail="E[W(t)] = 0, Var[W(t)] = t" accent={ACCENT}>E[W(3)] = 0 (propriété fondamentale : espérance nulle à tout instant)</DemoStep>
+          <DemoStep num={2} rule="Propriétés du brownien" ruleDetail="W(t)-W(s) ~ N(0, t-s)" accent={ACCENT}><K>{"W(3) - W(1) \\sim N(0,\\, 3-1) = N(0,2)"}</K> → <K>{"\\mathrm{Var}[W(3)-W(1)] = 2"}</K></DemoStep>
+          <DemoStep num={3} rule="Propriétés du brownien" ruleDetail="W(1) ~ N(0,1)" accent={ACCENT}><K>{"W(1) \\sim N(0,1)"}</K> → <K>{"P(W(1)>1) = 1 - \\Phi(1) \\approx 15.87\\%"}</K></DemoStep>
+          <DemoStep num={4} rule="Propriétés du brownien" ruleDetail="Cov[W(s),W(t)] = min(s,t)" accent={ACCENT}>Bonus : <K>{"\\mathrm{Cov}[W(2), W(5)] = \\min(2,5) = 2"}</K></DemoStep>
+        </Demonstration>
       </Accordion>
 
       <Accordion title="Exercice — Simulation discrète du brownien" accent={ACCENT} badge="Entraînement">
         <p style={{ color: T.text }}>Simulez à la main 4 pas de brownien sur [0,1] (Δt = 0.25). Utilisez les réalisations Z = +0.8, -1.2, +0.3, -0.5.</p>
-        <Step num={1} accent={ACCENT}>Incrément par pas : √Δt × Z = √0.25 × Z = 0.5 × Z</Step>
-        <Step num={2} accent={ACCENT}>W(0.25) = 0 + 0.5 × 0.8 = 0.40</Step>
-        <Step num={3} accent={ACCENT}>W(0.50) = 0.40 + 0.5 × (-1.2) = 0.40 - 0.60 = -0.20</Step>
-        <Step num={4} accent={ACCENT}>W(0.75) = -0.20 + 0.5 × 0.3 = -0.20 + 0.15 = -0.05</Step>
-        <Step num={5} accent={ACCENT}>W(1.00) = -0.05 + 0.5 × (-0.5) = -0.05 - 0.25 = -0.30</Step>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Vérification : E[W(1)] théoriquement 0, Var[W(1)] théoriquement 1. Sur cet échantillon unique, W(1) = -0.30 (variabilité normale pour 4 pas).
-        </div>
+        <FormulaBox accent={ACCENT}><K>{"W(1.00) = -0.30"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Propriétés du brownien" ruleDetail="ΔW = √Δt × Z" accent={ACCENT}>Incrément par pas : <K>{"\\sqrt{\\Delta t} \\times Z = \\sqrt{0.25} \\times Z = 0.5 \\times Z"}</K></DemoStep>
+          <DemoStep num={2} rule="Propriétés du brownien" ruleDetail="W(tᵢ) = W(tᵢ₋₁) + ΔW" accent={ACCENT}><K>{"W(0.25) = 0 + 0.5 \\times 0.8 = 0.40"}</K></DemoStep>
+          <DemoStep num={3} rule="Propriétés du brownien" ruleDetail="W(tᵢ) = W(tᵢ₋₁) + ΔW" accent={ACCENT}><K>{"W(0.50) = 0.40 + 0.5 \\times (-1.2) = -0.20"}</K></DemoStep>
+          <DemoStep num={4} rule="Propriétés du brownien" ruleDetail="W(tᵢ) = W(tᵢ₋₁) + ΔW" accent={ACCENT}><K>{"W(0.75) = -0.20 + 0.5 \\times 0.3 = -0.05"}</K></DemoStep>
+          <DemoStep num={5} rule="Propriétés du brownien" ruleDetail="W(tᵢ) = W(tᵢ₋₁) + ΔW" accent={ACCENT}><K>{"W(1.00) = -0.05 + 0.5 \\times (-0.5) = -0.30"}</K>. Vérification : E[W(1)] théoriquement 0, Var[W(1)] théoriquement 1. Sur cet échantillon unique, W(1) = −0.30 (variabilité normale pour 4 pas).</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -302,14 +305,16 @@ export function GBMTab() {
 
       <Accordion title="Exercice — Simulation GBM à la main (1 an, 4 trimestres)" accent={ACCENT} badge="Entraînement">
         <p style={{ color: T.text }}>S₀ = 100€, µ = 10%, σ = 20%, T = 1 an, N = 4 pas (Δt = 0.25). Réalisations Z = +0.6, -0.4, +1.1, -0.2.</p>
-        <Step num={1} accent={ACCENT}>Formule : S(tᵢ) = S(tᵢ₋₁) × exp[(µ - σ²/2)Δt + σ√Δt × Z]</Step>
-        <Step num={2} accent={ACCENT}>Drift ajusté : (µ - σ²/2)Δt = (0.10 - 0.02) × 0.25 = 0.08 × 0.25 = 0.02</Step>
-        <Step num={3} accent={ACCENT}>σ√Δt = 0.20 × √0.25 = 0.20 × 0.5 = 0.10</Step>
-        <Step num={4} accent={ACCENT}>S(0.25) = 100 × exp(0.02 + 0.10 × 0.6) = 100 × exp(0.08) = 100 × 1.0833 = 108.33€</Step>
-        <Step num={5} accent={ACCENT}>S(0.50) = 108.33 × exp(0.02 + 0.10 × (-0.4)) = 108.33 × exp(0.016) = 108.33 × 1.0161 = 109.98€</Step>
-        <Step num={6} accent={ACCENT}>S(0.75) = 109.98 × exp(0.02 + 0.10 × 1.1) = 109.98 × exp(0.13) = 109.98 × 1.1388 = 125.24€</Step>
-        <Step num={7} accent={ACCENT}>S(1.00) = 125.24 × exp(0.02 + 0.10 × (-0.2)) = 125.24 × exp(0.018) = 125.24 × 1.0181 = 127.51€</Step>
-        <FormulaBox accent={ACCENT}>Rendement total = ln(127.51/100) = +24.6%  |  E[S₁] = 100×e^0.10 = 110.5€ (1 trajectoire ≠ espérance)</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"S(1) = 127.51\\text{€},\\; \\ln(127.51/100) = +24.6\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Solution exacte du GBM" ruleDetail="S(tᵢ) = S(tᵢ₋₁)·exp[(µ−σ²/2)Δt + σ√Δt·Z]" accent={ACCENT}>Formule : <K>{"S(t_i) = S(t_{i-1}) \\times \\exp\\!\\big[(\\mu - \\tfrac{\\sigma^2}{2})\\Delta t + \\sigma\\sqrt{\\Delta t}\\,Z\\big]"}</K></DemoStep>
+          <DemoStep num={2} rule="Solution exacte du GBM" ruleDetail="drift ajusté (µ−σ²/2)Δt" accent={ACCENT}>Drift ajusté : <K>{"(\\mu - \\sigma^2/2)\\Delta t = (0.10 - 0.02)\\times 0.25 = 0.02"}</K></DemoStep>
+          <DemoStep num={3} rule="Euler-Maruyama" ruleDetail="σ√Δt" accent={ACCENT}><K>{"\\sigma\\sqrt{\\Delta t} = 0.20 \\times 0.5 = 0.10"}</K></DemoStep>
+          <DemoStep num={4} rule="Solution exacte du GBM" ruleDetail="S(0.25)" accent={ACCENT}><K>{"S(0.25) = 100 \\times e^{0.08} = 108.33\\text{€}"}</K></DemoStep>
+          <DemoStep num={5} rule="Solution exacte du GBM" ruleDetail="S(0.50)" accent={ACCENT}><K>{"S(0.50) = 108.33 \\times e^{0.016} = 109.98\\text{€}"}</K></DemoStep>
+          <DemoStep num={6} rule="Solution exacte du GBM" ruleDetail="S(0.75)" accent={ACCENT}><K>{"S(0.75) = 109.98 \\times e^{0.13} = 125.24\\text{€}"}</K></DemoStep>
+          <DemoStep num={7} rule="Solution exacte du GBM" ruleDetail="S(1.00)" accent={ACCENT}><K>{"S(1.00) = 125.24 \\times e^{0.018} = 127.51\\text{€}"}</K>. <K>{"E[S_1] = 100 \\times e^{0.10} = 110.5\\text{€}"}</K> (1 trajectoire ≠ espérance).</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ChartWrapper title={`GBM : S₀=${S0}€, µ=${(mu * 100).toFixed(0)}%, σ=${(sigma * 100).toFixed(0)}%, T=${T2.toFixed(1)}a`} accent={ACCENT} height={300}>
@@ -475,11 +480,13 @@ export function MeanRevTab() {
 
       <Accordion title="Exercice — Demi-vie d'un processus OU" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Un modèle OU calibré sur le gaz naturel donne κ = 3.5/an. X₀ = 6 $/MMBtu, θ = 4 $/MMBtu. Calculez la demi-vie et E[X(t)] à t = 0.5 an.</p>
-        <Step num={1} accent={ACCENT}>Demi-vie : t₁/₂ = ln(2)/κ = ln(2)/3.5 = 0.693/3.5 = 0.198 an = 72 jours</Step>
-        <Step num={2} accent={ACCENT}>Interprétation : en 72 jours, l'écart initial (6 - 4 = 2$/MMBtu) sera réduit de moitié → E[X(72j)] = 5 $/MMBtu</Step>
-        <Step num={3} accent={ACCENT}>E[X(0.5)] = 4 + (6 - 4) × e^(-3.5 × 0.5) = 4 + 2 × e^(-1.75) = 4 + 2 × 0.1738 = 4.35 $/MMBtu</Step>
-        <Step num={4} accent={ACCENT}>Var[X(∞)] = σ²/(2κ). Si σ = 1.2 $/MMBtu/an^(1/2) : Var[X(∞)] = 1.44/(2×3.5) = 0.206 → σ(X∞) = 0.45 $/MMBtu</Step>
-        <FormulaBox accent={ACCENT}>Demi-vie = 72 jours, E[X(6 mois)] = 4.35 $/MMBtu, σ_stationnaire = 0.45 $/MMBtu</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"t_{1/2} = 72\\text{ jours},\\; E[X(0.5)] = 4.35\\text{ \\$/MMBtu},\\; \\sigma_{\\infty} = 0.45\\text{ \\$/MMBtu}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Demi-vie" ruleDetail="t₁/₂ = ln(2)/κ" accent={ACCENT}><K>{"t_{1/2} = \\frac{\\ln 2}{\\kappa} = \\frac{0.693}{3.5} = 0.198\\text{ an} = 72\\text{ jours}"}</K></DemoStep>
+          <DemoStep num={2} rule="Processus d'Ornstein-Uhlenbeck" ruleDetail="E[X(t)] = θ + (X₀−θ)e^{−κt}" accent={ACCENT}>En 72 jours, l'écart initial <K>{"(6 - 4 = 2\\text{ \\$/MMBtu})"}</K> sera réduit de moitié → <K>{"E[X(72j)] = 5\\text{ \\$/MMBtu}"}</K></DemoStep>
+          <DemoStep num={3} rule="Processus d'Ornstein-Uhlenbeck" ruleDetail="E[X(t)] = θ + (X₀−θ)e^{−κt}" accent={ACCENT}><K>{"E[X(0.5)] = 4 + 2 \\times e^{-1.75} = 4 + 2 \\times 0.1738 = 4.35\\text{ \\$/MMBtu}"}</K></DemoStep>
+          <DemoStep num={4} rule="Processus d'Ornstein-Uhlenbeck" ruleDetail="Var[X(∞)] = σ²/(2κ)" accent={ACCENT}><K>{"\\mathrm{Var}[X(\\infty)] = \\frac{\\sigma^2}{2\\kappa} = \\frac{1.44}{7} = 0.206"}</K> → <K>{"\\sigma_{\\infty} = 0.45\\text{ \\$/MMBtu}"}</K></DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ChartWrapper title={`Processus OU — Prix pétrole avec mean-reversion vers θ=${theta}$/bbl`} accent={ACCENT} height={300}>
@@ -629,32 +636,36 @@ export function ItoTab() {
 
       <Accordion title="Exercice — Lemme d'Itô appliqué à f(S) = S²" accent={ACCENT} badge="Entraînement">
         <p style={{ color: T.text }}>Si dS = µS dt + σS dW, trouvez df où f(S) = S²</p>
-        <Step num={1} accent={ACCENT}>∂f/∂S = 2S, ∂²f/∂S² = 2, ∂f/∂t = 0</Step>
-        <Step num={2} accent={ACCENT}>df = [0 + µS × 2S + (1/2)σ²S² × 2]dt + σS × 2S dW</Step>
-        <Step num={3} accent={ACCENT}>df = [2µS² + σ²S²]dt + 2σS² dW</Step>
-        <FormulaBox accent={ACCENT}>df = S²(2µ + σ²)dt + 2σS² dW</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Le terme σ² supplémentaire vient de la correction d'Itô (dW² = dt).</div>
+        <FormulaBox accent={ACCENT}><K>{"df = S^2(2\\mu + \\sigma^2)\\,dt + 2\\sigma S^2\\,dW"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="f(S) expansion" accent={ACCENT}>Dérivées : <K>{"\\partial f/\\partial S = 2S,\\; \\partial^2 f/\\partial S^2 = 2,\\; \\partial f/\\partial t = 0"}</K></DemoStep>
+          <DemoStep num={2} rule="Lemme d'Itô" ruleDetail="df = f'dX + ½f''(dX)²" accent={ACCENT}><K>{"df = [0 + \\mu S \\cdot 2S + \\tfrac{1}{2}\\sigma^2 S^2 \\cdot 2]\\,dt + \\sigma S \\cdot 2S\\,dW"}</K></DemoStep>
+          <DemoStep num={3} rule="Lemme d'Itô" ruleDetail="dW² = dt" accent={ACCENT}><K>{"df = [2\\mu S^2 + \\sigma^2 S^2]\\,dt + 2\\sigma S^2\\,dW"}</K>. Le terme <K>{"\\sigma^2"}</K> supplémentaire vient de la correction d'Itô (<K>{"dW^2 = dt"}</K>).</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <Accordion title="Exercice — Lemme d'Itô appliqué à f(S) = √S" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Si dS = µS dt + σS dW (GBM), trouvez l'EDS de Y = √S = S^(1/2).</p>
-        <Step num={1} accent={ACCENT}>f(S) = S^(1/2) → f'(S) = (1/2)S^(-1/2), f''(S) = -(1/4)S^(-3/2)</Step>
-        <Step num={2} accent={ACCENT}>Lemme d'Itô : dY = [(1/2)S^(-1/2) × µS + (1/2)σ²S² × (-1/4)S^(-3/2)]dt + (1/2)S^(-1/2) × σS dW</Step>
-        <Step num={3} accent={ACCENT}>= [(µ/2)S^(1/2) - (σ²/8)S^(1/2)]dt + (σ/2)S^(1/2) dW</Step>
-        <Step num={4} accent={ACCENT}>= Y[(µ - σ²/8)/2 × 2]dt + (σ/2)Y dW   (en substituant Y = S^(1/2))</Step>
-        <FormulaBox accent={ACCENT}>dY = Y(µ/2 - σ²/8)dt + (σ/2)Y dW — Y suit aussi un GBM, avec drift µ/2 - σ²/8 et vol σ/2</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Application : si S est un prix d'action, Y = √S suit aussi un GBM (réduction de drift et vol par 2).</div>
+        <FormulaBox accent={ACCENT}><K>{"dY = Y\\Big(\\frac{\\mu}{2} - \\frac{\\sigma^2}{8}\\Big)dt + \\frac{\\sigma}{2}Y\\,dW"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="f(S) expansion" accent={ACCENT}>Dérivées : <K>{"f(S)=S^{1/2},\\; f'(S)=\\tfrac{1}{2}S^{-1/2},\\; f''(S)=-\\tfrac{1}{4}S^{-3/2}"}</K></DemoStep>
+          <DemoStep num={2} rule="Lemme d'Itô" ruleDetail="df = f'dX + ½f''(dX)²" accent={ACCENT}><K>{"dY = \\big[\\tfrac{1}{2}S^{-1/2}\\cdot\\mu S + \\tfrac{1}{2}\\sigma^2 S^2\\cdot(-\\tfrac{1}{4}S^{-3/2})\\big]dt + \\tfrac{1}{2}S^{-1/2}\\cdot\\sigma S\\,dW"}</K></DemoStep>
+          <DemoStep num={3} rule="Lemme d'Itô" ruleDetail="simplification" accent={ACCENT}><K>{"= \\big[\\tfrac{\\mu}{2}S^{1/2} - \\tfrac{\\sigma^2}{8}S^{1/2}\\big]dt + \\tfrac{\\sigma}{2}S^{1/2}\\,dW"}</K></DemoStep>
+          <DemoStep num={4} rule="Lemme d'Itô" ruleDetail="Y = √S" accent={ACCENT}>En substituant <K>{"Y = S^{1/2}"}</K> : <K>{"dY = Y(\\mu/2 - \\sigma^2/8)\\,dt + (\\sigma/2)Y\\,dW"}</K>. Y suit aussi un GBM avec drift <K>{"\\mu/2 - \\sigma^2/8"}</K> et vol <K>{"\\sigma/2"}</K>.</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <Accordion title="Exercice — Processus OU via le lemme d'Itô" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text }}>Montrez que la solution du processus OU dX = κ(θ - X)dt + σdW est X(t) = X₀e^(-κt) + θ(1-e^(-κt)) + σ∫₀ᵗ e^(-κ(t-s))dW(s).</p>
-        <Step num={1} accent={ACCENT}>Posons Z(t) = X(t)e^(κt) (changement de variable). Cherchons dZ.</Step>
-        <Step num={2} accent={ACCENT}>Lemme d'Itô sur f(X,t) = X × e^(κt) : ∂f/∂t = κXe^(κt), ∂f/∂X = e^(κt), ∂²f/∂X² = 0</Step>
-        <Step num={3} accent={ACCENT}>dZ = κXe^(κt)dt + e^(κt)dX = κXe^(κt)dt + e^(κt)[κ(θ-X)dt + σdW]</Step>
-        <Step num={4} accent={ACCENT}>= e^(κt)[κXdt + κθdt - κXdt + σdW] = κθe^(κt)dt + σe^(κt)dW</Step>
-        <Step num={5} accent={ACCENT}>Intégration : Z(t) - Z(0) = κθ∫₀ᵗ e^(κs)ds + σ∫₀ᵗ e^(κs)dW(s)</Step>
-        <Step num={6} accent={ACCENT}>= θ(e^(κt) - 1) + σ∫₀ᵗ e^(κs)dW(s)</Step>
-        <FormulaBox accent={ACCENT}>X(t) = Z(t)e^(-κt) = X₀e^(-κt) + θ(1-e^(-κt)) + σ∫₀ᵗ e^(-κ(t-s))dW(s) ✓</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"X(t) = X_0 e^{-\\kappa t} + \\theta(1-e^{-\\kappa t}) + \\sigma\\!\\int_0^t e^{-\\kappa(t-s)}dW(s)"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Lemme d'Itô" ruleDetail="changement de variable" accent={ACCENT}>Posons <K>{"Z(t) = X(t)\\,e^{\\kappa t}"}</K> (changement de variable). Cherchons dZ.</DemoStep>
+          <DemoStep num={2} rule="Lemme d'Itô" ruleDetail="f(X,t) = X·e^{κt}" accent={ACCENT}>Dérivées : <K>{"\\partial f/\\partial t = \\kappa X e^{\\kappa t},\\; \\partial f/\\partial X = e^{\\kappa t},\\; \\partial^2 f/\\partial X^2 = 0"}</K></DemoStep>
+          <DemoStep num={3} rule="Lemme d'Itô" ruleDetail="dZ = ∂f/∂t dt + ∂f/∂X dX" accent={ACCENT}><K>{"dZ = \\kappa X e^{\\kappa t}dt + e^{\\kappa t}[\\kappa(\\theta - X)dt + \\sigma\\,dW]"}</K></DemoStep>
+          <DemoStep num={4} rule="Lemme d'Itô" ruleDetail="simplification" accent={ACCENT}><K>{"= e^{\\kappa t}[\\kappa X + \\kappa\\theta - \\kappa X]dt + \\sigma e^{\\kappa t}dW = \\kappa\\theta e^{\\kappa t}dt + \\sigma e^{\\kappa t}dW"}</K></DemoStep>
+          <DemoStep num={5} rule="Processus d'Ornstein-Uhlenbeck" ruleDetail="intégration" accent={ACCENT}><K>{"Z(t) - Z(0) = \\kappa\\theta\\!\\int_0^t e^{\\kappa s}ds + \\sigma\\!\\int_0^t e^{\\kappa s}dW(s)"}</K></DemoStep>
+          <DemoStep num={6} rule="Processus d'Ornstein-Uhlenbeck" ruleDetail="X = Ze^{−κt}" accent={ACCENT}><K>{"= \\theta(e^{\\kappa t}-1) + \\sigma\\!\\int_0^t e^{\\kappa s}dW(s)"}</K>. Donc <K>{"X(t) = X_0 e^{-\\kappa t} + \\theta(1-e^{-\\kappa t}) + \\sigma\\!\\int_0^t e^{-\\kappa(t-s)}dW(s)"}</K> ✓</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -767,21 +778,25 @@ export function SimulTab() {
 
       <Accordion title="Exercice — Nombre de simulations nécessaires" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>Un call vaut 5€ avec σ_payoff ≈ 20€. Combien de simulations pour une précision de ±0.10€ (95%) ? De ±0.01€ ?</p>
-        <Step num={1} accent={ACCENT}>Formule : N = (1.96 × σ_payoff / ε)² où ε est la demi-largeur souhaitée</Step>
-        <Step num={2} accent={ACCENT}>Pour ε = 0.10€ : N = (1.96 × 20 / 0.10)² = (392)² = 153 664 simulations</Step>
-        <Step num={3} accent={ACCENT}>Pour ε = 0.01€ : N = (1.96 × 20 / 0.01)² = (3920)² = 15 366 400 simulations (~15M !)</Step>
-        <Step num={4} accent={ACCENT}>Avec variables antithétiques (variance réduite de 50%) : N divisé par 2 → gain de CPU ×2</Step>
-        <FormulaBox accent={ACCENT}>N_nécessaire = (1.96 × σ / ε)² — multiplier précision par 10 → multiplier N par 100</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>En pratique : 10 000 sims pour une estimation rapide, 1M pour publication, 10M pour pricing de salle de marchés.</div>
+        <FormulaBox accent={ACCENT}><K>{"N = \\Big(\\frac{1.96\\,\\sigma}{\\varepsilon}\\Big)^{\\!2}"}</K> — précision ×10 → N ×100</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Erreur standard" ruleDetail="N = (1.96·σ/ε)²" accent={ACCENT}>Formule : <K>{"N = \\Big(\\frac{1.96 \\times \\sigma_{\\text{payoff}}}{\\varepsilon}\\Big)^{\\!2}"}</K> où ε est la demi-largeur souhaitée</DemoStep>
+          <DemoStep num={2} rule="Loi des grands nombres" ruleDetail="convergence en 1/√N" accent={ACCENT}>Pour ε = 0.10€ : <K>{"N = (1.96 \\times 20 / 0.10)^2 = 392^2 = 153\\,664"}</K> simulations</DemoStep>
+          <DemoStep num={3} rule="Loi des grands nombres" ruleDetail="convergence en 1/√N" accent={ACCENT}>Pour ε = 0.01€ : <K>{"N = (3920)^2 = 15\\,366\\,400"}</K> simulations (~15M !)</DemoStep>
+          <DemoStep num={4} rule="Erreur standard" ruleDetail="réduction de variance" accent={ACCENT}>Avec variables antithétiques (variance réduite de 50%) : N divisé par 2 → gain de CPU ×2. En pratique : 10 000 sims pour estimation rapide, 1M pour publication, 10M pour pricing de salle de marchés.</DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ExampleBlock title="Cas concret : portefeuille énergie à 1 an" accent={ACCENT}>
         <p>100M$ en WTI (σ=30%) + 50M$ en Gaz Nat (σ=25%), ρ=0.5</p>
-        <Step num={1} accent={ACCENT}>w₁=2/3, w₂=1/3 (en poids du portefeuille total 150M$)</Step>
-        <Step num={2} accent={ACCENT}>Cov = 0.5 × 0.30 × 0.25 = 0.0375</Step>
-        <Step num={3} accent={ACCENT}>σ²_p = (2/3)² × 0.09 + 2×(2/3)×(1/3)×0.0375 + (1/3)² × 0.0625</Step>
-        <Step num={4} accent={ACCENT}>= 0.04 + 0.01667 + 0.006944 = 0.063611</Step>
-        <Step num={5} accent={ACCENT}>σ_p = 25.2% → VaR 95% (1 an) = 1.645 × 0.252 × 150M$ = 62.1M$</Step>
+        <FormulaBox accent={ACCENT}><K>{"\\sigma_p = 25.2\\%,\\; \\text{VaR}_{95\\%} = 62.1\\text{M\\$}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Loi des grands nombres" ruleDetail="poids du portefeuille" accent={ACCENT}><K>{"w_1 = 2/3,\\; w_2 = 1/3"}</K> (portefeuille total 150M$)</DemoStep>
+          <DemoStep num={2} rule="Loi des grands nombres" ruleDetail="Cov = ρ·σ₁·σ₂" accent={ACCENT}><K>{"\\mathrm{Cov} = 0.5 \\times 0.30 \\times 0.25 = 0.0375"}</K></DemoStep>
+          <DemoStep num={3} rule="Erreur standard" ruleDetail="σ²_p = Σ wᵢwⱼ Covᵢⱼ" accent={ACCENT}><K>{"\\sigma_p^2 = (2/3)^2 \\times 0.09 + 2 \\times \\tfrac{2}{3} \\times \\tfrac{1}{3} \\times 0.0375 + (1/3)^2 \\times 0.0625"}</K></DemoStep>
+          <DemoStep num={4} rule="Erreur standard" ruleDetail="calcul numérique" accent={ACCENT}><K>{"= 0.04 + 0.01667 + 0.006944 = 0.063611"}</K></DemoStep>
+          <DemoStep num={5} rule="Erreur standard" ruleDetail="VaR = z·σ·V" accent={ACCENT}><K>{"\\sigma_p = 25.2\\%"}</K> → VaR 95% (1 an) = <K>{"1.645 \\times 0.252 \\times 150\\text{M\\$} = 62.1\\text{M\\$}"}</K></DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -964,24 +979,31 @@ export function JumpTab() {
 
       <ExampleBlock title="Spike de gaz naturel — Rupture d'approvisionnement" accent={ACCENT}>
         <p>Gaz naturel : θ=3$/MMBtu, κ=4, σ=35%, λ=6 sauts/an, µ_J=0%, σ_J=25%</p>
-        <Step num={1} accent={ACCENT}>P(≥1 saut par trimestre) = 1 - e^(-6×0.25) = 1 - e^(-1.5) = 77.7%</Step>
-        <Step num={2} accent={ACCENT}>Saut haussier typique (+1σ_J) : e^(0.25) - 1 = +28% sur le prix courant</Step>
-        <Step num={3} accent={ACCENT}>Demi-vie mean-reversion : ln(2)/4 = 63 jours → retour vers θ après ~2 mois</Step>
-        <Step num={4} accent={ACCENT}>Vol totale ≈ √(σ² + λ(µ_J² + σ_J²)) = √(0.1225 + 6×0.0625) = √0.4975 ≈ 71% (vs 35% sans sauts !)</Step>
+        <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 71\\%\\text{ (vs 35% sans sauts)}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Processus de Poisson" ruleDetail="P(N≥1) = 1−e^{−λt}" accent={ACCENT}><K>{"P(\\geq 1\\text{ saut/trimestre}) = 1 - e^{-6 \\times 0.25} = 1 - e^{-1.5} = 77.7\\%"}</K></DemoStep>
+          <DemoStep num={2} rule="MRJD" ruleDetail="saut multiplicatif e^Y−1" accent={ACCENT}>Saut haussier typique (+1σ_J) : <K>{"e^{0.25} - 1 = +28\\%"}</K> sur le prix courant</DemoStep>
+          <DemoStep num={3} rule="Demi-vie" ruleDetail="t₁/₂ = ln(2)/κ" accent={ACCENT}><K>{"t_{1/2} = \\ln(2)/4 = 63\\text{ jours}"}</K> → retour vers θ après ~2 mois</DemoStep>
+          <DemoStep num={4} rule="MRJD" ruleDetail="σ_total = √(σ²+λ(µ²_J+σ²_J))" accent={ACCENT}><K>{"\\sigma_{\\text{tot}} = \\sqrt{0.1225 + 6 \\times 0.0625} = \\sqrt{0.4975} \\approx 71\\%"}</K> (vs 35% sans sauts !)</DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <Accordion title="Exercice — Probabilité de saut (Poisson)" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Le pétrole subit λ=4 sauts/an. Quelle est la probabilité d'avoir ≥2 sauts en 6 mois ?</p>
-        <Step num={1} accent={ACCENT}>t = 0.5 an → λt = 4 × 0.5 = 2</Step>
-        <Step num={2} accent={ACCENT}>P(N≥2) = 1 - P(N=0) - P(N=1) = 1 - e^(-2) - 2e^(-2) = 1 - 3e^(-2)</Step>
-        <FormulaBox accent={ACCENT}>= 1 - 3 × 0.1353 = 59.4%</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"P(N \\geq 2) = 59.4\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Processus de Poisson" ruleDetail="λt = intensité × durée" accent={ACCENT}><K>{"t = 0.5\\text{ an} \\Rightarrow \\lambda t = 4 \\times 0.5 = 2"}</K></DemoStep>
+          <DemoStep num={2} rule="Processus de Poisson" ruleDetail="P(N=k) = e^{−λt}(λt)^k/k!" accent={ACCENT}><K>{"P(N \\geq 2) = 1 - P(N=0) - P(N=1) = 1 - e^{-2} - 2e^{-2} = 1 - 3 \\times 0.1353 = 59.4\\%"}</K></DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice — Vol totale MRJD" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>σ=20%, λ=8, µ_J=0, σ_J=15%. Calculez la volatilité totale effective.</p>
-        <Step num={1} accent={ACCENT}>Variance diffusion : σ² = 0.04</Step>
-        <Step num={2} accent={ACCENT}>Variance sauts : λ×(µ_J² + σ_J²) = 8×(0 + 0.0225) = 0.18</Step>
-        <Step num={3} accent={ACCENT}>Variance totale = 0.04 + 0.18 = 0.22</Step>
-        <FormulaBox accent={ACCENT}>σ_totale ≈ √0.22 = 46.9%  (vs 20% sans sauts — les sauts ×2.3 la vol !)</FormulaBox>
+        <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 46.9\\%\\text{ (vs 20% sans sauts)}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="MRJD" ruleDetail="σ² diffusion" accent={ACCENT}>Variance diffusion : <K>{"\\sigma^2 = 0.04"}</K></DemoStep>
+          <DemoStep num={2} rule="MRJD" ruleDetail="λ(µ²_J + σ²_J)" accent={ACCENT}>Variance sauts : <K>{"\\lambda(\\mu_J^2 + \\sigma_J^2) = 8 \\times 0.0225 = 0.18"}</K></DemoStep>
+          <DemoStep num={3} rule="MRJD" ruleDetail="σ_total = √(σ²+var_sauts)" accent={ACCENT}>Variance totale = <K>{"0.04 + 0.18 = 0.22"}</K> → <K>{"\\sigma_{\\text{tot}} = \\sqrt{0.22} = 46.9\\%"}</K> — les sauts ×2.3 la vol !</DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )

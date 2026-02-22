@@ -7,6 +7,7 @@ import { T } from '../../design/tokens'
 import {
   ModuleHeader, TabBar, Panel, FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SymbolLegend, SectionTitle, InfoChip, Grid, ChartWrapper,
+  Demonstration, DemoStep, K,
 } from '../../design/components'
 
 const ACCENT = T.a1
@@ -219,52 +220,103 @@ export function DerivTab() {
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Dérivée de base" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text, marginBottom: 12 }}>Calculez f'(x) pour f(x) = 3x⁴ - 2x² + 5x - 7</p>
-        <div style={{ color: T.muted, fontSize: 13, marginBottom: 10 }}>Corrigé :</div>
-        <Step num={1} accent={ACCENT}>Règle de puissance terme par terme</Step>
-        <Step num={2} accent={ACCENT}>d/dx(3x⁴) = 12x³</Step>
-        <Step num={3} accent={ACCENT}>d/dx(-2x²) = -4x</Step>
-        <Step num={4} accent={ACCENT}>d/dx(5x) = 5 ; d/dx(-7) = 0</Step>
-        <FormulaBox accent={ACCENT}>f'(x) = 12x³ - 4x + 5</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"f'(x) = 12x^3 - 4x + 5"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Linéarité de la dérivée" ruleDetail="(af + bg)' = af' + bg'" accent={ACCENT}>
+            On dérive chaque terme séparément : <K>{"f'(x) = \\frac{d}{dx}(3x^4) - \\frac{d}{dx}(2x^2) + \\frac{d}{dx}(5x) - \\frac{d}{dx}(7)"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Règle de puissance" ruleDetail="d/dx(xⁿ) = n·xⁿ⁻¹" accent={ACCENT}>
+            <K>{"\\frac{d}{dx}(3x^4) = 3 \\times 4x^{4-1} = 12x^3"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Règle de puissance" ruleDetail="d/dx(xⁿ) = n·xⁿ⁻¹" accent={ACCENT}>
+            <K>{"\\frac{d}{dx}(-2x^2) = -2 \\times 2x^{2-1} = -4x"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Dérivée d'un monôme et constante" ruleDetail="d/dx(cx) = c, d/dx(c) = 0" accent={ACCENT}>
+            <K>{"\\frac{d}{dx}(5x) = 5"}</K> et <K>{"\\frac{d}{dx}(-7) = 0"}</K> (la dérivée d'une constante est toujours 0)
+          </DemoStep>
+          <FormulaBox accent={ACCENT} label="Résultat final"><K>{"f'(x) = 12x^3 - 4x + 5"}</K></FormulaBox>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Règle de chaîne : vitesse d'une fusée" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
           La distance d'une fusée est d(t) = 3t² + 2t. Calculez la vitesse v(t) = d′(t) et l'accélération a(t) = v′(t).
         </p>
-        <Step num={1} accent={ACCENT}>v(t) = d′(t) = d/dt(3t² + 2t) = 6t + 2</Step>
-        <Step num={2} accent={ACCENT}>a(t) = v′(t) = d/dt(6t + 2) = 6</Step>
-        <FormulaBox accent={ACCENT}>v(t) = 6t + 2   |   a(t) = 6 (accélération constante)</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>À t = 3s : vitesse = 6×3 + 2 = 20 m/s. L'accélération est constante : la fusée gagne 6 m/s chaque seconde.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"v(t) = 6t + 2 \\quad|\\quad a(t) = 6"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Règle de puissance" ruleDetail="d/dt(tⁿ) = n·tⁿ⁻¹" accent={ACCENT}>
+            <K>{"v(t) = d'(t) = \\frac{d}{dt}(3t^2 + 2t)"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Linéarité de la dérivée" ruleDetail="(af + bg)' = af' + bg'" accent={ACCENT}>
+            <K>{"v(t) = 3 \\cdot 2t + 2 \\cdot 1 = 6t + 2"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Règle de puissance (ordre 2)" ruleDetail="Accélération = dérivée de la vitesse" accent={ACCENT}>
+            <K>{"a(t) = v'(t) = \\frac{d}{dt}(6t + 2) = 6"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Évaluation numérique" accent={ACCENT}>
+            À t = 3s : v(3) = 6×3 + 2 = 20 m/s. L'accélération est constante (6 m/s²) : la fusée gagne 6 m/s chaque seconde.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Règle de chaîne : composition de fonctions" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
           Soit h(x) = sin(x²). Calculez h′(x) par la règle de chaîne.
         </p>
-        <Step num={1} accent={ACCENT}>Identifier : h = f∘g avec g(x) = x² et f(u) = sin(u)</Step>
-        <Step num={2} accent={ACCENT}>g′(x) = 2x   et   f′(u) = cos(u)</Step>
-        <Step num={3} accent={ACCENT}>Règle de chaîne : h′(x) = f′(g(x)) × g′(x) = cos(x²) × 2x</Step>
-        <FormulaBox accent={ACCENT}>h′(x) = 2x · cos(x²)</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>En x = √(π/2) : h′ = 2√(π/2) × cos(π/2) = 0 — point stationnaire (extremum local).</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"h'(x) = 2x \\cdot \\cos(x^2)"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Identification de la composition" ruleDetail="h = f ∘ g → appliquer la règle de chaîne" accent={ACCENT}>
+            Poser <K>{"g(x) = x^2"}</K> (fonction intérieure) et <K>{"f(u) = \\sin(u)"}</K> (fonction extérieure), donc <K>{"h(x) = f(g(x))"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Dérivation des fonctions élémentaires" ruleDetail="(xⁿ)' = nxⁿ⁻¹, (sin u)' = cos u" accent={ACCENT}>
+            <K>{"g'(x) = 2x"}</K> et <K>{"f'(u) = \\cos(u)"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Règle de la chaîne" ruleDetail="(f∘g)'(x) = f'(g(x)) · g'(x)" accent={ACCENT}>
+            <K>{"h'(x) = f'(g(x)) \\cdot g'(x) = \\cos(x^2) \\cdot 2x = 2x\\cos(x^2)"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Vérification numérique" accent={ACCENT}>
+            En <K>{"x = \\sqrt{\\pi/2}"}</K> : <K>{"h' = 2\\sqrt{\\pi/2} \\cdot \\cos(\\pi/2) = 0"}</K> — point stationnaire (extremum local).
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 4 — Dérivées partielles : surface d'un cylindre" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 12 }}>
           La surface latérale d'un cylindre est S(r, h) = 2π·r·h. Calculez ∂S/∂r et ∂S/∂h, puis évaluez-les en r=3, h=10.
         </p>
-        <Step num={1} accent={ACCENT}>∂S/∂r : h est constant → ∂S/∂r = 2π·h</Step>
-        <Step num={2} accent={ACCENT}>∂S/∂h : r est constant → ∂S/∂h = 2π·r</Step>
-        <Step num={3} accent={ACCENT}>En r=3, h=10 : ∂S/∂r = 2π×10 ≈ 62.8 cm²/cm</Step>
-        <Step num={4} accent={ACCENT}>En r=3, h=10 : ∂S/∂h = 2π×3 ≈ 18.8 cm²/cm</Step>
-        <FormulaBox accent={ACCENT}>∂S/∂r|_(3,10) ≈ 62.8   |   ∂S/∂h|_(3,10) ≈ 18.8</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Interprétation : augmenter le rayon de 1 cm ajoute plus de surface (~63 cm²) qu'augmenter la hauteur de 1 cm (~19 cm²), car le rayon intervient dans toute la circonférence.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\left.\\frac{\\partial S}{\\partial r}\\right|_{(3,10)} \\approx 62.8 \\quad|\\quad \\left.\\frac{\\partial S}{\\partial h}\\right|_{(3,10)} \\approx 18.8"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Dérivée partielle" ruleDetail="∂/∂r : traiter h comme constante" accent={ACCENT}>
+            <K>{"\\frac{\\partial S}{\\partial r} = \\frac{\\partial}{\\partial r}(2\\pi r h) = 2\\pi h"}</K> (h est une constante, on dérive r → facteur 1)
+          </DemoStep>
+          <DemoStep num={2} rule="Dérivée partielle" ruleDetail="∂/∂h : traiter r comme constante" accent={ACCENT}>
+            <K>{"\\frac{\\partial S}{\\partial h} = \\frac{\\partial}{\\partial h}(2\\pi r h) = 2\\pi r"}</K> (r est une constante, on dérive h → facteur 1)
+          </DemoStep>
+          <DemoStep num={3} rule="Évaluation numérique" accent={ACCENT}>
+            En r=3, h=10 : <K>{"\\frac{\\partial S}{\\partial r} = 2\\pi \\times 10 \\approx 62.8"}</K> cm²/cm
+          </DemoStep>
+          <DemoStep num={4} rule="Évaluation numérique" accent={ACCENT}>
+            En r=3, h=10 : <K>{"\\frac{\\partial S}{\\partial h} = 2\\pi \\times 3 \\approx 18.8"}</K> cm²/cm.
+            Interprétation : augmenter le rayon de 1 cm ajoute ~63 cm² (car le rayon intervient dans toute la circonférence) vs ~19 cm² pour la hauteur.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 5 — Taylor : approximation de e^x" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
           Approximez e^(0.3) avec un développement de Taylor d'ordre 3 autour de x₀ = 0. Comparez à la valeur exacte.
         </p>
-        <Step num={1} accent={ACCENT}>f(x) = eˣ → toutes les dérivées valent eˣ. En x₀=0 : f(0) = f′(0) = f″(0) = f‴(0) = 1.</Step>
-        <Step num={2} accent={ACCENT}>Taylor ordre 3 : eˣ ≈ 1 + x + x²/2 + x³/6</Step>
-        <Step num={3} accent={ACCENT}>En x = 0.3 : 1 + 0.3 + 0.09/2 + 0.027/6 = 1 + 0.3 + 0.045 + 0.0045 = 1.3495</Step>
-        <FormulaBox accent={ACCENT}>Approximation : e^(0.3) ≈ 1.3495   |   Valeur exacte : 1.34986…</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>Erreur relative : (1.34986 − 1.3495) / 1.34986 ≈ 0.027%. Trois termes suffisent pour une précision de l'ordre du millième.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"e^{0.3} \\approx 1.3495 \\quad (\\text{exact : } 1.34986\\ldots)"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Dérivées de l'exponentielle" ruleDetail="d/dx(eˣ) = eˣ, toutes les dérivées sont identiques" accent={ACCENT}>
+            <K>{"f(x) = e^x"}</K> → toutes les dérivées valent <K>{"e^x"}</K>. En <K>{"x_0 = 0"}</K> : <K>{"f(0) = f'(0) = f''(0) = f'''(0) = 1"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Formule de Taylor" ruleDetail="f(x) ≈ Σ f⁽ⁿ⁾(x₀)/n! · (x−x₀)ⁿ" accent={ACCENT}>
+            Taylor ordre 3 : <K>{"e^x \\approx 1 + x + \\frac{x^2}{2!} + \\frac{x^3}{3!} = 1 + x + \\frac{x^2}{2} + \\frac{x^3}{6}"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Substitution numérique" accent={ACCENT}>
+            En x = 0.3 : <K>{"1 + 0.3 + \\frac{0.09}{2} + \\frac{0.027}{6} = 1 + 0.3 + 0.045 + 0.0045 = 1.3495"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Calcul d'erreur relative" accent={ACCENT}>
+            Erreur = <K>{"\\frac{|1.34986 - 1.3495|}{1.34986} \\approx 0.027\\%"}</K>. Trois termes suffisent pour une précision au millième.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -387,30 +439,57 @@ export function IntegTab() {
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
       <Accordion title="Exercice 1 — Intégrale simple" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Calculez ∫[0,3] 2x dx</p>
-        <Step num={1} accent={ACCENT}>Primitive de 2x : F(x) = x²</Step>
-        <Step num={2} accent={ACCENT}>F(3) - F(0) = 9 - 0 = 9</Step>
-        <FormulaBox accent={ACCENT}>∫[0,3] 2x dx = 9</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Interprétation géométrique : triangle de base 3, hauteur 6 → aire = (3×6)/2 = 9 ✓</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\int_0^3 2x\\,dx = 9"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Primitive (règle de puissance intégrale)" ruleDetail="∫ xⁿ dx = xⁿ⁺¹/(n+1) + C" accent={ACCENT}>
+            Primitive de <K>{"2x"}</K> : <K>{"F(x) = x^2"}</K> car <K>{"F'(x) = 2x \\checkmark"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Théorème fondamental du calcul" ruleDetail="∫[a,b] f(x)dx = F(b) − F(a)" accent={ACCENT}>
+            <K>{"F(3) - F(0) = 3^2 - 0^2 = 9 - 0 = 9"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Vérification géométrique" accent={ACCENT}>
+            Aire du triangle : base = 3, hauteur = 2×3 = 6 → aire = (3×6)/2 = 9 ✓
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Probabilité et intégrale gaussienne" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text, marginBottom: 8 }}>La taille des adultes suit une loi N(175, 7²) cm. Quelle est la probabilité d'avoir entre 168 et 182 cm ?</p>
-        <Step num={1} accent={ACCENT}>Standardiser : Z = (X − 175) / 7. L'intervalle [168, 182] devient [(168−175)/7, (182−175)/7] = [−1, +1].</Step>
-        <Step num={2} accent={ACCENT}>P(168 ≤ X ≤ 182) = P(−1 ≤ Z ≤ 1) = Φ(1) − Φ(−1)</Step>
-        <Step num={3} accent={ACCENT}>Par symétrie : Φ(−1) = 1 − Φ(1). Φ(1) ≈ 0.8413</Step>
-        <FormulaBox accent={ACCENT}>P(168 ≤ X ≤ 182) = 2 × 0.8413 − 1 ≈ 68.3%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12 }}>Règle empirique : ±1σ couvre ~68% de la population, ±2σ couvre ~95%, ±3σ couvre ~99.7%.</div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(168 \\le X \\le 182) = 2 \\times 0.8413 - 1 \\approx 68.3\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Standardisation (Z-score)" ruleDetail="Z = (X − μ) / σ" accent={ACCENT}>
+            <K>{"Z = \\frac{X - 175}{7}"}</K>. L'intervalle [168, 182] devient <K>{"\\left[\\frac{168-175}{7},\\;\\frac{182-175}{7}\\right] = [-1, +1]"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Propriété de la CDF normale" ruleDetail="P(a ≤ Z ≤ b) = Φ(b) − Φ(a)" accent={ACCENT}>
+            <K>{"P(168 \\le X \\le 182) = P(-1 \\le Z \\le 1) = \\Phi(1) - \\Phi(-1)"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Symétrie de la loi normale" ruleDetail="Φ(−z) = 1 − Φ(z)" accent={ACCENT}>
+            Par symétrie : <K>{"\\Phi(-1) = 1 - \\Phi(1)"}</K>. Table : <K>{"\\Phi(1) \\approx 0.8413"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Calcul final" accent={ACCENT}>
+            <K>{"P = \\Phi(1) - (1 - \\Phi(1)) = 2 \\times 0.8413 - 1 = 0.6826 \\approx 68.3\\%"}</K>
+            <br />Règle empirique : ±1σ couvre ~68%, ±2σ couvre ~95%, ±3σ couvre ~99.7%.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 3 — Espérance d'une variable tronquée" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
           X suit une loi uniforme sur [0, 4]. Calculez E[X], E[X²], puis E[max(X − 2, 0)] = ∫[2, 4] (x−2) · (1/4) dx.
         </p>
-        <Step num={1} accent={ACCENT}>Densité f(x) = 1/4 sur [0,4]. E[X] = ∫[0,4] x × (1/4) dx = (1/4) × [x²/2]₀⁴ = (1/4) × 8 = 2</Step>
-        <Step num={2} accent={ACCENT}>E[X²] = ∫[0,4] x² × (1/4) dx = (1/4) × [x³/3]₀⁴ = (1/4) × 64/3 = 16/3 ≈ 5.33</Step>
-        <Step num={3} accent={ACCENT}>E[max(X−2, 0)] = ∫[2,4] (x−2)/4 dx = (1/4) × [(x−2)²/2]₂⁴ = (1/4) × 2 = 0.5</Step>
-        <FormulaBox accent={ACCENT}>E[X] = 2   |   E[X²] = 16/3   |   E[max(X−2, 0)] = 0.5</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          La variable tronquée max(X−2, 0) est nulle pour X ≤ 2, puis croît linéairement. L'espérance de cette fonction tronquée est un concept fondamental en théorie des probabilités (espérance conditionnelle, loi des valeurs extrêmes).
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"E[X] = 2 \\quad|\\quad E[X^2] = \\frac{16}{3} \\quad|\\quad E[\\max(X-2,0)] = 0.5"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Espérance d'une loi uniforme" ruleDetail="E[X] = ∫ x·f(x)dx, f(x) = 1/(b−a)" accent={ACCENT}>
+            Densité <K>{"f(x) = \\frac{1}{4}"}</K> sur [0,4]. <K>{"E[X] = \\int_0^4 x \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4}\\left[\\frac{x^2}{2}\\right]_0^4 = \\frac{1}{4} \\times 8 = 2"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Moment d'ordre 2" ruleDetail="E[X²] = ∫ x²·f(x)dx" accent={ACCENT}>
+            <K>{"E[X^2] = \\int_0^4 x^2 \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4}\\left[\\frac{x^3}{3}\\right]_0^4 = \\frac{1}{4} \\times \\frac{64}{3} = \\frac{16}{3} \\approx 5.33"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Intégrale d'une fonction tronquée" ruleDetail="max(X−2,0) = 0 si X≤2, (X−2) sinon" accent={ACCENT}>
+            <K>{"E[\\max(X-2,0)] = \\int_2^4 \\frac{x-2}{4}\\,dx = \\frac{1}{4}\\left[\\frac{(x-2)^2}{2}\\right]_2^4 = \\frac{1}{4} \\times \\frac{4}{2} = 0.5"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Interprétation" accent={ACCENT}>
+            La variable tronquée <K>{"\\max(X-2,0)"}</K> est analogue au payoff d'un call : nulle sous le strike, croissante au-dessus. Ce concept est fondamental en théorie des options.
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
@@ -565,22 +644,42 @@ export function ExpLogTab() {
         <p style={{ color: T.text, marginBottom: 12 }}>
           Action avec S₀=100€, µ=8%, σ=25%, T=1 an. Calculez P(S_T {'>'} 120€).
         </p>
-        <Step num={1} accent={ACCENT}>Calcul de d₂ : d₂ = [ln(100/120) + (0.08 - 0.25²/2)×1] / (0.25×√1)</Step>
-        <Step num={2} accent={ACCENT}>ln(100/120) = ln(0.8333) = -0.1823. Drift corrigé : 0.08 - 0.03125 = 0.04875</Step>
-        <Step num={3} accent={ACCENT}>d₂ = (-0.1823 + 0.04875) / 0.25 = -0.1336 / 0.25 = -0.5342</Step>
-        <Step num={4} accent={ACCENT}>P(S_T {'>'} 120) = P(Z {'>'} -0.5342) = 1 - N(-0.5342) = N(0.5342) ≈ 0.7034</Step>
-        <FormulaBox accent={ACCENT}>P(S_T {'>'} 120€) ≈ 70.3%</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Interprétation : avec un drift de 8% et une vol de 25%, il y a environ 70% de chances que l'action dépasse 120€ en 1 an. En pétrole : P(Brent {'>'} 96$/bbl) dans 1 an si on part de 80$/bbl avec µ=8%, σ=25%.
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"P(S_T > 120\\euro) \\approx 70.3\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Loi log-normale du GBM" ruleDetail="ln(S_T/S₀) ~ N((µ−σ²/2)T, σ²T)" accent={ACCENT}>
+            Calcul de d₂ : <K>{"d_2 = \\frac{\\ln(S_0/K) + (\\mu - \\sigma^2/2)T}{\\sigma\\sqrt{T}}"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Logarithme népérien" ruleDetail="ln(a/b) = ln(a) − ln(b)" accent={ACCENT}>
+            <K>{"\\ln(100/120) = \\ln(0.8333) = -0.1823"}</K>. Drift corrigé : <K>{"\\mu - \\sigma^2/2 = 0.08 - 0.03125 = 0.04875"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Substitution et calcul" accent={ACCENT}>
+            <K>{"d_2 = \\frac{-0.1823 + 0.04875}{0.25} = \\frac{-0.1336}{0.25} = -0.5342"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Symétrie de la loi normale" ruleDetail="P(Z > −z) = Φ(z)" accent={ACCENT}>
+            <K>{"P(S_T > 120) = P(Z > -0.5342) = \\Phi(0.5342) \\approx 0.7034"}</K>
+          </DemoStep>
+        </Demonstration>
       </Accordion>
 
       <ExampleBlock title="Propriété clé : ln(S_T/S₀) ~ N(µ̃T, σ²T)" accent={ACCENT}>
         <p>Pour S₀ = 80$/bbl (pétrole brut), µ = 10%, σ = 30%, T = 0.5 an :</p>
-        <Step num={1} accent={ACCENT}>µ̃ = µ - σ²/2 = 0.10 - 0.09/2 = 0.055</Step>
-        <Step num={2} accent={ACCENT}>E[ln(S_T/S₀)] = 0.055 × 0.5 = 0.0275</Step>
-        <Step num={3} accent={ACCENT}>E[S_T] = 80 × e^(0.10 × 0.5) = 80 × 1.0513 = 84.1$/bbl</Step>
-        <Step num={4} accent={ACCENT}>σ(ln S_T/S₀) = 0.30 × √0.5 = 0.212 → incertitude importante !</Step>
+        <FormulaBox accent={ACCENT} label="Résultats">
+          E[ln(S_T/S₀)] = 0.0275 | E[S_T] = 84.1$/bbl | σ(ln) = 0.212
+        </FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Correction d'Itô" ruleDetail="µ̃ = µ − σ²/2" accent={ACCENT}>
+            <K>{"\\tilde{\\mu} = \\mu - \\frac{\\sigma^2}{2} = 0.10 - \\frac{0.09}{2} = 0.055"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Espérance du log-rendement" ruleDetail="E[ln(S_T/S₀)] = µ̃·T" accent={ACCENT}>
+            <K>{"E[\\ln(S_T/S_0)] = 0.055 \\times 0.5 = 0.0275"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Espérance du prix (loi log-normale)" ruleDetail="E[S_T] = S₀·e^(µT)" accent={ACCENT}>
+            <K>{"E[S_T] = 80 \\times e^{0.10 \\times 0.5} = 80 \\times 1.0513 = 84.1"}</K> $/bbl
+          </DemoStep>
+          <DemoStep num={4} rule="Écart-type du log-rendement" ruleDetail="σ_{log} = σ·√T" accent={ACCENT}>
+            <K>{"\\sigma_{\\ln} = 0.30 \\times \\sqrt{0.5} = 0.212"}</K> → incertitude importante !
+          </DemoStep>
+        </Demonstration>
       </ExampleBlock>
     </div>
   )
@@ -725,13 +824,21 @@ export function AlgebraTab() {
 
       <ExampleBlock title="Pétrole & Gaz Naturel — Corrélation historique" accent={ACCENT}>
         <p>σ_oil = 30%, σ_gas = 40%, ρ = 0.5, portefeuille 50%/50%</p>
-        <Step num={1} accent={ACCENT}>Cov = 0.5 × 0.30 × 0.40 = 0.060</Step>
-        <Step num={2} accent={ACCENT}>σ²_p = 0.25×0.09 + 2×0.25×0.06 + 0.25×0.16 = 0.0225 + 0.03 + 0.04 = 0.0925</Step>
-        <Step num={3} accent={ACCENT}>σ_p = √0.0925 = 30.4%</Step>
-        <Step num={4} accent={ACCENT}>Si ρ = 0 → σ_p = √(0.25×0.09 + 0.25×0.16) = √0.0625 = 25.0%</Step>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          → La corrélation positive augmente le risque de 25% à 30.4%. La diversification fonctionne moins bien !
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat">σ_p = 30.4%</FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Covariance" ruleDetail="Cov(X,Y) = ρ·σ_X·σ_Y" accent={ACCENT}>
+            <K>{"\\text{Cov} = 0.5 \\times 0.30 \\times 0.40 = 0.060"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Variance de portefeuille" ruleDetail="σ²_p = w¹²σ¹² + 2w¹w²ρσ¹σ² + w²²σ²²" accent={ACCENT}>
+            <K>{"\\sigma_p^2 = 0.25 \\times 0.09 + 2 \\times 0.25 \\times 0.06 + 0.25 \\times 0.16 = 0.0925"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Racine carrée" ruleDetail="σ_p = √(σ²_p)" accent={ACCENT}>
+            <K>{"\\sigma_p = \\sqrt{0.0925} = 30.4\\%"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Comparaison (diversification)" accent={ACCENT}>
+            Si ρ = 0 → <K>{"\\sigma_p = \\sqrt{0.0625} = 25.0\\%"}</K>. La corrélation positive augmente le risque de 25% à 30.4% — la diversification fonctionne moins bien !
+          </DemoStep>
+        </Demonstration>
       </ExampleBlock>
 
       <SectionTitle accent={ACCENT}>Exercices</SectionTitle>
@@ -739,27 +846,53 @@ export function AlgebraTab() {
         <p style={{ color: T.text, marginBottom: 12 }}>
           Soit Σ = [[0.04, 0.018], [0.018, 0.09]] (σ₁=20%, σ₂=30%, ρ=0.3). Calculez la matrice triangulaire inférieure L telle que L×Lᵀ = Σ.
         </p>
-        <Step num={1} accent={ACCENT}>L est de la forme [[l₁₁, 0], [l₂₁, l₂₂]]. Condition L×Lᵀ = Σ donne 3 équations.</Step>
-        <Step num={2} accent={ACCENT}>l₁₁² = Σ₁₁ = 0.04 → l₁₁ = 0.20 (= σ₁, comme attendu)</Step>
-        <Step num={3} accent={ACCENT}>l₂₁ × l₁₁ = Σ₂₁ = 0.018 → l₂₁ = 0.018 / 0.20 = 0.090 (= ρ × σ₂ = 0.3 × 0.30 ✓)</Step>
-        <Step num={4} accent={ACCENT}>l₂₁² + l₂₂² = Σ₂₂ = 0.09 → l₂₂ = √(0.09 - 0.0081) = √0.0819 ≈ 0.2862 (= σ₂ × √(1-ρ²) ✓)</Step>
-        <FormulaBox accent={ACCENT}>L = [[0.20, 0], [0.090, 0.2862]]</FormulaBox>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 8 }}>
-          Vérification : L×Lᵀ = [[0.04, 0.018], [0.018, 0.0081+0.0819]] = [[0.04, 0.018], [0.018, 0.09]] ✓. Pour simuler (X,Y) corrélés : X = 0.20×Z₁ ; Y = 0.090×Z₁ + 0.2862×Z₂ où Z₁, Z₂ ~ N(0,1) indépendants.
-        </div>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"L = \\begin{bmatrix} 0.20 & 0 \\\\ 0.090 & 0.2862 \\end{bmatrix}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Structure de Cholesky" ruleDetail="L triangulaire inférieure : Σ = L·Lᵀ" accent={ACCENT}>
+            L est de la forme <K>{"\\begin{bmatrix} l_{11} & 0 \\\\ l_{21} & l_{22} \\end{bmatrix}"}</K>. La condition <K>{"LL^T = \\Sigma"}</K> donne 3 équations.
+          </DemoStep>
+          <DemoStep num={2} rule="Équation diagonale (1,1)" ruleDetail="l₁₁² = Σ₁₁" accent={ACCENT}>
+            <K>{"l_{11}^2 = \\Sigma_{11} = 0.04 \\Rightarrow l_{11} = 0.20"}</K> (= σ₁, comme attendu)
+          </DemoStep>
+          <DemoStep num={3} rule="Équation hors-diagonale" ruleDetail="l₂₁·l₁₁ = Σ₂₁" accent={ACCENT}>
+            <K>{"l_{21} = \\frac{\\Sigma_{21}}{l_{11}} = \\frac{0.018}{0.20} = 0.090"}</K> (= ρ·σ₂ = 0.3×0.30 ✓)
+          </DemoStep>
+          <DemoStep num={4} rule="Équation diagonale (2,2)" ruleDetail="l₂₁² + l₂₂² = Σ₂₂" accent={ACCENT}>
+            <K>{"l_{22} = \\sqrt{\\Sigma_{22} - l_{21}^2} = \\sqrt{0.09 - 0.0081} = \\sqrt{0.0819} \\approx 0.2862"}</K>
+            <br />(= σ₂·√(1−ρ²) ✓). Vérification : L×Lᵀ = [[0.04, 0.018], [0.018, 0.09]] ✓
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 1 — Multiplication de matrices" accent={ACCENT} badge="Facile">
         <p style={{ color: T.text }}>Calculez A × B avec A = [[1,2],[3,4]] et B = [[5],[6]]</p>
-        <Step num={1} accent={ACCENT}>A × B = [[1×5 + 2×6], [3×5 + 4×6]]</Step>
-        <FormulaBox accent={ACCENT}>= [[17], [39]]</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"A \\times B = \\begin{bmatrix} 17 \\\\ 39 \\end{bmatrix}"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Produit matriciel" ruleDetail="(AB)ᵢⱼ = Σₖ Aᵢₖ·Bₖⱼ" accent={ACCENT}>
+            Ligne 1 : <K>{"1 \\times 5 + 2 \\times 6 = 5 + 12 = 17"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Produit matriciel" ruleDetail="(AB)ᵢⱼ = Σₖ Aᵢₖ·Bₖⱼ" accent={ACCENT}>
+            Ligne 2 : <K>{"3 \\times 5 + 4 \\times 6 = 15 + 24 = 39"}</K>
+          </DemoStep>
+        </Demonstration>
       </Accordion>
       <Accordion title="Exercice 2 — Variance de portefeuille" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}>3 actifs : w = [50%, 30%, 20%], σ = [20%, 25%, 35%], ρᵢⱼ = 0.3 ∀ i≠j. Calculez σ_p.</p>
-        <Step num={1} accent={ACCENT}>σ²_p = Σᵢ wᵢ² σᵢ² + 2Σᵢ{'<'}ⱼ wᵢwⱼρσᵢσⱼ</Step>
-        <Step num={2} accent={ACCENT}>Termes diagonaux : 0.25×0.04 + 0.09×0.0625 + 0.04×0.1225 = 0.01 + 0.005625 + 0.0049 = 0.020525</Step>
-        <Step num={3} accent={ACCENT}>Termes croisés (×2) : 2[0.5×0.3×0.3×0.2×0.25 + 0.5×0.2×0.3×0.2×0.35 + 0.3×0.2×0.3×0.25×0.35]</Step>
-        <Step num={4} accent={ACCENT}>= 2[0.00225 + 0.0021 + 0.001575] = 2×0.005925 = 0.01185</Step>
-        <FormulaBox accent={ACCENT}>σ²_p = 0.020525 + 0.01185 = 0.032375 → σ_p ≈ 17.99% ≈ 18%</FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\sigma_p \\approx 18\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Formule de variance de portefeuille" ruleDetail="σ²_p = Σᵢ wᵢ²σᵢ² + 2Σᵢ<j wᵢwⱼρσᵢσⱼ" accent={ACCENT}>
+            <K>{"\\sigma_p^2 = \\sum_i w_i^2 \\sigma_i^2 + 2\\sum_{i<j} w_i w_j \\rho \\sigma_i \\sigma_j"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Termes diagonaux (variances individuelles)" accent={ACCENT}>
+            <K>{"0.5^2 \\times 0.20^2 + 0.3^2 \\times 0.25^2 + 0.2^2 \\times 0.35^2 = 0.01 + 0.005625 + 0.0049 = 0.020525"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Termes croisés (covariances)" ruleDetail="Cov(i,j) = ρ·σᵢ·σⱼ" accent={ACCENT}>
+            <K>{"2[0.5{\\times}0.3{\\times}0.3{\\times}0.20{\\times}0.25 + 0.5{\\times}0.2{\\times}0.3{\\times}0.20{\\times}0.35 + 0.3{\\times}0.2{\\times}0.3{\\times}0.25{\\times}0.35]"}</K>
+            = 2 × 0.005925 = 0.01185
+          </DemoStep>
+          <DemoStep num={4} rule="Racine carrée" ruleDetail="σ_p = √(σ²_p)" accent={ACCENT}>
+            <K>{"\\sigma_p^2 = 0.020525 + 0.01185 = 0.032375 \\Rightarrow \\sigma_p = \\sqrt{0.032375} \\approx 18\\%"}</K>
+          </DemoStep>
+        </Demonstration>
       </Accordion>
     </div>
   )
