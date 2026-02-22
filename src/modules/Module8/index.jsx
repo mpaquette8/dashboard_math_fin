@@ -37,7 +37,7 @@ function black76(F, K, T, r, sigma, type = 'call') {
 }
 
 // ─── Tab: Marchés Énergie ─────────────────────────────────────────────────────
-function MarchesTab() {
+export function MarchesTab() {
   const [commodity, setCommodity] = useState('crude')
 
   const commodities = {
@@ -296,7 +296,7 @@ function MarchesTab() {
 }
 
 // ─── Tab: Forward Curves ──────────────────────────────────────────────────────
-function ForwardCurvesTab() {
+export function ForwardCurvesTab() {
   const [spot, setSpot] = useState(80)
   const [r, setR] = useState(0.05)
   const [u, setU] = useState(0.03)   // storage cost
@@ -541,7 +541,7 @@ function ForwardCurvesTab() {
 }
 
 // ─── Tab: Options Énergie (Black 76) ─────────────────────────────────────────
-function OptionsTab() {
+export function OptionsTab() {
   const [F, setF] = useState(80)
   const [K, setK] = useState(82)
   const [T2, setT2] = useState(0.5)
@@ -853,7 +853,7 @@ function OptionsTab() {
 }
 
 // ─── Tab: Cas Intégrateur ─────────────────────────────────────────────────────
-function CasIntegrateurTab() {
+export function CasIntegrateurTab() {
   const [step, setStep] = useState(1)
   const steps = [1, 2, 3, 4, 5, 6, 7, 8]
 

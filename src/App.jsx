@@ -1,8 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
-import { T } from './design/tokens'
+import { T, categoryInfo } from './design/tokens'
 import Sidebar from './shared/Sidebar'
 import Checklist from './shared/Checklist'
+import MathsPures from './categories/MathsPures/index.jsx'
+import MathsFinance from './categories/MathsFinance/index.jsx'
+import MathsEnergie from './categories/MathsEnergie/index.jsx'
+import Simulation from './categories/Simulation/index.jsx'
+
+// Legacy module imports (kept for potential direct URL access during transition)
 import Module1 from './modules/Module1/index.jsx'
 import Module2 from './modules/Module2/index.jsx'
 import Module3 from './modules/Module3/index.jsx'
@@ -31,40 +37,78 @@ function useLayout() {
   return layout
 }
 
-const SIDEBAR_WIDTH = { full: 240, compact: 56, mobile: 0 }
+const SIDEBAR_WIDTH = { full: 260, compact: 56, mobile: 0 }
 
 function Home() {
   const layout = useLayout()
-  const cols = layout === 'full' ? 4 : 2
+  const cols = layout === 'full' ? 2 : 1
   return (
-    <div style={{ maxWidth: 800, margin: '40px auto', padding: `0 ${layout === 'mobile' ? '16px' : '24px'}`, textAlign: 'center' }}>
-      <div style={{ fontSize: 52, marginBottom: 10 }}>Δ</div>
-      <h1 style={{ color: T.text, fontSize: layout === 'full' ? 32 : 22, fontWeight: 800, marginBottom: 12 }}>DPH3V Dashboard</h1>
-      <p style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, marginBottom: 28 }}>
-        Plateforme d'apprentissage interactif pour le cours Advanced Derivatives Pricing, Hedging and Risk Management — Mennta Energy Solutions
-      </p>
-      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 10 }}>
-        {[
-          { n: 1, c: T.a1, t: 'Fondations Math' },
-          { n: 2, c: T.a2, t: 'Probabilités' },
-          { n: 3, c: T.a3, t: 'Processus Stoch.' },
-          { n: 4, c: T.a4, t: 'Pricing Options' },
-          { n: 5, c: T.a5, t: 'Volatilité' },
-          { n: 6, c: T.a6, t: 'VaR Avancée' },
-          { n: 7, c: T.a7, t: 'Risk Mgmt' },
-          { n: 8, c: T.a8, t: 'Applications Énergie' },
-        ].map(m => (
-          <Link key={m.n} to={`/module${m.n}`} style={{ textDecoration: 'none' }}>
+    <div style={{ maxWidth: 860, margin: '40px auto', padding: `0 ${layout === 'mobile' ? '16px' : '24px'}` }}>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: 40 }}>
+        <div style={{ fontSize: 52, marginBottom: 12 }}>Δ</div>
+        <h1 style={{ color: T.text, fontSize: layout === 'full' ? 30 : 22, fontWeight: 800, marginBottom: 10 }}>
+          Dashboard Personnel — Mathématiques & Finance
+        </h1>
+        <p style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, maxWidth: 560, margin: '0 auto' }}>
+          Plateforme d'apprentissage interactif organisée par grandes disciplines. À enrichir tout au long du parcours.
+        </p>
+      </div>
+
+      {/* Category cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: 16 }}>
+        {categoryInfo.map(cat => (
+          <Link key={cat.id} to={cat.path} style={{ textDecoration: 'none' }}>
             <div style={{
-              background: T.panel, border: `1px solid ${m.c}33`,
-              borderRadius: 10, padding: layout === 'full' ? 16 : 12, cursor: 'pointer',
+              background: T.panel,
+              border: `1px solid ${cat.accent}33`,
+              borderRadius: 14,
+              padding: layout === 'full' ? '22px 24px' : '16px',
+              cursor: 'pointer',
               transition: 'all 0.15s',
-            }}>
-              <div style={{ color: m.c, fontWeight: 800, fontSize: 16, marginBottom: 4 }}>M{m.n}</div>
-              <div style={{ color: T.muted, fontSize: 11 }}>{m.t}</div>
+              height: '100%',
+            }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = `${cat.accent}77`; e.currentTarget.style.background = `${cat.accent}0a` }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = `${cat.accent}33`; e.currentTarget.style.background = T.panel }}
+            >
+              {/* Card header */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 16 }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 10,
+                  background: `${cat.accent}22`, border: `1px solid ${cat.accent}44`,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 22, flexShrink: 0,
+                }}>{cat.icon}</div>
+                <div style={{ color: cat.accent, fontWeight: 800, fontSize: 16, lineHeight: 1.3 }}>
+                  {cat.label}
+                </div>
+              </div>
+              {/* Tabs list */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {cat.tabs.map(t => (
+                  <div key={t.slug} style={{
+                    display: 'flex', alignItems: 'center', gap: 8,
+                    padding: '6px 10px', borderRadius: 6,
+                    background: `${cat.accent}08`,
+                  }}>
+                    <div style={{
+                      width: 5, height: 5, borderRadius: '50%',
+                      background: cat.accent, flexShrink: 0, opacity: 0.7,
+                    }} />
+                    <span style={{ color: T.text, fontSize: 12 }}>{t.label}</span>
+                  </div>
+                ))}
+              </div>
             </div>
           </Link>
         ))}
+      </div>
+
+      {/* Footer note */}
+      <div style={{ textAlign: 'center', marginTop: 36, color: T.muted, fontSize: 12, lineHeight: 1.8 }}>
+        Utilisez la sidebar pour naviguer directement vers un sujet.
+        <br />
+        Certaines rubriques sont <span style={{ color: T.a3 }}>en cours de construction</span> et seront enrichies progressivement.
       </div>
     </div>
   )
@@ -128,13 +172,32 @@ export default function App() {
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 14, fontWeight: 900, color: T.a1,
                 }}>Δ</div>
-                <div style={{ color: T.text, fontWeight: 800, fontSize: 15 }}>DPH3V</div>
+                <div style={{ color: T.text, fontWeight: 800, fontSize: 15 }}>Dashboard Math</div>
               </div>
             </div>
           )}
 
           <Routes>
+            {/* Home */}
             <Route path="/" element={<Home />} />
+
+            {/* New category routes */}
+            <Route path="/maths-pures" element={<Navigate to="/maths-pures/calcul" replace />} />
+            <Route path="/maths-pures/:tab" element={<MathsPures />} />
+
+            <Route path="/maths-finance" element={<Navigate to="/maths-finance/pricing" replace />} />
+            <Route path="/maths-finance/:tab" element={<MathsFinance />} />
+
+            <Route path="/maths-energie" element={<Navigate to="/maths-energie/marches" replace />} />
+            <Route path="/maths-energie/:tab" element={<MathsEnergie />} />
+
+            <Route path="/simulation" element={<Navigate to="/simulation/monte-carlo" replace />} />
+            <Route path="/simulation/:tab" element={<Simulation />} />
+
+            {/* Checklist */}
+            <Route path="/checklist" element={<Checklist />} />
+
+            {/* Legacy module routes (kept during transition) */}
             <Route path="/module1" element={<Module1 />} />
             <Route path="/module2" element={<Module2 />} />
             <Route path="/module3" element={<Module3 />} />
@@ -143,7 +206,8 @@ export default function App() {
             <Route path="/module6" element={<Module6 />} />
             <Route path="/module7" element={<Module7 />} />
             <Route path="/module8" element={<Module8 />} />
-            <Route path="/checklist" element={<Checklist />} />
+
+            {/* Fallback */}
             <Route path="*" element={<Navigate to="/" />} />
           </Routes>
         </main>

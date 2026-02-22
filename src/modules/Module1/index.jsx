@@ -12,7 +12,7 @@ import {
 const ACCENT = T.a1
 
 // ─── Tab: Dérivées ────────────────────────────────────────────────────────────
-function DerivTab() {
+export function DerivTab() {
   const [fx, setFx] = useState('x2') // x2, sinx, expx
   const [showDeriv, setShowDeriv] = useState(true)
   const [xPoint, setXPoint] = useState(1.0)
@@ -408,7 +408,7 @@ function DerivTab() {
 }
 
 // ─── Tab: Intégrales ──────────────────────────────────────────────────────────
-function IntegTab() {
+export function IntegTab() {
   const [a, setA] = useState(-1)
   const [b, setB] = useState(1)
   const [fnType, setFnType] = useState('gauss')
@@ -552,7 +552,7 @@ function IntegTab() {
 }
 
 // ─── Tab: Exp & Log ───────────────────────────────────────────────────────────
-function ExpLogTab() {
+export function ExpLogTab() {
   const [mu, setMu] = useState(0.08)
   const [sigma, setSigma] = useState(0.2)
   const [T2, setT2] = useState(1)
@@ -722,7 +722,7 @@ function ExpLogTab() {
 }
 
 // ─── Tab: Algèbre Linéaire ────────────────────────────────────────────────────
-function AlgebraTab() {
+export function AlgebraTab() {
   const [rho, setRho] = useState(0.6)
   const [sigma1, setSigma1] = useState(0.2)
   const [sigma2, setSigma2] = useState(0.3)

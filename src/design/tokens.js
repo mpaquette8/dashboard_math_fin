@@ -9,7 +9,7 @@ export const T = {
   text: '#dde4f0',
   muted: '#45607a',
 
-  // Accent colors per module
+  // Accent colors per module (kept for backward compat)
   a1: '#22d3ee',  // cyan    — Module 1 Fondations Math
   a2: '#fb923c',  // orange  — Module 2 Probabilités
   a3: '#a78bfa',  // violet  — Module 3 Processus Stochastiques
@@ -45,4 +45,60 @@ export const moduleInfo = [
   { id: 6, label: 'VaR Avancée', short: 'M6', accent: T.a6, path: '/module6' },
   { id: 7, label: 'Risk Management', short: 'M7', accent: T.a7, path: '/module7' },
   { id: 8, label: 'Applications Énergie', short: 'M8', accent: T.a8, path: '/module8' },
+]
+
+// ─── New category-based structure ─────────────────────────────────────────────
+export const categoryInfo = [
+  {
+    id: 'maths-pures',
+    label: 'Mathématiques Pures',
+    icon: '📐',
+    accent: T.a1,       // cyan
+    path: '/maths-pures',
+    tabs: [
+      { slug: 'calcul',        label: 'Calcul' },
+      { slug: 'algebre',       label: 'Algèbre Linéaire' },
+      { slug: 'probabilites',  label: 'Probabilités & Lois' },
+      { slug: 'stochastique',  label: 'Processus Stochastiques' },
+    ],
+  },
+  {
+    id: 'maths-finance',
+    label: 'Mathématiques Financières',
+    icon: '📈',
+    accent: T.a4,       // green
+    path: '/maths-finance',
+    tabs: [
+      { slug: 'pricing',     label: 'Pricing Options' },
+      { slug: 'greeks',      label: 'Greeks & Sensibilités' },
+      { slug: 'volatilite',  label: 'Volatilité & Surfaces' },
+      { slug: 'risk',        label: 'Risk Management' },
+    ],
+  },
+  {
+    id: 'maths-energie',
+    label: 'Mathématiques Énergie',
+    icon: '⚡',
+    accent: T.a8,       // red
+    path: '/maths-energie',
+    tabs: [
+      { slug: 'marches',       label: 'Marchés Énergie' },
+      { slug: 'forward',       label: 'Forward Curves' },
+      { slug: 'options',       label: 'Options Énergie' },
+      { slug: 'mean-reversion', label: 'Mean-Reversion' },
+    ],
+  },
+  {
+    id: 'simulation',
+    label: 'Informatique & Simulation',
+    icon: '🖥️',
+    accent: T.a3,       // violet
+    path: '/simulation',
+    tabs: [
+      { slug: 'monte-carlo',   label: 'Monte Carlo' },
+      { slug: 'arbres',        label: 'Arbres & Méthodes' },
+      { slug: 'calibration',   label: 'Calibration' },
+      { slug: 'visualisation', label: 'Visualisation & Outils' },
+    ],
+  },
 ]

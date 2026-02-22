@@ -43,7 +43,7 @@ function gaussRand() {
 }
 
 // ─── Tab: VaR Variance-Covariance ─────────────────────────────────────────────
-function VarCovTab() {
+export function VarCovTab() {
   const [mu, setMu] = useState(0)
   const [sigma, setSigma] = useState(0.02)
   const [alpha, setAlpha] = useState(0.99)
@@ -217,7 +217,7 @@ function VarCovTab() {
 }
 
 // ─── Tab: VaR Historique ──────────────────────────────────────────────────────
-function VarHistTab() {
+export function VarHistTab() {
   const [alpha, setAlpha] = useState(0.99)
   const [sigma, setSigma] = useState(0.02)
   const [nDays, setNDays] = useState(500)
@@ -372,7 +372,7 @@ function VarHistTab() {
 }
 
 // ─── Tab: Monte Carlo VaR ─────────────────────────────────────────────────────
-function VarMCTab() {
+export function VarMCTab() {
   const [sigma1, setSigma1] = useState(0.25)
   const [sigma2, setSigma2] = useState(0.35)
   const [rho, setRho] = useState(0.5)
@@ -511,7 +511,7 @@ function VarMCTab() {
 }
 
 // ─── Tab: EVT ─────────────────────────────────────────────────────────────────
-function EVTTab() {
+export function EVTTab() {
   const [xi2, setXi2] = useState(0.3)  // shape parameter (tail index)
   const [beta, setBeta] = useState(0.02)  // scale
   const [u, setU] = useState(0.03)  // threshold
@@ -677,7 +677,7 @@ function EVTTab() {
 }
 
 // ─── Tab: VaR Marginale ───────────────────────────────────────────────────────
-function MarginalVarTab() {
+export function MarginalVarTab() {
   const [w1, setW1] = useState(0.5)
   const [w2, setW2] = useState(0.3)
   const [sigma1, setSigma1] = useState(0.25)

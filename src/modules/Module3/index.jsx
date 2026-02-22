@@ -19,7 +19,7 @@ function gaussRand() {
 }
 
 // ─── Tab: Marche Aléatoire ────────────────────────────────────────────────────
-function RandomWalkTab() {
+export function RandomWalkTab() {
   const [steps, setSteps] = useState(100)
   const [nPaths, setNPaths] = useState(3)
   const [key, setKey] = useState(0)
@@ -167,7 +167,7 @@ function RandomWalkTab() {
 }
 
 // ─── Tab: GBM ─────────────────────────────────────────────────────────────────
-function GBMTab() {
+export function GBMTab() {
   const [mu, setMu] = useState(0.1)
   const [sigma, setSigma] = useState(0.25)
   const [T2, setT2] = useState(1)
@@ -332,7 +332,7 @@ function GBMTab() {
 }
 
 // ─── Tab: Mean-Reversion ──────────────────────────────────────────────────────
-function MeanRevTab() {
+export function MeanRevTab() {
   const [kappa, setKappa] = useState(2)
   const [theta, setTheta] = useState(80)
   const [sigma, setSigma] = useState(15)
@@ -501,7 +501,7 @@ function MeanRevTab() {
 }
 
 // ─── Tab: Lemme d'Itô ─────────────────────────────────────────────────────────
-function ItoTab() {
+export function ItoTab() {
   return (
     <div>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
@@ -661,7 +661,7 @@ function ItoTab() {
 }
 
 // ─── Tab: Simulation (2 actifs corrélés) ────────────────────────────────────
-function SimulTab() {
+export function SimulTab() {
   const [rho, setRho] = useState(0.6)
   const [mu1, setMu1] = useState(0.08)
   const [mu2, setMu2] = useState(0.05)
@@ -788,7 +788,7 @@ function SimulTab() {
 }
 
 // ─── Tab: Processus à Saut ────────────────────────────────────────────────────
-function JumpTab() {
+export function JumpTab() {
   const [lambda, setLambda] = useState(5)
   const [muJ, setMuJ] = useState(0.0)
   const [sigJ, setSigJ] = useState(0.2)
