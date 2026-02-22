@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, Link } from 'react-router-dom'
 import { T } from './design/tokens'
 import Sidebar from './shared/Sidebar'
 import Checklist from './shared/Checklist'
@@ -54,7 +54,7 @@ function Home() {
           { n: 7, c: T.a7, t: 'Risk Mgmt' },
           { n: 8, c: T.a8, t: 'Applications Énergie' },
         ].map(m => (
-          <a key={m.n} href={`/module${m.n}`} style={{ textDecoration: 'none' }}>
+          <Link key={m.n} to={`/module${m.n}`} style={{ textDecoration: 'none' }}>
             <div style={{
               background: T.panel, border: `1px solid ${m.c}33`,
               borderRadius: 10, padding: layout === 'full' ? 16 : 12, cursor: 'pointer',
@@ -63,7 +63,7 @@ function Home() {
               <div style={{ color: m.c, fontWeight: 800, fontSize: 16, marginBottom: 4 }}>M{m.n}</div>
               <div style={{ color: T.muted, fontSize: 11 }}>{m.t}</div>
             </div>
-          </a>
+          </Link>
         ))}
       </div>
     </div>
