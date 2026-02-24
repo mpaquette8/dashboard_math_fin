@@ -6,7 +6,7 @@ import { TabBar } from '../../design/components'
 // ─── Tab content imports from existing modules ────────────────────────────────
 import { NoArbTab, BSTab, Black76Tab, ArbreTab, ExotiquesTab } from './tabs/Pricing.jsx'
 import { GreeksTab } from './tabs/Greeks.jsx'
-import { HistVolTab, ImplVolTab, SmileTab, SurfaceTab, HestonTab } from './tabs/Volatilite.jsx'
+import { HistVolTab, ImplVolTab, SmileTab, SmileRotationTab, SurfaceTab, HestonTab } from './tabs/Volatilite.jsx'
 import { VarCovTab, VarHistTab, VarMCTab, EVTTab, MarginalVarTab } from './tabs/Risk.jsx'
 import { EaRTab, RAROCTab, PFETab, CVATab } from './tabs/Risk.jsx'
 
@@ -71,7 +71,7 @@ function GreeksAndSensitivitiesTab() {
 // ─── Volatilité & Surfaces tab ────────────────────────────────────────────────
 function VolTab() {
   const [sub, setSub] = useState('Vol Historique')
-  const subTabs = ['Vol Historique', 'Vol Implicite', 'Smile', 'Surface', 'Heston']
+  const subTabs = ['Vol Historique', 'Vol Implicite', 'Smile', 'Rotation du Smile', 'Surface', 'Heston']
   return (
     <div>
       <CrossRef
@@ -82,8 +82,9 @@ function VolTab() {
       <div style={{ marginTop: 16 }}>
         {sub === 'Vol Historique' && <HistVolTab />}
         {sub === 'Vol Implicite'  && <ImplVolTab />}
-        {sub === 'Smile'          && <SmileTab />}
-        {sub === 'Surface'        && <SurfaceTab />}
+        {sub === 'Smile'             && <SmileTab />}
+        {sub === 'Rotation du Smile' && <SmileRotationTab />}
+        {sub === 'Surface'           && <SurfaceTab />}
         {sub === 'Heston'         && <HestonTab />}
       </div>
     </div>

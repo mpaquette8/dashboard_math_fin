@@ -898,3 +898,359 @@ export function HestonTab() {
     </div>
   )
 }
+
+
+// ─── Tab: Rotation du Smile ───────────────────────────────────────────────────
+
+export function SmileRotationTab() {
+  // ── Rotation demo state ──────────────────────────────────────────────────
+  const [atm, setAtm]       = useState(0.25)
+  const [skew1, setSkew1]   = useState(-0.05)
+  const [skew2, setSkew2]   = useState(-0.20)
+  const [kurt, setKurt]     = useState(0.08)
+  const [S, setS]           = useState(100)
+
+  // ── Sticky Strike vs Sticky Delta state ─────────────────────────────────
+  const [stickyAtm,    setStickyAtm]    = useState(0.25)
+  const [stickySkew,   setStickySkew]   = useState(-0.12)
+  const [stickyKurt,   setStickyKurt]   = useState(0.08)
+  const [spotMove,     setSpotMove]     = useState(-10)  // % change in spot
+
+  // ── Rotation chart data ─────────────────────────────────────────────────
+  const rotationData = useMemo(() => {
+    const pts = []
+    for (let K = S * 0.65; K <= S * 1.40; K += S * 0.025) {
+      const m  = K / S - 1
+      const iv1 = Math.max(atm + skew1 * m + kurt * m * m, 0.03) * 100
+      const iv2 = Math.max(atm + skew2 * m + kurt * m * m, 0.03) * 100
+      pts.push({ K: +K.toFixed(1), avant: +iv1.toFixed(2), apres: +iv2.toFixed(2) })
+    }
+    return pts
+  }, [S, atm, skew1, skew2, kurt])
+
+  // ── Sticky Strike vs Sticky Delta chart data ─────────────────────────────
+  const S0 = 100
+  const S1 = +(S0 * (1 + spotMove / 100)).toFixed(2)
+
+  const stickyData = useMemo(() => {
+    const pts = []
+    const S1local = +(S0 * (1 + spotMove / 100)).toFixed(2)
+    for (let K = S0 * 0.65; K <= S0 * 1.40; K += S0 * 0.025) {
+      const Kf = +K.toFixed(1)
+      const mBefore      = K / S0 - 1
+      const mAfterDelta  = K / S1local - 1
+      const ivBefore      = Math.max(stickyAtm + stickySkew * mBefore     + stickyKurt * mBefore ** 2,     0.03) * 100
+      const ivStickyStrike = ivBefore
+      const ivStickyDelta  = Math.max(stickyAtm + stickySkew * mAfterDelta + stickyKurt * mAfterDelta ** 2, 0.03) * 100
+      pts.push({ K: Kf, avant: +ivBefore.toFixed(2), sticky_strike: +ivStickyStrike.toFixed(2), sticky_delta: +ivStickyDelta.toFixed(2) })
+    }
+    return pts
+  }, [spotMove, stickyAtm, stickySkew, stickyKurt])
+
+  // ── Derived metrics ──────────────────────────────────────────────────────
+  const rotation   = +(skew2 - skew1).toFixed(3)
+  const mS1        = spotMove / 100
+  const atmVolSS   = +(Math.max(stickyAtm + stickySkew * mS1 + stickyKurt * mS1 ** 2, 0.03) * 100).toFixed(2)
+  const atmVolSD   = +(stickyAtm * 100).toFixed(2)
+
+  // ── Vanna helpers ────────────────────────────────────────────────────────
+  const [vannS,   setVannS]   = useState(100)
+  const [vannK,   setVannK]   = useState(90)
+  const [vannT,   setVannT]   = useState(0.5)
+  const [vannR,   setVannR]   = useState(0.04)
+  const [vannSig, setVannSig] = useState(0.30)
+
+  const vannaMetrics = useMemo(() => {
+    if (vannT <= 0) return { d1: 0, d2: 0, vanna: 0, vega: 0, delta: 0 }
+    const sqrtT = Math.sqrt(vannT)
+    const d1    = (Math.log(vannS / vannK) + (vannR + 0.5 * vannSig ** 2) * vannT) / (vannSig * sqrtT)
+    const d2    = d1 - vannSig * sqrtT
+    const vega  = vannS * phi(d1) * sqrtT
+    const vanna = -phi(d1) * d2 / vannSig
+    const delta = normCDF(d1)
+    return { d1: +d1.toFixed(3), d2: +d2.toFixed(3), vanna: +vanna.toFixed(4), vega: +vega.toFixed(2), delta: +delta.toFixed(3) }
+  }, [vannS, vannK, vannT, vannR, vannSig])
+
+  return (
+    <div>
+      {/* ── Intro ────────────────────────────────────────────────────────── */}
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
+        Le smile de volatilité n'est pas figé : sa <strong style={{ color: ACCENT }}>pente</strong> peut changer au fil du temps
+        ou lorsque le spot bouge, sans que le niveau ATM ne varie beaucoup.
+        On appelle cela la <em>rotation du smile</em>. Ce phénomène a des conséquences directes
+        sur le hedging, notamment à travers le greek <strong style={{ color: ACCENT }}>Vanna</strong>,
+        et soulève la question fondamentale : comment le smile se déplace-t-il quand le sous-jacent bouge ?
+        C'est le débat <strong style={{ color: ACCENT }}>Sticky Strike vs Sticky Delta</strong>.
+      </div>
+
+      {/* ── Décomposer le smile ──────────────────────────────────────────── */}
+      <IntuitionBlock emoji="🎯" title="Niveau, Pente, Convexité — les 3 dimensions du smile" accent={ACCENT}>
+        Le smile paramétrique <K>{"\\sigma(K) = \\sigma_{ATM} + \\text{skew}\\cdot m + \\text{kurt}\\cdot m^2"}</K>
+        (avec <K>{"m = K/S - 1"}</K>) se décompose en trois degrés de liberté :
+        <br /><br />
+        <strong>Niveau</strong> — <K>{"\\sigma_{ATM}"}</K> : la volatilité at-the-money, le "prix" central du risque.<br />
+        <strong>Pente</strong> — <K>{"\\text{skew}"}</K> : l'asymétrie du smile. Négatif si les puts OTM sont plus chers. C'est le coefficient du terme linéaire.<br />
+        <strong>Convexité</strong> — <K>{"\\text{kurt}"}</K> : la courbure. Positif = les deux wings OTM sont plus chers que l'ATM. C'est le coefficient du terme quadratique.<br /><br />
+        La <strong>rotation</strong> = un changement de pente (skew) à niveau et convexité quasi-constants.
+        C'est la déformation la plus fréquente lors d'un choc de marché.
+      </IntuitionBlock>
+
+      <FormulaBox accent={ACCENT} label="Smile paramétrique — Niveau / Pente / Convexité">
+        <K display>{"\\sigma(K) = \\underbrace{\\sigma_{ATM}}_{\\text{niveau}} \\;+\\; \\underbrace{\\text{skew}}_{\\text{pente}} \\cdot \\left(\\frac{K}{S}-1\\right) \\;+\\; \\underbrace{\\text{kurt}}_{\\text{convexité}} \\cdot \\left(\\frac{K}{S}-1\\right)^{\\!2}"}</K>
+        <K display>{"\\text{Pente à l'ATM} = \\left.\\frac{\\partial\\sigma}{\\partial m}\\right|_{m=0} = \\text{skew}"}</K>
+        <K display>{"\\text{Rotation} = \\Delta\\text{skew} = \\text{skew}_{\\text{après}} - \\text{skew}_{\\text{avant}}"}</K>
+      </FormulaBox>
+
+      {/* ── Rotation demo ────────────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Visualiser la rotation du smile</SectionTitle>
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 12 }}>
+        Faites varier la pente <em>avant</em> et <em>après</em> : le niveau ATM et la convexité restent fixes,
+        seule la pente change — c'est une rotation pure autour du point ATM.
+      </div>
+
+      <Grid cols={2} gap="10px">
+        <Slider label="σ_ATM (niveau)" value={atm} min={0.08} max={0.60} step={0.01}
+          onChange={setAtm} accent={ACCENT} format={v => `${(v * 100).toFixed(0)}%`} />
+        <Slider label="Kurt (convexité)" value={kurt} min={0} max={0.30} step={0.01}
+          onChange={setKurt} accent={T.a3} format={v => v.toFixed(2)} />
+        <Slider label="Skew avant (pente initiale)" value={skew1} min={-0.40} max={0.40} step={0.01}
+          onChange={setSkew1} accent={T.a4} format={v => v.toFixed(2)} />
+        <Slider label="Skew après (pente finale)" value={skew2} min={-0.40} max={0.40} step={0.01}
+          onChange={setSkew2} accent={T.a2} format={v => v.toFixed(2)} />
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 8, margin: '10px 0 4px', flexWrap: 'wrap' }}>
+        <InfoChip label="Pente avant" value={skew1.toFixed(2)} accent={T.a4} />
+        <InfoChip label="Pente après" value={skew2.toFixed(2)} accent={T.a2} />
+        <InfoChip label="Rotation Δskew" value={rotation > 0 ? `+${rotation}` : `${rotation}`} accent={ACCENT} />
+        <InfoChip label="σ_ATM (inchangé)" value={`${(atm * 100).toFixed(0)}%`} accent={T.a3} />
+      </div>
+
+      <ChartWrapper title="Rotation du smile — pente change, niveau ATM fixe" accent={ACCENT} height={260}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={rotationData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="K" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }}
+              label={{ value: 'Strike K', position: 'insideBottom', fill: T.muted, fontSize: 11, offset: -2 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} unit="%" domain={['auto', 'auto']} />
+            <ReferenceLine x={S} stroke={T.border} strokeDasharray="4 3"
+              label={{ value: `ATM (S=${S})`, fill: T.muted, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }}
+              formatter={(v, name) => [`${v}%`, name === 'avant' ? 'Smile avant' : 'Smile après']} />
+            <Legend formatter={n => n === 'avant' ? 'Smile avant' : 'Smile après'} />
+            <Line type="monotone" dataKey="avant" stroke={T.a4}  strokeWidth={2} strokeDasharray="6 3" dot={false} />
+            <Line type="monotone" dataKey="apres" stroke={T.a2}  strokeWidth={2.5} dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: 14, margin: '10px 0 18px', fontSize: 13, color: T.text, lineHeight: 1.7 }}>
+        <strong style={{ color: ACCENT }}>À retenir :</strong> lors d'un choc de marché (krach, stress de liquidité),
+        le skew peut passer de -5% à -20% en quelques heures. L'ATM vol monte aussi, mais la <em>rotation</em>
+        est parfois la déformation dominante. Les books d'options avec des puts OTM vendus sont alors
+        très vulnérables — le skew s'écrase contre eux.
+      </div>
+
+      {/* ── Sticky Strike vs Sticky Delta ────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Sticky Strike vs Sticky Delta — comment le smile se déplace</SectionTitle>
+
+      <IntuitionBlock emoji="📌" title="Le débat central du trading de vol" accent={ACCENT}>
+        Quand le spot S passe de S₀ à S₁, <strong>comment le smile se déplace-t-il ?</strong>
+        Deux conventions extrêmes s'affrontent :<br /><br />
+        <strong>Sticky Strike</strong> : la vol implicite de chaque <em>strike absolu K</em> est inchangée.
+        La courbe σ(K) est fixe. Mais comme l'ATM a glissé vers S₁, la vol ATM change.
+        Intuition : le marché "mémorise" les strikes fixes (comme les barrières d'options exotiques).<br /><br />
+        <strong>Sticky Delta</strong> : la vol implicite de chaque <em>delta Δ</em> est inchangée.
+        Le smile (vu en moneyness K/S) se translate avec le spot. L'ATM vol reste la même.
+        Intuition : le marché est homogène en termes de distance relative au spot.
+      </IntuitionBlock>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+        {[
+          {
+            label: 'Sticky Strike', color: T.a4,
+            desc: 'σ(K) inchangée pour tout K fixé. La vol ATM = σ(S₁) sur l\'ancienne courbe. Implique que le delta d\'un call change à cause du glissement du smile. Utilisé dans: options barrières, modèles locaux (Dupire).',
+          },
+          {
+            label: 'Sticky Delta', color: T.a2,
+            desc: 'σ(K/S) inchangée. La courbe se translate avec le spot. Vol ATM constante. Implique que le delta BS est correct. Utilisé dans: FX, modèles stochastiques (Heston), indices en régime normal.',
+          },
+        ].map(s => (
+          <div key={s.label} style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${s.color}33` }}>
+            <div style={{ color: s.color, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{s.label}</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>{s.desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <Grid cols={2} gap="10px">
+        <Slider label="σ_ATM" value={stickyAtm} min={0.08} max={0.50} step={0.01}
+          onChange={setStickyAtm} accent={ACCENT} format={v => `${(v * 100).toFixed(0)}%`} />
+        <Slider label="Skew initial" value={stickySkew} min={-0.40} max={0.20} step={0.01}
+          onChange={setStickySkew} accent={T.a3} format={v => v.toFixed(2)} />
+        <Slider label="Kurt (convexité)" value={stickyKurt} min={0} max={0.30} step={0.01}
+          onChange={setStickyKurt} accent={T.muted} format={v => v.toFixed(2)} />
+        <Slider label="Déplacement du spot (%)" value={spotMove} min={-30} max={30} step={1}
+          onChange={setSpotMove} accent={T.a6} format={v => `${v > 0 ? '+' : ''}${v}%`} />
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 8, margin: '10px 0 4px', flexWrap: 'wrap' }}>
+        <InfoChip label="Spot initial S₀" value={`${S0}`}   accent={T.a4} />
+        <InfoChip label="Spot final S₁"   value={`${S1}`}   accent={T.a6} />
+        <InfoChip label="Vol ATM — Sticky Strike" value={`${atmVolSS}%`} accent={T.a4} />
+        <InfoChip label="Vol ATM — Sticky Delta"  value={`${atmVolSD}%`} accent={T.a2} />
+      </div>
+
+      <ChartWrapper title="Smile avant (---) · Sticky Strike (vert) · Sticky Delta (bleu) après mouvement du spot" accent={ACCENT} height={260}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={stickyData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="K" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }}
+              label={{ value: 'Strike K', position: 'insideBottom', fill: T.muted, fontSize: 11, offset: -2 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} unit="%" domain={['auto', 'auto']} />
+            <ReferenceLine x={S0} stroke={T.a4} strokeDasharray="4 3"
+              label={{ value: `S₀=${S0}`, fill: T.a4, fontSize: 10 }} />
+            <ReferenceLine x={S1} stroke={T.a6} strokeDasharray="4 3"
+              label={{ value: `S₁=${S1}`, fill: T.a6, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }}
+              formatter={(v, name) => [`${v}%`, { avant: 'Avant', sticky_strike: 'Sticky Strike', sticky_delta: 'Sticky Delta' }[name]]} />
+            <Legend formatter={n => ({ avant: 'Avant (S₀)', sticky_strike: 'Après — Sticky Strike', sticky_delta: 'Après — Sticky Delta' }[n])} />
+            <Line type="monotone" dataKey="avant"         stroke={T.muted} strokeWidth={1.5} strokeDasharray="6 3" dot={false} />
+            <Line type="monotone" dataKey="sticky_strike" stroke={T.a4}    strokeWidth={2}   dot={false} />
+            <Line type="monotone" dataKey="sticky_delta"  stroke={T.a2}    strokeWidth={2}   dot={false} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 8, padding: 14, margin: '10px 0 4px', fontSize: 13, color: T.text, lineHeight: 1.7 }}>
+        <strong style={{ color: T.a4 }}>Sticky Strike (vert) :</strong> la courbe σ(K) est identique à la courbe "avant".
+        Mais le nouvel ATM est en S₁ → la vol ATM lue sur la courbe est <strong>{atmVolSS}%</strong> (≠ {(stickyAtm * 100).toFixed(0)}%).
+        La rotation du smile vu depuis le nouveau ATM est automatique.
+      </div>
+      <div style={{ background: `${T.a2}0d`, border: `1px solid ${T.a2}33`, borderRadius: 8, padding: 14, margin: '4px 0 18px', fontSize: 13, color: T.text, lineHeight: 1.7 }}>
+        <strong style={{ color: T.a2 }}>Sticky Delta (bleu) :</strong> la courbe σ(K/S) est inchangée — elle se translate avec le spot.
+        La vol ATM reste <strong>{atmVolSD}%</strong>. La forme relative du smile (distance put-call) est conservée.
+        Cette convention est plus "raisonnable" pour les marchés FX et les modèles stochastiques.
+      </div>
+
+      {/* ── Impact sur le Delta ──────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Conséquence sur le Delta — quel delta utiliser ?</SectionTitle>
+      <FormulaBox accent={ACCENT} label="Delta sous les deux conventions">
+        <K display>{"\\Delta_{\\text{Sticky Strike}} = \\frac{\\partial C}{\\partial S}\\bigg|_{\\sigma(K)\\,\\text{fixé}} = \\Delta_{BS}\\bigl(\\sigma_{impl}(K)\\bigr)"}</K>
+        <K display>{"\\Delta_{\\text{Sticky Delta}} = \\Delta_{BS} - \\text{Vanna} \\times \\frac{\\text{skew}}{S}"}</K>
+      </FormulaBox>
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
+        La correction au delta BS due au smile s'appelle le <strong style={{ color: ACCENT }}>"delta de smile"</strong>.
+        Avec un skew négatif et une vanna positive (call OTM), le delta sticky-delta est plus grand que le delta BS.
+        En pratique, les market makers d'equity et d'énergie utilisent souvent une convention intermédiaire.
+      </div>
+
+      {/* ── Vanna ────────────────────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Vanna — le Greek de la rotation du smile</SectionTitle>
+
+      <IntuitionBlock emoji="🔀" title="Vanna : quand le spot bouge, le delta change à cause de la vol" accent={ACCENT}>
+        La Vanna mesure la sensibilité croisée entre le spot et la vol implicite :<br />
+        <K>{"\\text{Vanna} = \\frac{\\partial^2 C}{\\partial S\\,\\partial\\sigma} = \\frac{\\partial\\Delta}{\\partial\\sigma} = \\frac{\\partial\\mathcal{V}}{\\partial S}"}</K><br /><br />
+        Quand le smile <em>pivote</em> (skew change), les options avec vanna ≠ 0 génèrent un P&L :
+        une option OTM voit son delta changer non seulement parce que S bouge, mais aussi parce que
+        la vol implicite à ce strike a changé. La vanna est maximale pour les options légèrement OTM
+        (ni trop proches de l'ATM, ni trop loin).
+      </IntuitionBlock>
+
+      <FormulaBox accent={ACCENT} label="Vanna — formule exacte (Black-Scholes)">
+        <K display>{"\\text{Vanna} = -\\phi(d_1) \\cdot \\frac{d_2}{\\sigma}"}</K>
+        <K display>{"d_1 = \\frac{\\ln(S/K)+(r+\\tfrac{1}{2}\\sigma^2)T}{\\sigma\\sqrt{T}}, \\quad d_2 = d_1 - \\sigma\\sqrt{T}"}</K>
+        <K display>{"\\text{P\\&L rotation} \\approx \\text{Vanna} \\times \\Delta S \\times \\Delta\\sigma_{impl}"}</K>
+      </FormulaBox>
+
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 12 }}>
+        La vanna est <strong style={{ color: ACCENT }}>positive</strong> pour un call OTM (d₂ &lt; 0) et <strong style={{ color: ACCENT }}>négative</strong> pour un put OTM (d₂ &gt; 0).
+        En pratique, les traders "vanna-hedgent" leur book en combinant des vanilles OTM de façon à annuler l'exposition nette.
+      </div>
+
+      <Grid cols={3} gap="8px">
+        <Slider label="S (spot)" value={vannS} min={80} max={130} step={1}
+          onChange={setVannS} accent={ACCENT} format={v => v.toFixed(0)} />
+        <Slider label="K (strike)" value={vannK} min={70} max={130} step={1}
+          onChange={setVannK} accent={T.a4} format={v => v.toFixed(0)} />
+        <Slider label="T (maturité)" value={vannT} min={0.05} max={2} step={0.05}
+          onChange={setVannT} accent={T.a3} format={v => `${v.toFixed(2)}a`} />
+        <Slider label="σ (vol implicite)" value={vannSig} min={0.05} max={0.80} step={0.01}
+          onChange={setVannSig} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
+        <Slider label="r (taux)" value={vannR} min={0} max={0.10} step={0.005}
+          onChange={setVannR} accent={T.muted} format={v => `${(v * 100).toFixed(1)}%`} />
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 8, margin: '10px 0 18px', flexWrap: 'wrap' }}>
+        <InfoChip label="d₁" value={vannaMetrics.d1} accent={ACCENT} />
+        <InfoChip label="d₂" value={vannaMetrics.d2} accent={T.a3} />
+        <InfoChip label="Delta (Δ)" value={vannaMetrics.delta.toFixed(3)} accent={T.a4} />
+        <InfoChip label="Vega (𝒱)" value={`${vannaMetrics.vega.toFixed(2)}$`} accent={T.a5} />
+        <InfoChip label="Vanna" value={vannaMetrics.vanna.toFixed(4)} accent={T.a2} />
+      </div>
+
+      {/* ── Exercises ────────────────────────────────────────────────────── */}
+      <Accordion title="Exercice — Identifier Sticky Strike ou Sticky Delta ?" accent={ACCENT} badge="Moyen">
+        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.9 }}>
+          <strong style={{ color: ACCENT }}>Contexte :</strong> WTI à S₀ = 80 $/bbl. Smile initial : σ_ATM = 30%, skew = -10%.
+          Après une annonce OPEP, le spot passe à S₁ = 72 $/bbl (-10%). On observe :<br />
+          — Vol du put K=70 (OTM) : reste à 39% (même qu'avant le mouvement)<br />
+          — Vol ATM (K=72, nouveau ATM) : monte à 33%<br /><br />
+          <strong>Question :</strong> quelle convention de smile le market maker utilise-t-il ?<br /><br />
+          <Demonstration accent={ACCENT}>
+            <DemoStep num={1} rule="Calcul vol K=70 sous Sticky Delta" ruleDetail="m = K/S₁ - 1" accent={ACCENT}>
+              Si Sticky Delta : m(K=70, S₁=72) = 70/72 - 1 = -2.78%.
+              Vol = 30% + (-0.10)×(-0.0278) + 0.08×(-0.0278)² ≈ <strong>30.3%</strong>.
+              Or on observe 39% → ce n'est pas Sticky Delta.
+            </DemoStep>
+            <DemoStep num={2} rule="Calcul vol K=70 sous Sticky Strike" ruleDetail="m = K/S₀ - 1" accent={ACCENT}>
+              Si Sticky Strike : smile ancré sur S₀=80.
+              m(K=70, S₀=80) = 70/80 - 1 = -12.5%.
+              Vol = 30% + (-0.10)×(-0.125) + 0.08×(-0.125)² = 30% + 1.25% + 0.125% = <strong>31.4%</strong>.
+              Toujours pas 39% — donc le smile a aussi steepné lors de la baisse du spot.
+            </DemoStep>
+            <DemoStep num={3} rule="Conclusion" ruleDetail="Sticky Strike + rotation" accent={ACCENT}>
+              Les deux effets se combinent : <strong>(1)</strong> convention proche de Sticky Strike (chaque K conserve une vol élevée),
+              <strong> (2)</strong> rotation simultanée du smile (skew est passé de -10% à ~-15%).
+              C'est typique de l'énergie en stress : smile tourne et monte ensemble.
+              Le put K=70 vendu est doublement pénalisé : hausse ATM vol + rotation du skew.
+            </DemoStep>
+          </Demonstration>
+        </div>
+      </Accordion>
+
+      <Accordion title="Exercice — P&L d'une rotation du smile via la Vanna" accent={ACCENT} badge="Difficile">
+        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.9 }}>
+          <strong style={{ color: ACCENT }}>Problème :</strong> Vous êtes long d'un call OTM : S=100, K=110, T=0.5a, σ=25%, r=4%.
+          Le spot passe à 103 (+3$) et la vol implicite de ce strike monte de 25% à 27% (+2%).
+          Estimez le P&L dû à la vanna (terme croisé spot-vol).<br /><br />
+          <Demonstration accent={ACCENT}>
+            <DemoStep num={1} rule="Calcul BS" ruleDetail="d₁, d₂" accent={ACCENT}>
+              <K>{"d_1 = \\frac{\\ln(100/110)+(0.04+0.03125)\\times0.5}{0.25\\sqrt{0.5}} = \\frac{-0.0953+0.0356}{0.1768} \\approx -0.338"}</K>,
+              <K>{"d_2 = -0.338-0.177=-0.515"}</K>.
+            </DemoStep>
+            <DemoStep num={2} rule="Vanna" ruleDetail="-φ(d₁)×d₂/σ" accent={ACCENT}>
+              <K>{"\\text{Vanna} = -\\phi(-0.338)\\times(-0.515)/0.25 = +\\frac{0.376\\times0.515}{0.25} \\approx +0.775"}</K>.
+              Vanna positive → le delta du call augmente quand la vol monte.
+            </DemoStep>
+            <DemoStep num={3} rule="P&L croisé" ruleDetail="Vanna × ΔS × Δσ" accent={ACCENT}>
+              <K>{"\\Delta P\\&L_{\\text{vanna}} \\approx 0.775 \\times 3 \\times 0.02 = +0.047\\$"}</K>
+              par option. Sur 1000 calls : <strong>+47$</strong>.
+              Ce terme s'additionne au P&L delta (≈ Δ×ΔS ≈ 0.37×3 = +1.11$/option)
+              et au P&L vega (≈ 𝒱×Δσ ≈ S×φ(d₁)×√T×0.02 ≈ 0.27$/option).
+            </DemoStep>
+          </Demonstration>
+        </div>
+      </Accordion>
+
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['skew', "Pente du smile à l'ATM — coefficient du terme linéaire en moneyness"],
+        ['kurt', 'Convexité du smile — coefficient du terme quadratique'],
+        ['Δskew', 'Rotation = variation de la pente du smile'],
+        ['Sticky Strike', 'Convention : σ(K) fixée pour chaque strike absolu K'],
+        ['Sticky Delta', 'Convention : σ(K/S) fixée — smile se translate avec le spot'],
+        ['Vanna', '∂²C/∂S∂σ = ∂Δ/∂σ = ∂Vega/∂S — sensibilité croisée spot-vol'],
+      ]} />
+    </div>
+  )
+}
