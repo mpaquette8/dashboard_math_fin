@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react'
 import {
   LineChart, Line, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine,
+  ResponsiveContainer,
 } from 'recharts'
 import { T } from '../../../design/tokens'
 import {
@@ -375,34 +376,38 @@ export function SwingOptionsTab() {
 
       <Grid cols={2} gap="16px">
         <ChartWrapper title={`Prix simulés — 3 scénarios avec collar K±${collar} €/MWh`} height={260}>
-          <LineChart data={priceChartData}>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-            <XAxis dataKey="h" tick={{ fill: T.muted, fontSize: 9 }}
-                   label={{ value: 'Heure du mois', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -2 }} />
-            <YAxis tick={{ fill: T.muted, fontSize: 10 }} domain={['auto', 'auto']} />
-            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, fontSize: 11 }}
-                     formatter={v => [`${v} €/MWh`]} />
-            <ReferenceLine y={theta + collar} stroke={T.a4} strokeDasharray="5 3"
-                           label={{ value: `K+δ=${theta + collar}`, fill: T.a4, fontSize: 9 }} />
-            <ReferenceLine y={theta - collar} stroke={T.a7} strokeDasharray="5 3"
-                           label={{ value: `K−δ=${theta - collar}`, fill: T.a7, fontSize: 9 }} />
-            <ReferenceLine y={theta} stroke={T.muted} strokeDasharray="3 3"
-                           label={{ value: `θ=${theta}`, fill: T.muted, fontSize: 9 }} />
-            <Line type="monotone" dataKey="s0" stroke={ACCENT} dot={false} strokeWidth={1.5} name="Scénario 1" />
-            <Line type="monotone" dataKey="s1" stroke={T.a5} dot={false} strokeWidth={1.5} name="Scénario 2" />
-            <Line type="monotone" dataKey="s2" stroke={T.a7} dot={false} strokeWidth={1.5} name="Scénario 3" />
-          </LineChart>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={priceChartData} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+              <XAxis dataKey="h" tick={{ fill: T.muted, fontSize: 9 }}
+                     label={{ value: 'Heure du mois', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -10 }} />
+              <YAxis tick={{ fill: T.muted, fontSize: 10 }} domain={['auto', 'auto']} />
+              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, fontSize: 11 }}
+                       formatter={v => [`${v} €/MWh`]} />
+              <ReferenceLine y={theta + collar} stroke={T.a4} strokeDasharray="5 3"
+                             label={{ value: `K+δ=${theta + collar}`, fill: T.a4, fontSize: 9 }} />
+              <ReferenceLine y={theta - collar} stroke={T.a7} strokeDasharray="5 3"
+                             label={{ value: `K−δ=${theta - collar}`, fill: T.a7, fontSize: 9 }} />
+              <ReferenceLine y={theta} stroke={T.muted} strokeDasharray="3 3"
+                             label={{ value: `θ=${theta}`, fill: T.muted, fontSize: 9 }} />
+              <Line type="monotone" dataKey="s0" stroke={ACCENT} dot={false} strokeWidth={1.5} name="Scénario 1" />
+              <Line type="monotone" dataKey="s1" stroke={T.a5} dot={false} strokeWidth={1.5} name="Scénario 2" />
+              <Line type="monotone" dataKey="s2" stroke={T.a7} dot={false} strokeWidth={1.5} name="Scénario 3" />
+            </LineChart>
+          </ResponsiveContainer>
         </ChartWrapper>
 
         <ChartWrapper title="Distribution des payoffs mensuels (N=200)" height={260}>
-          <BarChart data={histogram}>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-            <XAxis dataKey="range" tick={{ fill: T.muted, fontSize: 9 }}
-                   label={{ value: 'Payoff (€)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -2 }} />
-            <YAxis tick={{ fill: T.muted, fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, fontSize: 11 }} />
-            <Bar dataKey="count" fill={ACCENT} fillOpacity={0.75} name="Nb chemins" />
-          </BarChart>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={histogram} margin={{ top: 5, right: 20, left: 0, bottom: 20 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+              <XAxis dataKey="range" tick={{ fill: T.muted, fontSize: 9 }}
+                     label={{ value: 'Payoff (€)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -10 }} />
+              <YAxis tick={{ fill: T.muted, fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, fontSize: 11 }} />
+              <Bar dataKey="count" fill={ACCENT} fillOpacity={0.75} name="Nb chemins" />
+            </BarChart>
+          </ResponsiveContainer>
         </ChartWrapper>
       </Grid>
 
