@@ -86,6 +86,7 @@ export const categoryInfo = [
       { slug: 'forward',       label: 'Forward Curves' },
       { slug: 'options',       label: 'Options Énergie' },
       { slug: 'mean-reversion', label: 'Mean-Reversion' },
+      { slug: 'swing-options',  label: 'Swing Options' },
     ],
   },
   {

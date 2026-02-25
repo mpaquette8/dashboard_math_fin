@@ -8,6 +8,7 @@ import { MarchesTab } from './tabs/Marches.jsx'
 import { ForwardCurvesTab } from './tabs/ForwardCurves.jsx'
 import { OptionsTab, CasIntegrateurTab } from './tabs/OptionsEnergie.jsx'
 import { MeanRevTab, JumpTab } from './tabs/MeanReversion.jsx'
+import { SwingOptionsTab } from './tabs/SwingOptions.jsx'
 
 const ACCENT = T.a8  // red
 
@@ -107,6 +108,7 @@ const TAB_SLUGS = {
   forward:          'Forward Curves',
   options:          'Options Énergie',
   'mean-reversion': 'Mean-Reversion',
+  'swing-options':  'Swing Options',
 }
 const DISPLAY_TABS = Object.values(TAB_SLUGS)
 const slugOf = (label) => Object.keys(TAB_SLUGS).find(k => TAB_SLUGS[k] === label) || 'marches'
@@ -136,6 +138,7 @@ export default function MathsEnergie() {
         {activeLabel === 'Forward Curves'   && <ForwardCurvesTab />}
         {activeLabel === 'Options Énergie'  && <OptionsEnergieTab />}
         {activeLabel === 'Mean-Reversion'   && <MeanRevEnergyTab />}
+        {activeLabel === 'Swing Options'    && <SwingOptionsTab />}
       </div>
     </div>
   )
