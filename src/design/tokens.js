@@ -98,6 +98,7 @@ export const categoryInfo = [
     tabs: [
       { slug: 'monte-carlo',   label: 'Monte Carlo' },
       { slug: 'arbres',        label: 'Arbres & Méthodes' },
+      { slug: 'react-vite',    label: 'React & Vite' },
       { slug: 'calibration',   label: 'Calibration' },
       { slug: 'visualisation', label: 'Visualisation & Outils' },
     ],
