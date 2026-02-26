@@ -7,6 +7,7 @@ import { TabBar, IntuitionBlock, FormulaBox, SectionTitle } from '../../design/c
 import { SimulTab, GBMTab } from './tabs/MonteCarlo.jsx'
 import { MonteCarloTab } from './tabs/MonteCarlo.jsx'
 import { ArbreTab } from './tabs/Arbres.jsx'
+import { ReactViteTab } from './tabs/ReactVite.jsx'
 
 const ACCENT = T.a3  // violet
 
@@ -122,6 +123,7 @@ function CategoryHeader() {
 const TAB_SLUGS = {
   'monte-carlo':   'Monte Carlo',
   arbres:          'Arbres & Méthodes',
+  'react-vite':    'React & Vite',
   calibration:     'Calibration',
   visualisation:   'Visualisation & Outils',
 }
@@ -151,6 +153,7 @@ export default function Simulation() {
       <div style={{ marginTop: 24 }}>
         {activeLabel === 'Monte Carlo' && <MCTab />}
         {activeLabel === 'Arbres & Méthodes' && <ArbresTab />}
+        {activeLabel === 'React & Vite' && <ReactViteTab />}
         {activeLabel === 'Calibration' && (
           <ComingSoon
             title="Calibration & Optimisation"
