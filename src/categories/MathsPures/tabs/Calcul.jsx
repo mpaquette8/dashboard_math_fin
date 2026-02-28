@@ -225,9 +225,12 @@ export function DerivTab() {
           <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Sinus & Cosinus</div>
           <K display>{"\\frac{d}{dx}(\\sin x) = \\cos x"}</K>
           <K display>{"\\frac{d}{dx}(\\cos x) = -\\sin x"}</K>
-          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
-            Moyen mnémotechnique : sin → cos → −sin → −cos → sin (cycle de période 4).<br />
-            Ex. : <K>{"\\frac{d}{dx}(\\sin(3x)) = 3\\cos(3x)"}</K> (règle de chaîne)
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.7 }}>
+            <strong style={{ color: T.text }}>Avec règle de chaîne</strong> (u = u(x)) :<br />
+            <K>{"\\frac{d}{dx}(\\sin(u)) = u' \\cdot \\cos(u)"}</K><br />
+            <K>{"\\frac{d}{dx}(\\cos(u)) = -u' \\cdot \\sin(u)"}</K><br />
+            Ex. : <K>{"(\\sin(3x))' = 3\\cos(3x)"}</K>, <K>{"(\\cos(x^2))' = -2x\\sin(x^2)"}</K><br />
+            <em>Cycle mnémotechnique :</em> sin → cos → −sin → −cos → sin (période 4)
           </div>
         </div>
 
