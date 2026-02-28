@@ -216,9 +216,6 @@ export function JumpTab() {
   const [muJ, setMuJ] = useState(0.0)
   const [sigJ, setSigJ] = useState(0.2)
   const [sigma, setSigma] = useState(0.2)
-  const [mode, setMode] = useState('mrjd')
-  const [kappa, setKappa] = useState(3)
-  const [theta, setTheta] = useState(80)
   const [key, setKey] = useState(0)
 
   function poissonRand(lam) {
@@ -229,35 +226,28 @@ export function JumpTab() {
     return k - 1
   }
 
-  const Tstep = 1, n = 252, dt = 1 / n
+  const n = 252, dt = 1 / n
   const COLORS = [ACCENT, T.a4, T.a5]
 
   const paths = useMemo(() => {
     const result = []
     for (let p = 0; p < 3; p++) {
-      let S = mode === 'merton' ? 100 : theta
+      let S = 100
       const pts = [{ t: 0, S: +S.toFixed(2) }]
       for (let i = 1; i <= n; i++) {
         const Z = gaussRand()
         const nJumps = poissonRand(lambda * dt)
-        if (mode === 'merton') {
-          const kbar = Math.exp(muJ + 0.5 * sigJ * sigJ) - 1
-          let jumpLogSum = 0
-          for (let j = 0; j < nJumps; j++) jumpLogSum += muJ + sigJ * gaussRand()
-          S *= Math.exp((0.05 - lambda * kbar - 0.5 * sigma * sigma) * dt + sigma * Math.sqrt(dt) * Z + jumpLogSum)
-        } else {
-          // MRJD : dX = κ(θ-X)dt + σX dW + X(e^Y-1) dN
-          let jumpMult = 0
-          for (let j = 0; j < nJumps; j++) jumpMult += Math.expm1(muJ + sigJ * gaussRand())
-          S += kappa * (theta - S) * dt + sigma * S * Math.sqrt(dt) * Z + S * jumpMult
-        }
+        const kbar = Math.exp(muJ + 0.5 * sigJ * sigJ) - 1
+        let jumpLogSum = 0
+        for (let j = 0; j < nJumps; j++) jumpLogSum += muJ + sigJ * gaussRand()
+        S *= Math.exp((0.05 - lambda * kbar - 0.5 * sigma * sigma) * dt + sigma * Math.sqrt(dt) * Z + jumpLogSum)
         S = Math.max(S, 0.01)
         if (i % 3 === 0) pts.push({ t: +(i * dt).toFixed(3), S: +S.toFixed(2) })
       }
       result.push(pts)
     }
     return result
-  }, [lambda, muJ, sigJ, sigma, mode, kappa, theta, key])
+  }, [lambda, muJ, sigJ, sigma, key])
 
   const poissonData = useMemo(() => {
     const pts = [{ t: 0, N: 0 }]
@@ -283,8 +273,9 @@ export function JumpTab() {
         Le mouvement brownien est continu — mais les marchés de l'énergie ne le sont pas.
         Un ouragan ferme des plateformes → le gaz triple en quelques heures.
         Une décision OPEP → le pétrole chute de 10% instantanément.
-        Le cours DPH3V utilise explicitement le <strong>MRJD (Mean-Reverting Jump Diffusion)</strong> pour capturer
-        à la fois le retour à la moyenne et ces chocs ponctuels discontinus.
+        Le processus de Poisson modélise l'<strong>arrivée aléatoire</strong> de ces chocs ;
+        le modèle de Merton combine ce processus à sauts avec une diffusion brownienne continue.
+        La combinaison avec le mean-reversion (MRJD) est traitée dans l'onglet suivant.
       </IntuitionBlock>
 
       <SectionTitle accent={ACCENT}>1. Processus de Poisson — Modèle des arrivées de sauts</SectionTitle>
@@ -297,7 +288,7 @@ export function JumpTab() {
         ['λ', "Intensité : nombre moyen de sauts par an (ex: λ=5 → 1 saut tous les 73j)"],
         ['N(t)', "Processus de comptage — ne peut qu'augmenter, trajectoires en escalier"],
         ['dN', 'Vaut 1 avec probabilité λdt, 0 sinon (quand dt petit)'],
-        ['τ ~ Exp(λ)', 'Temps entre sauts : P(τ > t) = e^(-λt), mémoryfree'],
+        ['τ ~ Exp(λ)', 'Temps entre sauts : P(τ > t) = e^(-λt), sans mémoire'],
       ]} />
 
       <SectionTitle accent={ACCENT}>2. Merton Jump Diffusion (1976) — Actifs financiers</SectionTitle>
@@ -311,39 +302,11 @@ export function JumpTab() {
         <K>{"\\mu_J = 0"}</K> : sauts symétriques (perturbations neutres en espérance).
       </div>
 
-      <SectionTitle accent={ACCENT}>3. MRJD — Mean-Reverting Jump Diffusion (cours DPH3V)</SectionTitle>
-      <FormulaBox accent={ACCENT} label="MRJD — Modèle énergie explicitement au programme">
-        <K display>{"dX = \\kappa(\\theta - X)\\,dt + \\sigma X\\,dW + X(e^Y - 1)\\,dN"}</K>
-        <K display>{"Y \\sim \\mathcal{N}(\\mu_J,\\, \\sigma_J^2)"}</K>
-      </FormulaBox>
-      <SymbolLegend accent={ACCENT} symbols={[
-        ['κ(θ-X)dt', 'Force de rappel vers θ (mean-reversion OU)'],
-        ['σX dW', 'Diffusion continue, proportionnelle au prix'],
-        ['X(e^Y - 1) dN', 'Saut multiplicatif : Y = log-rendement du saut'],
-        ['λ', "Fréquence des sauts (4–12/an typique pour l'énergie)"],
-        ['Vol totale ≈', '√(σ² + λ(µ_J² + σ_J²)) — diffusion + composante saut'],
-      ]} />
-
-      <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        {['merton', 'mrjd'].map(m => (
-          <button key={m} onClick={() => setMode(m)} style={{
-            background: mode === m ? `${ACCENT}22` : T.panel2,
-            border: `1px solid ${mode === m ? ACCENT : T.border}`,
-            color: mode === m ? ACCENT : T.muted,
-            borderRadius: 6, padding: '6px 14px', cursor: 'pointer', fontSize: 12, fontWeight: mode === m ? 700 : 400,
-          }}>{m === 'merton' ? 'Merton JD (S₀=100)' : 'MRJD Énergie'}</button>
-        ))}
-      </div>
-
-      <Grid cols={3} gap="10px">
+      <Grid cols={2} gap="10px">
         <Slider label="λ (sauts/an)" value={lambda} min={1} max={20} step={0.5} onChange={setLambda} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="µ_J (moyenne saut)" value={muJ} min={-0.4} max={0.4} step={0.02} onChange={setMuJ} accent={T.a4} format={v => `${(v * 100).toFixed(0)}%`} />
         <Slider label="σ_J (taille saut)" value={sigJ} min={0.05} max={0.6} step={0.01} onChange={setSigJ} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
         <Slider label="σ (diffusion)" value={sigma} min={0.05} max={0.5} step={0.01} onChange={setSigma} accent={T.a7} format={v => `${(v * 100).toFixed(0)}%`} />
-        {mode === 'mrjd' && <>
-          <Slider label="κ (mean-rev.)" value={kappa} min={0.5} max={10} step={0.5} onChange={setKappa} accent={T.a3} format={v => v.toFixed(1)} />
-          <Slider label="θ (niveau moyen)" value={theta} min={30} max={150} step={5} onChange={setTheta} accent={T.a6} format={v => `${v}$/bbl`} />
-        </>}
       </Grid>
 
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
@@ -358,13 +321,12 @@ export function JumpTab() {
         borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 12, marginBottom: 12,
       }}>🔄 Nouvelles trajectoires</button>
 
-      <ChartWrapper title={mode === 'merton' ? 'Merton JD — 3 trajectoires (S₀=100)' : `MRJD — 3 trajectoires (θ=${theta}$/bbl)`} accent={ACCENT} height={300}>
+      <ChartWrapper title="Merton JD — 3 trajectoires (S₀=100)" accent={ACCENT} height={300}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
             <XAxis dataKey="t" type="number" domain={[0, 1]} stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Temps (années)', fill: T.muted, fontSize: 11 }} />
             <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-            {mode === 'mrjd' && <ReferenceLine y={theta} stroke={T.a4} strokeDasharray="6 3" label={{ value: `θ=${theta}`, fill: T.a4, fontSize: 10 }} />}
             <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
             {paths.map((p, i) => (
               <Line key={i} data={p} type="monotone" dataKey="S" stroke={COLORS[i]} strokeWidth={1.5} dot={false} name={`Traj. ${i + 1}`} />
@@ -385,6 +347,134 @@ export function JumpTab() {
         </ResponsiveContainer>
       </ChartWrapper>
 
+      <Accordion title="Exercice — Probabilité de saut (Poisson)" accent={ACCENT} badge="Facile">
+        <p style={{ color: T.text }}>Le pétrole subit <K>{"\\lambda=4"}</K> sauts/an. Quelle est la probabilité d'avoir <K>{"\\geq 2"}</K> sauts en 6 mois ?</p>
+        <FormulaBox accent={ACCENT}><K>{"P(N \\geq 2) = 59.4\\%"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Processus de Poisson" ruleDetail="λt = intensité × durée" accent={ACCENT}><K>{"t = 0.5\\text{ an} \\Rightarrow \\lambda t = 4 \\times 0.5 = 2"}</K></DemoStep>
+          <DemoStep num={2} rule="Processus de Poisson" ruleDetail="P(N=k) = e^{−λt}(λt)^k/k!" accent={ACCENT}><K>{"P(N \\geq 2) = 1 - P(N=0) - P(N=1) = 1 - e^{-2} - 2e^{-2} = 1 - 3 \\times 0.1353 = 59.4\\%"}</K></DemoStep>
+        </Demonstration>
+      </Accordion>
+    </div>
+  )
+}
+
+
+// ─── Tab: MRJD — Combinaison ─────────────────────────────────────────────────
+
+export function MRJDTab() {
+  const [lambda, setLambda] = useState(6)
+  const [muJ, setMuJ] = useState(0.0)
+  const [sigJ, setSigJ] = useState(0.25)
+  const [sigma, setSigma] = useState(0.35)
+  const [kappa, setKappa] = useState(4)
+  const [theta, setTheta] = useState(80)
+  const [key, setKey] = useState(0)
+
+  function poissonRand(lam) {
+    if (lam <= 0) return 0
+    const L = Math.exp(-lam)
+    let k = 0, p = 1
+    do { k++; p *= Math.random() } while (p > L && k < 50)
+    return k - 1
+  }
+
+  const n = 252, dt = 1 / n
+  const COLORS = [ACCENT, T.a4, T.a5]
+
+  const paths = useMemo(() => {
+    const result = []
+    for (let p = 0; p < 3; p++) {
+      let S = theta
+      const pts = [{ t: 0, S: +S.toFixed(2) }]
+      for (let i = 1; i <= n; i++) {
+        const Z = gaussRand()
+        const nJumps = poissonRand(lambda * dt)
+        let jumpMult = 0
+        for (let j = 0; j < nJumps; j++) jumpMult += Math.expm1(muJ + sigJ * gaussRand())
+        S += kappa * (theta - S) * dt + sigma * S * Math.sqrt(dt) * Z + S * jumpMult
+        S = Math.max(S, 0.01)
+        if (i % 3 === 0) pts.push({ t: +(i * dt).toFixed(3), S: +S.toFixed(2) })
+      }
+      result.push(pts)
+    }
+    return result
+  }, [lambda, muJ, sigJ, sigma, kappa, theta, key])
+
+  const halfLife = Math.log(2) / kappa
+  const volTotal = Math.sqrt(sigma * sigma + lambda * (muJ * muJ + sigJ * sigJ))
+  const pAtLeastOnePerMonth = 1 - Math.exp(-lambda / 12)
+
+  return (
+    <div>
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, marginBottom: 14 }}>
+        <strong style={{ color: ACCENT }}>Synthèse des deux briques :</strong> le MRJD combine le processus OU
+        (onglet <em>Mean-Reversion</em>) et le processus de Poisson (onglet <em>Processus à Saut</em>).
+        C'est le <strong>modèle standard de l'industrie énergie</strong> — explicitement au programme DPH3V.
+        Il capture à la fois l'ancrage fondamental vers θ et les chocs ponctuels discontinus (spikes).
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 16 }}>
+        <FormulaBox accent={T.a3} label="Brique 1 — OU (mean-reversion)">
+          <K display>{"dX = \\kappa(\\theta - X)\\,dt + \\sigma\\,dW"}</K>
+        </FormulaBox>
+        <FormulaBox accent={T.a5} label="Brique 2 — Poisson (sauts)">
+          <K display>{"dN \\sim \\text{Poisson}(\\lambda\\,dt)"}</K>
+          <K display>{"Y \\sim \\mathcal{N}(\\mu_J,\\,\\sigma_J^2)"}</K>
+        </FormulaBox>
+      </div>
+
+      <FormulaBox accent={ACCENT} label="MRJD — Mean-Reverting Jump Diffusion (DPH3V)">
+        <K display>{"dX = \\underbrace{\\kappa(\\theta - X)\\,dt}_{\\text{mean-reversion}} + \\underbrace{\\sigma X\\,dW}_{\\text{diffusion}} + \\underbrace{X(e^Y - 1)\\,dN}_{\\text{saut}}"}</K>
+        <K display>{"Y \\sim \\mathcal{N}(\\mu_J,\\, \\sigma_J^2)"}</K>
+      </FormulaBox>
+
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['κ(θ-X)dt', 'Force de rappel vers θ — le prix revient vers le fondamental'],
+        ['σX dW', 'Diffusion continue proportionnelle au prix'],
+        ['X(e^Y − 1) dN', 'Saut multiplicatif : Y = log-rendement du saut, e^Y−1 = rendement brut'],
+        ['λ', "Fréquence des sauts (4–12/an typique pour l'énergie)"],
+        ['σ_tot ≈', '√(σ² + λ(µ_J² + σ_J²)) — variance diffusion + variance sauts'],
+      ]} />
+
+      <Grid cols={3} gap="10px">
+        <Slider label="κ (mean-rev.)" value={kappa} min={0.5} max={10} step={0.5} onChange={setKappa} accent={T.a3} format={v => v.toFixed(1)} />
+        <Slider label="θ (niveau moyen)" value={theta} min={30} max={150} step={5} onChange={setTheta} accent={T.a4} format={v => `${v}$/bbl`} />
+        <Slider label="σ (diffusion)" value={sigma} min={0.05} max={0.6} step={0.01} onChange={setSigma} accent={T.a7} format={v => `${(v * 100).toFixed(0)}%`} />
+        <Slider label="λ (sauts/an)" value={lambda} min={1} max={20} step={0.5} onChange={setLambda} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="µ_J (moyenne saut)" value={muJ} min={-0.4} max={0.4} step={0.02} onChange={setMuJ} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
+        <Slider label="σ_J (taille saut)" value={sigJ} min={0.05} max={0.6} step={0.01} onChange={setSigJ} accent={T.a6} format={v => `${(v * 100).toFixed(0)}%`} />
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', margin: '12px 0' }}>
+        <InfoChip label="Demi-vie OU" value={`${(halfLife * 365).toFixed(0)}j`} accent={T.a3} />
+        <InfoChip label="E[X(∞)]" value={`${theta}$/bbl`} accent={T.a4} />
+        <InfoChip label="λ sauts/an" value={lambda.toFixed(1)} accent={ACCENT} />
+        <InfoChip label="E[τ] entre sauts" value={`${(365 / lambda).toFixed(0)}j`} accent={T.a5} />
+        <InfoChip label="P(≥1 saut/mois)" value={`${(pAtLeastOnePerMonth * 100).toFixed(0)}%`} accent={T.a6} />
+        <InfoChip label="σ totale ≈" value={`${(volTotal * 100).toFixed(0)}%`} accent={T.a7} />
+      </div>
+
+      <button onClick={() => setKey(k => k + 1)} style={{
+        background: `${ACCENT}22`, border: `1px solid ${ACCENT}44`, color: ACCENT,
+        borderRadius: 6, padding: '8px 16px', cursor: 'pointer', fontSize: 12, marginBottom: 12,
+      }}>🔄 Nouvelles trajectoires</button>
+
+      <ChartWrapper title={`MRJD — 3 trajectoires (θ=${theta}$/bbl)`} accent={ACCENT} height={300}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="t" type="number" domain={[0, 1]} stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Temps (années)', fill: T.muted, fontSize: 11 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <ReferenceLine y={theta} stroke={T.a4} strokeDasharray="6 3" label={{ value: `θ=${theta}`, fill: T.a4, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8 }} />
+            {paths.map((p, i) => (
+              <Line key={i} data={p} type="monotone" dataKey="S" stroke={COLORS[i]} strokeWidth={1.5} dot={false} name={`Traj. ${i + 1}`} />
+            ))}
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
       <ExampleBlock title="Spike de gaz naturel — Rupture d'approvisionnement" accent={ACCENT}>
         <p>Gaz naturel : <K>{"\\theta=3"}</K>$/MMBtu, <K>{"\\kappa=4"}</K>, <K>{"\\sigma=35\\%"}</K>, <K>{"\\lambda=6"}</K> sauts/an, <K>{"\\mu_J=0\\%"}</K>, <K>{"\\sigma_J=25\\%"}</K></p>
         <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 71\\%\\text{ (vs 35% sans sauts)}"}</K></FormulaBox>
@@ -396,14 +486,6 @@ export function JumpTab() {
         </Demonstration>
       </ExampleBlock>
 
-      <Accordion title="Exercice — Probabilité de saut (Poisson)" accent={ACCENT} badge="Facile">
-        <p style={{ color: T.text }}>Le pétrole subit <K>{"\\lambda=4"}</K> sauts/an. Quelle est la probabilité d'avoir <K>{"\\geq 2"}</K> sauts en 6 mois ?</p>
-        <FormulaBox accent={ACCENT}><K>{"P(N \\geq 2) = 59.4\\%"}</K></FormulaBox>
-        <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Processus de Poisson" ruleDetail="λt = intensité × durée" accent={ACCENT}><K>{"t = 0.5\\text{ an} \\Rightarrow \\lambda t = 4 \\times 0.5 = 2"}</K></DemoStep>
-          <DemoStep num={2} rule="Processus de Poisson" ruleDetail="P(N=k) = e^{−λt}(λt)^k/k!" accent={ACCENT}><K>{"P(N \\geq 2) = 1 - P(N=0) - P(N=1) = 1 - e^{-2} - 2e^{-2} = 1 - 3 \\times 0.1353 = 59.4\\%"}</K></DemoStep>
-        </Demonstration>
-      </Accordion>
       <Accordion title="Exercice — Vol totale MRJD" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.text }}><K>{"\\sigma=20\\%"}</K>, <K>{"\\lambda=8"}</K>, <K>{"\\mu_J=0"}</K>, <K>{"\\sigma_J=15\\%"}</K>. Calculez la volatilité totale effective.</p>
         <FormulaBox accent={ACCENT}><K>{"\\sigma_{\\text{totale}} \\approx 46.9\\%\\text{ (vs 20% sans sauts)}"}</K></FormulaBox>
