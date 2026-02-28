@@ -220,6 +220,28 @@ export function DerivTab() {
           </div>
         </div>
 
+        {/* Sinus & Cosinus */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Sinus & Cosinus</div>
+          <K display>{"\\frac{d}{dx}(\\sin x) = \\cos x"}</K>
+          <K display>{"\\frac{d}{dx}(\\cos x) = -\\sin x"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+            Moyen mnémotechnique : sin → cos → −sin → −cos → sin (cycle de période 4).<br />
+            Ex. : <K>{"\\frac{d}{dx}(\\sin(3x)) = 3\\cos(3x)"}</K> (règle de chaîne)
+          </div>
+        </div>
+
+        {/* Tangente & trigo inverse */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Tangente & trigo inverse</div>
+          <K display>{"\\frac{d}{dx}(\\tan x) = \\frac{1}{\\cos^2 x} = 1 + \\tan^2 x"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 2, lineHeight: 1.7 }}>
+            <K>{"\\frac{d}{dx}(\\arcsin x) = \\dfrac{1}{\\sqrt{1-x^2}}"}</K><br />
+            <K>{"\\frac{d}{dx}(\\arccos x) = -\\dfrac{1}{\\sqrt{1-x^2}}"}</K><br />
+            <K>{"\\frac{d}{dx}(\\arctan x) = \\dfrac{1}{1+x^2}"}</K>
+          </div>
+        </div>
+
       </Grid>
 
       <SectionTitle accent={ACCENT}>Applications des dérivées — Développement de Taylor</SectionTitle>
