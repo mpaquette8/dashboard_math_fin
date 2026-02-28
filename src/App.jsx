@@ -7,6 +7,7 @@ import MathsPures from './categories/MathsPures/index.jsx'
 import MathsFinance from './categories/MathsFinance/index.jsx'
 import MathsEnergie from './categories/MathsEnergie/index.jsx'
 import Simulation from './categories/Simulation/index.jsx'
+import Informatique from './categories/Informatique/index.jsx'
 
 // 'mobile'  → < 480px  : hamburger + sidebar slide-in
 // 'compact' → 480-767px: barre d'icônes 56px (paysage téléphone)
@@ -184,6 +185,9 @@ export default function App() {
 
             <Route path="/simulation" element={<Navigate to="/simulation/monte-carlo" replace />} />
             <Route path="/simulation/:tab" element={<Simulation />} />
+
+            <Route path="/informatique" element={<Navigate to="/informatique/react-vite" replace />} />
+            <Route path="/informatique/:tab" element={<Informatique />} />
 
             {/* Checklist */}
             <Route path="/checklist" element={<Checklist />} />
