@@ -462,6 +462,65 @@ export function IntegTab() {
         <K display>{"\\int_a^b f(x)\\,dx = F(b) - F(a) \\quad \\text{où } F' = f \\text{ (primitive de } f\\text{)}"}</K>
       </FormulaBox>
 
+      <SectionTitle accent={ACCENT}>Règles essentielles de calcul</SectionTitle>
+      <IntuitionBlock emoji="🧮" title="Pourquoi des règles ?" accent={ACCENT}>
+        Contrairement à la dérivée — où une suite d'algorithmes (produit, chaîne…) couvre tous les cas — il n'existe pas de méthode universelle pour trouver une primitive. Ces 8 règles couvrent cependant ~90 % des situations rencontrées en pratique.
+      </IntuitionBlock>
+
+      <Grid cols={2} gap="12px">
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>1. Linéarité</div>
+          <K display>{"\\int (\\alpha\\,f + \\beta\\,g)\\,dx = \\alpha\\int f\\,dx + \\beta\\int g\\,dx"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>L'intégrale est linéaire : on peut sortir les constantes et séparer les sommes.</div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>2. Règle de puissance</div>
+          <K display>{"\\int x^n\\,dx = \\frac{x^{n+1}}{n+1} + C \\quad (n \\ne -1)"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>Augmenter l'exposant de 1, diviser par le nouvel exposant. Exception : <K>{"n = -1"}</K> → règle du logarithme.</div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>3. Exponentielle</div>
+          <K display>{"\\int e^x\\,dx = e^x + C \\qquad \\int e^{ax}\\,dx = \\frac{e^{ax}}{a} + C"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}><K>{"e^x"}</K> est sa propre primitive. Avec un facteur <K>{"a"}</K>, on divise par <K>{"a"}</K>.</div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>4. Logarithme</div>
+          <K display>{"\\int \\frac{1}{x}\\,dx = \\ln|x| + C"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>Cas particulier <K>{"n = -1"}</K> exclu de la règle de puissance. La valeur absolue gère les <K>{"x < 0"}</K>.</div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>5. Trigonométrie</div>
+          <K display>{"\\int \\sin x\\,dx = -\\cos x + C \\qquad \\int \\cos x\\,dx = \\sin x + C"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>Attention au signe : primitive de <K>{"\\sin x"}</K> est <K>{"-\\cos x"}</K>. Mnémotechnique : dériver <K>{"-\\cos x"}</K> redonne <K>{"\\sin x"}</K>.</div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>6. Substitution (changement de variable)</div>
+          <K display>{"\\int f(g(x))\\,g'(x)\\,dx = \\int f(u)\\,du \\quad (u = g(x))"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
+            Ex : <K>{"\\int 2x\\cos(x^2)\\,dx"}</K>. Poser <K>{"u = x^2"}</K>, <K>{"du = 2x\\,dx"}</K> → <K>{"\\int \\cos u\\,du = \\sin(x^2) + C"}</K>.
+          </div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>7. Intégration par parties (IPP)</div>
+          <K display>{"\\int u\\,dv = uv - \\int v\\,du"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
+            Ex : <K>{"\\int x e^x\\,dx"}</K>. Poser <K>{"u = x"}</K>, <K>{"dv = e^x dx"}</K> → <K>{"xe^x - e^x + C"}</K>.
+          </div>
+        </div>
+
+        <div style={{ background: T.panel2, borderRadius: 8, padding: 14, border: `1px solid ${ACCENT}33` }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 6 }}>8. Évaluation aux bornes (TFC)</div>
+          <K display>{"\\int_a^b f(x)\\,dx = \\Big[F(x)\\Big]_a^b = F(b) - F(a)"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>Une fois la primitive <K>{"F"}</K> trouvée via les règles 1–7, évaluer aux bornes donne une valeur numérique.</div>
+        </div>
+      </Grid>
+
       <SectionTitle accent={ACCENT}>L'espérance comme intégrale</SectionTitle>
       <FormulaBox accent={ACCENT} label="Espérance d'une variable continue">
         <K display>{"E[X] = \\int_{-\\infty}^{+\\infty} x \\cdot f(x)\\,dx"}</K>
@@ -580,6 +639,63 @@ export function IntegTab() {
           </DemoStep>
           <DemoStep num={4} rule="Interprétation" accent={ACCENT}>
             La variable tronquée <K>{"\\max(X-2,0)"}</K> est analogue au payoff d'un call : nulle sous le strike, croissante au-dessus. Ce concept est fondamental en théorie des options.
+          </DemoStep>
+        </Demonstration>
+      </Accordion>
+
+      <Accordion title="Exercice 4 — Primitives polynomiales" accent={ACCENT} badge="Facile">
+        <p style={{ color: T.text }}>Calculez <K>{"\\int (3x^2 + 2x)\\,dx"}</K></p>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\int (3x^2 + 2x)\\,dx = x^3 + x^2 + C"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Linéarité" ruleDetail="∫(f + g)dx = ∫f dx + ∫g dx" accent={ACCENT}>
+            <K>{"\\int (3x^2 + 2x)\\,dx = 3\\int x^2\\,dx + 2\\int x\\,dx"}</K>
+          </DemoStep>
+          <DemoStep num={2} rule="Règle de puissance" ruleDetail="∫xⁿ dx = xⁿ⁺¹/(n+1) + C" accent={ACCENT}>
+            <K>{"3 \\cdot \\frac{x^3}{3} + 2 \\cdot \\frac{x^2}{2} + C = x^3 + x^2 + C"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Vérification" ruleDetail="Dériver le résultat doit redonner f(x)" accent={ACCENT}>
+            <K>{"\\frac{d}{dx}(x^3 + x^2 + C) = 3x^2 + 2x \\checkmark"}</K>
+          </DemoStep>
+        </Demonstration>
+      </Accordion>
+
+      <Accordion title="Exercice 5 — Intégration par parties" accent={ACCENT} badge="Moyen">
+        <p style={{ color: T.text }}>Calculez <K>{"\\int_0^1 x\\,e^x\\,dx"}</K></p>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\int_0^1 x\\,e^x\\,dx = 1"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Choix de u et dv" ruleDetail="Règle LIATE : choisir u = terme algébrique" accent={ACCENT}>
+            Poser <K>{"u = x"}</K> (se simplifie en dérivant) et <K>{"dv = e^x\\,dx"}</K> (facile à intégrer).
+            Alors <K>{"du = dx"}</K> et <K>{"v = e^x"}</K>.
+          </DemoStep>
+          <DemoStep num={2} rule="IPP" ruleDetail="∫u dv = uv − ∫v du" accent={ACCENT}>
+            <K>{"\\int_0^1 x\\,e^x\\,dx = \\Big[x\\,e^x\\Big]_0^1 - \\int_0^1 e^x\\,dx"}</K>
+          </DemoStep>
+          <DemoStep num={3} rule="Calcul des deux termes" accent={ACCENT}>
+            Premier terme : <K>{"\\big[x\\,e^x\\big]_0^1 = 1 \\cdot e - 0 \\cdot 1 = e"}</K>
+            <br />Second terme : <K>{"\\int_0^1 e^x\\,dx = \\big[e^x\\big]_0^1 = e - 1"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Résultat" accent={ACCENT}>
+            <K>{"\\int_0^1 x\\,e^x\\,dx = e - (e - 1) = 1"}</K>
+          </DemoStep>
+        </Demonstration>
+      </Accordion>
+
+      <Accordion title="Exercice 6 — Substitution" accent={ACCENT} badge="Moyen">
+        <p style={{ color: T.text }}>Calculez <K>{"\\int 2x\\cos(x^2)\\,dx"}</K></p>
+        <FormulaBox accent={ACCENT} label="Résultat"><K>{"\\int 2x\\cos(x^2)\\,dx = \\sin(x^2) + C"}</K></FormulaBox>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Identifier la substitution" ruleDetail="Repérer f(g(x))·g'(x)" accent={ACCENT}>
+            On reconnaît <K>{"\\cos(\\underbrace{x^2}_{g(x)}) \\cdot \\underbrace{2x}_{g'(x)}"}</K>. Poser <K>{"u = x^2"}</K>.
+          </DemoStep>
+          <DemoStep num={2} rule="Changement de variable" ruleDetail="du = g'(x) dx" accent={ACCENT}>
+            <K>{"u = x^2 \\Rightarrow du = 2x\\,dx"}</K>. L'intégrale devient <K>{"\\int \\cos(u)\\,du"}</K>.
+          </DemoStep>
+          <DemoStep num={3} rule="Intégration" ruleDetail="∫cos u du = sin u + C" accent={ACCENT}>
+            <K>{"\\int \\cos(u)\\,du = \\sin(u) + C"}</K>
+          </DemoStep>
+          <DemoStep num={4} rule="Retour à x" accent={ACCENT}>
+            Resubstituer <K>{"u = x^2"}</K> : <K>{"\\sin(x^2) + C"}</K>
+            <br />Vérification : <K>{"\\frac{d}{dx}\\sin(x^2) = \\cos(x^2) \\cdot 2x \\checkmark"}</K>
           </DemoStep>
         </Demonstration>
       </Accordion>
