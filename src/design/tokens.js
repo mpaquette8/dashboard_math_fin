@@ -82,11 +82,13 @@ export const categoryInfo = [
     accent: T.a8,       // red
     path: '/maths-energie',
     tabs: [
-      { slug: 'marches',       label: 'Marchés Énergie' },
-      { slug: 'forward',       label: 'Forward Curves' },
-      { slug: 'options',       label: 'Options Énergie' },
-      { slug: 'mean-reversion', label: 'Mean-Reversion' },
+      { slug: 'marches',        label: 'Marchés Énergie' },
+      { slug: 'forward',        label: 'Forward Curves' },
+      { slug: 'options',        label: 'Options Énergie' },
       { slug: 'swing-options',  label: 'Swing Options' },
+      { slug: 'mean-reversion', label: 'Mean-Reversion (OU)' },
+      { slug: 'processus-saut', label: 'Processus à Saut' },
+      { slug: 'mrjd',           label: 'MRJD — Combinaison' },
     ],
   },
   {

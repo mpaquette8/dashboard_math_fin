@@ -7,7 +7,7 @@ import { TabBar } from '../../design/components'
 import { MarchesTab } from './tabs/Marches.jsx'
 import { ForwardCurvesTab } from './tabs/ForwardCurves.jsx'
 import { OptionsTab, CasIntegrateurTab } from './tabs/OptionsEnergie.jsx'
-import { MeanRevTab, JumpTab } from './tabs/MeanReversion.jsx'
+import { MeanRevTab, JumpTab, MRJDTab } from './tabs/MeanReversion.jsx'
 import { SwingOptionsTab } from './tabs/SwingOptions.jsx'
 
 const ACCENT = T.a8  // red
@@ -24,29 +24,6 @@ function CrossRef({ to, label }) {
       <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
         <strong style={{ color: T.a4 }}>Liens avec d'autres sections : </strong>
         {label} — accessible via le menu <em>{to}</em>.
-      </div>
-    </div>
-  )
-}
-
-// ─── Mean-Reversion & Processus Énergie tab ───────────────────────────────────
-function MeanRevEnergyTab() {
-  const [sub, setSub] = useState('Mean-Reversion (OU)')
-  const subTabs = ['Mean-Reversion (OU)', 'Processus à Saut']
-  return (
-    <div>
-      <CrossRef
-        to="Mathématiques Pures › Processus Stochastiques"
-        label="Mouvement Brownien, Lemme d'Itô — fondements théoriques du Mean-Reversion"
-      />
-      <CrossRef
-        to="Informatique & Simulation › Monte Carlo"
-        label="Simulation numérique des processus Mean-Reversion et à sauts"
-      />
-      <TabBar tabs={subTabs} active={sub} onChange={setSub} accent={ACCENT} />
-      <div style={{ marginTop: 16 }}>
-        {sub === 'Mean-Reversion (OU)' && <MeanRevTab />}
-        {sub === 'Processus à Saut'    && <JumpTab />}
       </div>
     </div>
   )
@@ -94,7 +71,7 @@ function CategoryHeader() {
             Mathématiques Énergie
           </div>
           <div style={{ color: T.muted, fontSize: 13, marginTop: 3 }}>
-            Marchés Énergie · Forward Curves · Options · Mean-Reversion
+            Marchés · Forward Curves · Options · Swing Options · Mean-Reversion · Sauts · MRJD
           </div>
         </div>
       </div>
@@ -107,8 +84,10 @@ const TAB_SLUGS = {
   marches:          'Marchés Énergie',
   forward:          'Forward Curves',
   options:          'Options Énergie',
-  'mean-reversion': 'Mean-Reversion',
   'swing-options':  'Swing Options',
+  'mean-reversion': 'Mean-Reversion (OU)',
+  'processus-saut': 'Processus à Saut',
+  mrjd:             'MRJD — Combinaison',
 }
 const DISPLAY_TABS = Object.values(TAB_SLUGS)
 const slugOf = (label) => Object.keys(TAB_SLUGS).find(k => TAB_SLUGS[k] === label) || 'marches'
@@ -134,11 +113,25 @@ export default function MathsEnergie() {
         accent={ACCENT}
       />
       <div style={{ marginTop: 24 }}>
-        {activeLabel === 'Marchés Énergie'  && <MarchesTab />}
-        {activeLabel === 'Forward Curves'   && <ForwardCurvesTab />}
-        {activeLabel === 'Options Énergie'  && <OptionsEnergieTab />}
-        {activeLabel === 'Mean-Reversion'   && <MeanRevEnergyTab />}
-        {activeLabel === 'Swing Options'    && <SwingOptionsTab />}
+        {activeLabel === 'Marchés Énergie'   && <MarchesTab />}
+        {activeLabel === 'Forward Curves'    && <ForwardCurvesTab />}
+        {activeLabel === 'Options Énergie'   && <OptionsEnergieTab />}
+        {activeLabel === 'Swing Options'     && <SwingOptionsTab />}
+        {activeLabel === 'Mean-Reversion (OU)' && (
+          <>
+            <CrossRef
+              to="Mathématiques Pures › Processus Stochastiques"
+              label="Mouvement Brownien, Lemme d'Itô — fondements théoriques du Mean-Reversion"
+            />
+            <CrossRef
+              to="Informatique & Simulation › Monte Carlo"
+              label="Simulation numérique des processus Mean-Reversion et à sauts"
+            />
+            <MeanRevTab />
+          </>
+        )}
+        {activeLabel === 'Processus à Saut'  && <JumpTab />}
+        {activeLabel === 'MRJD — Combinaison' && <MRJDTab />}
       </div>
     </div>
   )
