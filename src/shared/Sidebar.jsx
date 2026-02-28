@@ -7,7 +7,7 @@ function SidebarCompact() {
   const location = useLocation()
   return (
     <nav style={{
-      width: 56, minHeight: '100vh', background: T.panel,
+      width: 56, height: '100vh', background: T.panel,
       borderRight: `1px solid ${T.border}`, display: 'flex',
       flexDirection: 'column', alignItems: 'center',
       position: 'fixed', top: 0, left: 0, zIndex: 100, overflowY: 'auto',
@@ -90,10 +90,10 @@ function SidebarFull({ layout, isOpen, onClose }) {
 
   return (
     <nav style={{
-      width: 260, minHeight: '100vh', background: T.panel,
+      width: 260, height: '100vh', background: T.panel,
       borderRight: `1px solid ${T.border}`, display: 'flex',
       flexDirection: 'column', position: 'fixed', top: 0, left: 0,
-      zIndex: 100, overflowY: 'auto',
+      zIndex: 100,
       transform: isMobile ? (isOpen ? 'translateX(0)' : 'translateX(-100%)') : 'none',
       transition: isMobile ? 'transform 0.25s ease' : 'none',
     }}>
@@ -126,7 +126,7 @@ function SidebarFull({ layout, isOpen, onClose }) {
       </div>
 
       {/* Category sections */}
-      <div style={{ padding: '10px 10px', flex: 1 }}>
+      <div style={{ padding: '10px 10px', flex: 1, overflowY: 'auto', minHeight: 0 }}>
         {categoryInfo.map((cat, catIdx) => {
           const isCatActive = location.pathname.startsWith(cat.path)
           return (
