@@ -93,16 +93,29 @@ export const categoryInfo = [
   },
   {
     id: 'simulation',
-    label: 'Informatique & Simulation',
-    icon: '🖥️',
+    label: 'Simulation Numérique',
+    icon: '🎲',
     accent: T.a3,       // violet
     path: '/simulation',
     tabs: [
       { slug: 'monte-carlo',   label: 'Monte Carlo' },
-      { slug: 'arbres',        label: 'Arbres & Méthodes' },
-      { slug: 'react-vite',    label: 'React & Vite' },
+      { slug: 'arbres',        label: 'Arbres Binomiaux' },
       { slug: 'calibration',   label: 'Calibration' },
       { slug: 'visualisation', label: 'Visualisation & Outils' },
+    ],
+  },
+  {
+    id: 'informatique',
+    label: 'Informatique',
+    icon: '⌨️',
+    accent: T.a7,       // sky blue
+    path: '/informatique',
+    tabs: [
+      { slug: 'react-vite',        label: 'React & Vite' },
+      { slug: 'algo',              label: 'Algorithmique' },
+      { slug: 'python',            label: 'Python & Data Science' },
+      { slug: 'machine-learning',  label: 'Machine Learning' },
+      { slug: 'bdd',               label: 'Bases de données' },
     ],
   },
 ]

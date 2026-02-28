@@ -7,7 +7,6 @@ import { TabBar, IntuitionBlock, FormulaBox, SectionTitle } from '../../design/c
 import { SimulTab, GBMTab } from './tabs/MonteCarlo.jsx'
 import { MonteCarloTab } from './tabs/MonteCarlo.jsx'
 import { ArbreTab } from './tabs/Arbres.jsx'
-import { ReactViteTab } from './tabs/ReactVite.jsx'
 
 const ACCENT = T.a3  // violet
 
@@ -30,8 +29,8 @@ function CrossRef({ to, label }) {
 
 // ─── Monte Carlo tab ──────────────────────────────────────────────────────────
 function MCTab() {
-  const [sub, setSub] = useState('Simulation GBM')
-  const subTabs = ['Simulation GBM', 'Monte Carlo Options']
+  const [sub, setSub] = useState('Trajectoires GBM')
+  const subTabs = ['Trajectoires GBM', 'Actifs Corrélés', 'Pricing MC']
   return (
     <div>
       <CrossRef
@@ -40,14 +39,15 @@ function MCTab() {
       />
       <TabBar tabs={subTabs} active={sub} onChange={setSub} accent={ACCENT} />
       <div style={{ marginTop: 16 }}>
-        {sub === 'Simulation GBM'      && <SimulTab />}
-        {sub === 'Monte Carlo Options' && <MonteCarloTab />}
+        {sub === 'Trajectoires GBM' && <GBMTab />}
+        {sub === 'Actifs Corrélés'  && <SimulTab />}
+        {sub === 'Pricing MC'       && <MonteCarloTab />}
       </div>
     </div>
   )
 }
 
-// ─── Arbres & Méthodes Numériques tab ─────────────────────────────────────────
+// ─── Arbres Binomiaux tab ─────────────────────────────────────────────────────
 function ArbresTab() {
   return (
     <div>
@@ -105,13 +105,13 @@ function CategoryHeader() {
           background: `${ACCENT}22`, border: `1px solid ${ACCENT}44`,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: 24,
-        }}>🖥️</div>
+        }}>🎲</div>
         <div>
           <div style={{ color: ACCENT, fontWeight: 800, fontSize: 22, letterSpacing: 0.3 }}>
-            Informatique & Simulation
+            Simulation Numérique
           </div>
           <div style={{ color: T.muted, fontSize: 13, marginTop: 3 }}>
-            Monte Carlo · Arbres & Méthodes Numériques · Calibration · Visualisation
+            Monte Carlo · GBM · Actifs Corrélés · Arbres Binomiaux · Calibration
           </div>
         </div>
       </div>
@@ -122,8 +122,7 @@ function CategoryHeader() {
 // ─── Tab slugs → display names ────────────────────────────────────────────────
 const TAB_SLUGS = {
   'monte-carlo':   'Monte Carlo',
-  arbres:          'Arbres & Méthodes',
-  'react-vite':    'React & Vite',
+  arbres:          'Arbres Binomiaux',
   calibration:     'Calibration',
   visualisation:   'Visualisation & Outils',
 }
@@ -151,9 +150,8 @@ export default function Simulation() {
         accent={ACCENT}
       />
       <div style={{ marginTop: 24 }}>
-        {activeLabel === 'Monte Carlo' && <MCTab />}
-        {activeLabel === 'Arbres & Méthodes' && <ArbresTab />}
-        {activeLabel === 'React & Vite' && <ReactViteTab />}
+        {activeLabel === 'Monte Carlo'      && <MCTab />}
+        {activeLabel === 'Arbres Binomiaux' && <ArbresTab />}
         {activeLabel === 'Calibration' && (
           <ComingSoon
             title="Calibration & Optimisation"
