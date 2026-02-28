@@ -161,21 +161,87 @@ export function DerivTab() {
       </div>
 
       <SectionTitle accent={ACCENT}>Règles essentielles</SectionTitle>
+
+      <IntuitionBlock emoji="🔗" title="Le symbole ∘ : composition de fonctions" accent={ACCENT}>
+        <strong>f∘g</strong> se lit <em>« f rond g »</em> et signifie : appliquer <K>{"g"}</K> d'abord, puis <K>{"f"}</K> sur le résultat.
+        <br /><br />
+        <K display>{"(f \\circ g)(x) = f(g(x))"}</K>
+        Exemple : avec <K>{"f(u) = \\sin(u)"}</K> et <K>{"g(x) = x^2"}</K>, on a <K>{"(f \\circ g)(x) = \\sin(x^2)"}</K> — on calcule d'abord <K>{"x^2"}</K>, puis on prend le sinus de ce résultat.
+        <br /><br />
+        La <strong>règle de chaîne</strong> donne la dérivée d'une telle composition : la dérivée de l'extérieur multipliée par la dérivée de l'intérieur.
+      </IntuitionBlock>
+
       <Grid cols={2} gap="10px">
-        {[
-          ["Puissance", "d/dx(xⁿ) = n·xⁿ⁻¹", "d/dx(x³) = 3x²"],
-          ["Produit", "(u·v)' = u'v + uv'"],
-          ["Quotient", "(u/v)' = (u'v - uv') / v²"],
-          ["Chaîne", "(f∘g)'(x) = f'(g(x))·g'(x)"],
-          ["Exponentielle", "d/dx(eˣ) = eˣ", "d/dx(eᵃˣ) = a·eᵃˣ"],
-          ["Logarithme", "d/dx(ln x) = 1/x"],
-        ].map(([name, rule, ex]) => (
-          <div key={name} style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
-            <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 4 }}>{name}</div>
-            <code style={{ color: T.text, fontFamily: 'monospace', fontSize: 13 }}>{rule}</code>
-            {ex && <div style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>{ex}</div>}
+
+        {/* Puissance */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Puissance</div>
+          <K display>{"\\frac{d}{dx}(x^n) = n \\cdot x^{n-1}"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>Ex. : <K>{"\\frac{d}{dx}(x^3) = 3x^2"}</K></div>
+        </div>
+
+        {/* Produit */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Produit</div>
+          <K display>{"(u \\cdot v)' = u'v + uv'"}</K>
+        </div>
+
+        {/* Quotient */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Quotient</div>
+          <K display>{"\\left(\\frac{u}{v}\\right)' = \\frac{u'v - uv'}{v^2}"}</K>
+        </div>
+
+        {/* Chaîne */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Chaîne (composition)</div>
+          <K display>{"(f \\circ g)'(x) = f'(g(x)) \\cdot g'(x)"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+            <strong style={{ color: T.text }}>∘ = composition</strong> : appliquer <K>{"g"}</K> en premier, <K>{"f"}</K> ensuite.<br />
+            Ex. : <K>{"h(x) = \\sin(x^2)"}</K> → <K>{"h'(x) = \\cos(x^2) \\cdot 2x"}</K>
           </div>
-        ))}
+        </div>
+
+        {/* Exponentielle */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Exponentielle</div>
+          <K display>{"\\frac{d}{dx}(e^x) = e^x"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4 }}>Variante : <K>{"\\frac{d}{dx}(e^{ax}) = a \\cdot e^{ax}"}</K></div>
+        </div>
+
+        {/* Logarithme */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Logarithme</div>
+          <K display>{"\\frac{d}{dx}(\\ln x) = \\frac{1}{x}"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.7 }}>
+            <strong style={{ color: T.text }}>Et aussi</strong> : <K>{"\\frac{d}{dx}(\\ln(ax)) = \\frac{1}{x}"}</K> — le <K>{"a"}</K> se simplifie.<br />
+            <em>Par règle de chaîne :</em> <K>{"\\frac{1}{ax} \\cdot a = \\frac{1}{x}"}</K><br />
+            <em>Par propriété log :</em> <K>{"\\ln(ax) = \\ln a + \\ln x"}</K>, et <K>{"\\ln a"}</K> est une constante → dérivée nulle.
+          </div>
+        </div>
+
+        {/* Sinus & Cosinus */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Sinus & Cosinus</div>
+          <K display>{"\\frac{d}{dx}(\\sin x) = \\cos x"}</K>
+          <K display>{"\\frac{d}{dx}(\\cos x) = -\\sin x"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 4, lineHeight: 1.6 }}>
+            Moyen mnémotechnique : sin → cos → −sin → −cos → sin (cycle de période 4).<br />
+            Ex. : <K>{"\\frac{d}{dx}(\\sin(3x)) = 3\\cos(3x)"}</K> (règle de chaîne)
+          </div>
+        </div>
+
+        {/* Tangente & trigo inverse */}
+        <div style={{ background: T.panel2, borderRadius: 8, padding: '12px 14px', border: `1px solid ${T.border}` }}>
+          <div style={{ color: ACCENT, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Tangente & trigo inverse</div>
+          <K display>{"\\frac{d}{dx}(\\tan x) = \\frac{1}{\\cos^2 x} = 1 + \\tan^2 x"}</K>
+          <div style={{ color: T.muted, fontSize: 12, marginTop: 2, lineHeight: 1.7 }}>
+            <K>{"\\frac{d}{dx}(\\arcsin x) = \\dfrac{1}{\\sqrt{1-x^2}}"}</K><br />
+            <K>{"\\frac{d}{dx}(\\arccos x) = -\\dfrac{1}{\\sqrt{1-x^2}}"}</K><br />
+            <K>{"\\frac{d}{dx}(\\arctan x) = \\dfrac{1}{1+x^2}"}</K>
+          </div>
+        </div>
+
       </Grid>
 
       <SectionTitle accent={ACCENT}>Applications des dérivées — Développement de Taylor</SectionTitle>
