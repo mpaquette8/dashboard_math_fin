@@ -624,22 +624,65 @@ export function IntegTab() {
       </Accordion>
       <Accordion title="Exercice 3 — Espérance d'une variable tronquée" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.text, marginBottom: 12 }}>
-          <K>{"X"}</K> suit une loi uniforme sur <K>{"[0, 4]"}</K>. Calculez <K>{"E[X]"}</K>, <K>{"E[X^2]"}</K>, puis <K>{"E[\\max(X - 2, 0)] = \\int_2^4 (x-2) \\cdot \\frac{1}{4}\\,dx"}</K>.
+          <K>{"X"}</K> suit une loi uniforme sur <K>{"[0, 4]"}</K>. Calculez <K>{"E[X]"}</K>, <K>{"E[X^2]"}</K>, puis <K>{"E[\\max(X - 2, 0)]"}</K>.
         </p>
-        <FormulaBox accent={ACCENT} label="Résultat"><K>{"E[X] = 2 \\quad|\\quad E[X^2] = \\frac{16}{3} \\quad|\\quad E[\\max(X-2,0)] = 0.5"}</K></FormulaBox>
+        <FormulaBox accent={ACCENT} label="Résultats"><K>{"E[X] = 2 \\quad|\\quad E[X^2] = \\frac{16}{3} \\quad|\\quad E[\\max(X-2,0)] = 0.5"}</K></FormulaBox>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Espérance d'une loi uniforme" ruleDetail="E[X] = ∫ x·f(x)dx, f(x) = 1/(b−a)" accent={ACCENT}>
-            Densité <K>{"f(x) = \\frac{1}{4}"}</K> sur [0,4]. <K>{"E[X] = \\int_0^4 x \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4}\\left[\\frac{x^2}{2}\\right]_0^4 = \\frac{1}{4} \\times 8 = 2"}</K>
+
+          <DemoStep num={1} rule="Densité de la loi uniforme" ruleDetail="f(x) = 1/(b−a) sur [a,b], 0 sinon" accent={ACCENT}>
+            Sur <K>{"[0, 4]"}</K>, la longueur de l'intervalle est <K>{"b - a = 4 - 0 = 4"}</K>. La densité est donc constante :<br />
+            <K display>{"f(x) = \\frac{1}{b-a} = \\frac{1}{4} \\quad \\text{pour } x \\in [0,4], \\quad f(x) = 0 \\text{ sinon}"}</K>
+            C'est cette densité <K>{"f(x)"}</K> qu'on multiplie par <K>{"x"}</K> (ou <K>{"x^2"}</K>) avant d'intégrer pour obtenir les espérances.
           </DemoStep>
-          <DemoStep num={2} rule="Moment d'ordre 2" ruleDetail="E[X²] = ∫ x²·f(x)dx" accent={ACCENT}>
-            <K>{"E[X^2] = \\int_0^4 x^2 \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4}\\left[\\frac{x^3}{3}\\right]_0^4 = \\frac{1}{4} \\times \\frac{64}{3} = \\frac{16}{3} \\approx 5.33"}</K>
+
+          <DemoStep num={2} rule="Mise en place de E[X]" ruleDetail="E[X] = ∫ x · f(x) dx" accent={ACCENT}>
+            On applique la définition de l'espérance. Puisque <K>{"f(x) = \\frac{1}{4}"}</K> est une constante, on la sort de l'intégrale :
+            <K display>{"E[X] = \\int_0^4 x \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4} \\int_0^4 x\\,dx"}</K>
           </DemoStep>
-          <DemoStep num={3} rule="Intégrale d'une fonction tronquée" ruleDetail="max(X−2,0) = 0 si X≤2, (X−2) sinon" accent={ACCENT}>
-            <K>{"E[\\max(X-2,0)] = \\int_2^4 \\frac{x-2}{4}\\,dx = \\frac{1}{4}\\left[\\frac{(x-2)^2}{2}\\right]_2^4 = \\frac{1}{4} \\times \\frac{4}{2} = 0.5"}</K>
+
+          <DemoStep num={3} rule="Calcul de E[X]" ruleDetail="∫ x dx = x²/2 + C" accent={ACCENT}>
+            On intègre <K>{"x"}</K> (règle de puissance : <K>{"\\int x\\,dx = \\frac{x^2}{2}"}</K>), puis on évalue aux bornes :
+            <K display>{"E[X] = \\frac{1}{4}\\left[\\frac{x^2}{2}\\right]_0^4 = \\frac{1}{4}\\left(\\frac{4^2}{2} - \\frac{0^2}{2}\\right) = \\frac{1}{4}\\left(\\frac{16}{2} - 0\\right) = \\frac{1}{4} \\times 8 = \\boxed{2}"}</K>
           </DemoStep>
-          <DemoStep num={4} rule="Interprétation" accent={ACCENT}>
-            La variable tronquée <K>{"\\max(X-2,0)"}</K> est analogue au payoff d'un call : nulle sous le strike, croissante au-dessus. Ce concept est fondamental en théorie des options.
+
+          <DemoStep num={4} rule="Mise en place de E[X²]" ruleDetail="E[X²] = ∫ x² · f(x) dx" accent={ACCENT}>
+            On remplace <K>{"x"}</K> par <K>{"x^2"}</K> dans l'intégrale, et on factorise à nouveau la constante :
+            <K display>{"E[X^2] = \\int_0^4 x^2 \\cdot \\frac{1}{4}\\,dx = \\frac{1}{4} \\int_0^4 x^2\\,dx"}</K>
           </DemoStep>
+
+          <DemoStep num={5} rule="Calcul de E[X²]" ruleDetail="∫ x² dx = x³/3 + C" accent={ACCENT}>
+            On intègre <K>{"x^2"}</K> (règle de puissance : <K>{"\\int x^2\\,dx = \\frac{x^3}{3}"}</K>), puis on évalue :
+            <K display>{"E[X^2] = \\frac{1}{4}\\left[\\frac{x^3}{3}\\right]_0^4 = \\frac{1}{4}\\left(\\frac{4^3}{3} - \\frac{0^3}{3}\\right) = \\frac{1}{4} \\times \\frac{64}{3} = \\boxed{\\frac{16}{3} \\approx 5.33}"}</K>
+          </DemoStep>
+
+          <DemoStep num={6} rule="Analyse de max(X−2, 0) : découpage du domaine" ruleDetail="max(X−2,0) = 0 si X ≤ 2 ; (X−2) si X > 2" accent={ACCENT}>
+            La fonction <K>{"\\max(X-2,0)"}</K> vaut 0 quand <K>{"X \\leq 2"}</K> (le terme est nul ou négatif), et vaut <K>{"X-2"}</K> quand <K>{"X > 2"}</K>. On écrit donc l'intégrale en la découpant en deux parties :<br />
+            <K display>{"E[\\max(X-2,0)] = \\underbrace{\\int_0^2 0 \\cdot \\frac{1}{4}\\,dx}_{= 0} + \\int_2^4 (x-2) \\cdot \\frac{1}{4}\\,dx"}</K>
+            La première partie est nulle. Il reste uniquement l'intégrale sur <K>{"[2, 4]"}</K>.
+          </DemoStep>
+
+          <DemoStep num={7} rule="Développement de l'intégrale sur [2, 4]" ruleDetail="∫(x−2) dx = ∫x dx − ∫2 dx" accent={ACCENT}>
+            On développe <K>{"\\frac{1}{4}\\int_2^4 (x-2)\\,dx"}</K> en séparant les deux termes :
+            <K display>{"\\frac{1}{4}\\int_2^4 x\\,dx - \\frac{1}{4}\\int_2^4 2\\,dx"}</K>
+            Premier morceau :
+            <K display>{"\\frac{1}{4}\\left[\\frac{x^2}{2}\\right]_2^4 = \\frac{1}{4}\\left(\\frac{16}{2} - \\frac{4}{2}\\right) = \\frac{1}{4}(8 - 2) = \\frac{6}{4} = \\frac{3}{2}"}</K>
+            Second morceau :
+            <K display>{"\\frac{1}{4}\\left[2x\\right]_2^4 = \\frac{1}{4}(8 - 4) = \\frac{4}{4} = 1"}</K>
+            Résultat : <K>{"\\dfrac{3}{2} - 1 = \\boxed{0.5}"}</K>
+          </DemoStep>
+
+          <DemoStep num={8} rule="Vérification par substitution" ruleDetail="u = x − 2 simplifie les bornes" accent={ACCENT}>
+            On peut confirmer en posant <K>{"u = x - 2"}</K>, donc <K>{"du = dx"}</K>. Les bornes deviennent : <K>{"x=2 \\Rightarrow u=0"}</K> et <K>{"x=4 \\Rightarrow u=2"}</K>.
+            <K display>{"\\frac{1}{4}\\int_0^2 u\\,du = \\frac{1}{4}\\left[\\frac{u^2}{2}\\right]_0^2 = \\frac{1}{4} \\times \\frac{4}{2} = \\frac{1}{4} \\times 2 = 0.5 \\checkmark"}</K>
+          </DemoStep>
+
+          <DemoStep num={9} rule="Interprétation financière" accent={ACCENT}>
+            <K>{"\\max(X-2,0)"}</K> est exactement le payoff d'un <strong>call européen</strong> de strike <K>{"K=2"}</K> sur un sous-jacent <K>{"X"}</K> :<br />
+            — Si <K>{"X \\leq 2"}</K> : l'option expire sans valeur (payoff = 0).<br />
+            — Si <K>{"X > 2"}</K> : le payoff vaut <K>{"X - 2"}</K> (gain proportionnel à l'excès au-dessus du strike).<br />
+            L'espérance <K>{"E[\\max(X-2,0)] = 0.5"}</K> représente la <strong>valeur intrinsèque attendue</strong> du call, avant actualisation. Ce calcul est au cœur de la valorisation des options.
+          </DemoStep>
+
         </Demonstration>
       </Accordion>
 
