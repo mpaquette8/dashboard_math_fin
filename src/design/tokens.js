@@ -89,6 +89,7 @@ export const categoryInfo = [
       { slug: 'mean-reversion', label: 'Mean-Reversion (OU)' },
       { slug: 'processus-saut', label: 'Processus à Saut' },
       { slug: 'mrjd',           label: 'MRJD — Combinaison' },
+      { slug: 'stockage-gaz',   label: 'Stockage de Gaz (Bellman)' },
     ],
   },
   {

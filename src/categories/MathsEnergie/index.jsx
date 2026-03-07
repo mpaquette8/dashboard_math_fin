@@ -9,6 +9,7 @@ import { ForwardCurvesTab } from './tabs/ForwardCurves.jsx'
 import { OptionsTab, CasIntegrateurTab } from './tabs/OptionsEnergie.jsx'
 import { MeanRevTab, JumpTab, MRJDTab } from './tabs/MeanReversion.jsx'
 import { SwingOptionsTab } from './tabs/SwingOptions.jsx'
+import { ActeurTab, BellmanTab, PrixTab, ValeurTab, DeltaTab, ForwardRiskTab } from './tabs/StockageGaz.jsx'
 
 const ACCENT = T.a8  // red
 
@@ -24,6 +25,39 @@ function CrossRef({ to, label }) {
       <div style={{ fontSize: 12, color: T.muted, lineHeight: 1.6 }}>
         <strong style={{ color: T.a4 }}>Liens avec d'autres sections : </strong>
         {label} — accessible via le menu <em>{to}</em>.
+      </div>
+    </div>
+  )
+}
+
+// ─── Stockage de Gaz (Bellman) tab ───────────────────────────────────────────
+function StockageGazTab() {
+  const [sub, setSub] = useState('Acteur & Modèle')
+  const subTabs = ['Acteur & Modèle', 'Équation de Bellman', 'Processus de Prix', 'Valeur Intrinsèque & Extrinsèque', 'Delta & Couverture', 'Courbe Forward & Portefeuille']
+  return (
+    <div>
+      <CrossRef
+        to="Mathématiques Financières › Greeks & Sensibilités"
+        label="Delta hedging, convexité/gamma — même logique appliquée aux options financières"
+      />
+      <CrossRef
+        to="Mathématiques Énergie › Forward Curves"
+        label="Structure de terme de la courbe forward — base du calcul de valeur intrinsèque"
+      />
+      <CrossRef
+        to="Mathématiques Énergie › Swing Options"
+        label="Contrats swing — actif de flexibilité complémentaire au stockage"
+      />
+      <div style={{ marginTop: 16 }}>
+        <TabBar tabs={subTabs} active={sub} onChange={setSub} accent={ACCENT} />
+      </div>
+      <div style={{ marginTop: 16 }}>
+        {sub === 'Acteur & Modèle'                  && <ActeurTab />}
+        {sub === 'Équation de Bellman'               && <BellmanTab />}
+        {sub === 'Processus de Prix'                 && <PrixTab />}
+        {sub === 'Valeur Intrinsèque & Extrinsèque'  && <ValeurTab />}
+        {sub === 'Delta & Couverture'                && <DeltaTab />}
+        {sub === 'Courbe Forward & Portefeuille'     && <ForwardRiskTab />}
       </div>
     </div>
   )
@@ -81,13 +115,14 @@ function CategoryHeader() {
 
 // ─── Tab slugs → display names ────────────────────────────────────────────────
 const TAB_SLUGS = {
-  marches:          'Marchés Énergie',
-  forward:          'Forward Curves',
-  options:          'Options Énergie',
-  'swing-options':  'Swing Options',
-  'mean-reversion': 'Mean-Reversion (OU)',
-  'processus-saut': 'Processus à Saut',
-  mrjd:             'MRJD — Combinaison',
+  marches:           'Marchés Énergie',
+  forward:           'Forward Curves',
+  options:           'Options Énergie',
+  'swing-options':   'Swing Options',
+  'mean-reversion':  'Mean-Reversion (OU)',
+  'processus-saut':  'Processus à Saut',
+  mrjd:              'MRJD — Combinaison',
+  'stockage-gaz':    'Stockage de Gaz (Bellman)',
 }
 const DISPLAY_TABS = Object.values(TAB_SLUGS)
 const slugOf = (label) => Object.keys(TAB_SLUGS).find(k => TAB_SLUGS[k] === label) || 'marches'
@@ -131,7 +166,8 @@ export default function MathsEnergie() {
           </>
         )}
         {activeLabel === 'Processus à Saut'  && <JumpTab />}
-        {activeLabel === 'MRJD — Combinaison' && <MRJDTab />}
+        {activeLabel === 'MRJD — Combinaison'          && <MRJDTab />}
+        {activeLabel === 'Stockage de Gaz (Bellman)'   && <StockageGazTab />}
       </div>
     </div>
   )
