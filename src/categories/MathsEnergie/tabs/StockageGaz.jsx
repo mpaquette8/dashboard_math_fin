@@ -1714,6 +1714,7 @@ export function BellmanTab() {
   )
 }
 
+
 // ─── Onglet 3 : Processus de Prix ────────────────────────────────────────────
 
 export function PrixTab() {
@@ -1741,7 +1742,6 @@ export function PrixTab() {
       }
       result.push(pts)
     }
-    // merge into single array
     const merged = result[0].map((pt, i) => ({
       ...pt,
       ...result[1][i],
@@ -1753,47 +1753,213 @@ export function PrixTab() {
   const halfLife = (Math.log(2) / kappa * 365).toFixed(0)
   const statStd = (sigma / Math.sqrt(2 * kappa)).toFixed(1)
 
-  // Build simple 5×5 transition matrix for display
   const NS_display = 5
   const sGridD = Array.from({ length: NS_display }, (_, j) => mu - 2 * parseFloat(statStd) + j * parseFloat(statStd))
   const PiD = buildTransitionMatrix(NS_display, sGridD, kappa, mu, sigma, 1 / 12)
 
   return (
     <div>
-      <IntuitionBlock emoji="🌀" title="Pourquoi un processus de retour à la moyenne ?" accent={ACCENT}>
-        Contrairement aux actions, le gaz ne peut pas monter indéfiniment : au-delà d'un certain prix,
-        les industriels substituent d'autres sources d'énergie et l'offre s'adapte.
-        En dessous d'un plancher, les producteurs ferment des puits.
-        Le <strong>coût marginal de production</strong> crée un ancrage fondamental <K>{"\\mu"}</K> vers lequel le prix revient toujours.
+
+      {/* ── 1. Intuition ─────────────────────────────────────────── */}
+      <IntuitionBlock emoji="🌡️" title="Le thermostat du marché gazier" accent={ACCENT}>
+        <strong>Analogie du thermostat :</strong> imagine un thermostat réglé à 20 °C. Si tu ouvres la fenêtre
+        en hiver, la température descend — mais dès que tu la refermes, le chauffage ramène la pièce vers 20 °C.
+        Plus la différence est grande, plus vite le chauffage agit.
+        <br /><br />
+        Le gaz naturel fonctionne exactement pareil : au-delà d'un certain prix, les industriels substituent
+        d'autres sources d'énergie (fioul, charbon) et l'offre s'adapte. En dessous d'un plancher,
+        les producteurs ferment des puits car la production n'est plus rentable.
+        Le <strong>coût marginal de production</strong> crée un ancrage fondamental <K>{"\\mu"}</K> vers lequel
+        le prix revient toujours — c'est la <strong>mean-reversion</strong> (retour à la moyenne).
+        <br /><br />
+        Contrairement aux actions (Amazon a pu multiplier par 1 000), le prix du gaz est
+        <strong> physiquement ancré</strong> : produire 1 MWh coûte un certain montant, et personne
+        ne paie 10× ce montant durablement.
       </IntuitionBlock>
 
+      {/* ── 2. Formule annotée ─────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Le processus Ornstein-Uhlenbeck — la formule du prix du gaz</SectionTitle>
+
       <FormulaBox accent={ACCENT} label="Processus Ornstein-Uhlenbeck (OU)">
-        <K display>{"dS_t = \\underbrace{\\kappa(\\mu - S_t)}_{\\text{rappel vers }\\mu}\\,dt + \\underbrace{\\sigma\\,dW_t}_{\\text{chocs aléatoires}}"}</K>
+        <K display>{"dS_t = \\underbrace{\\kappa(\\mu - S_t)}_{\\text{force de rappel vers }\\mu}\\,dt + \\underbrace{\\sigma\\,dW_t}_{\\text{chocs aléatoires du marché}}"}</K>
       </FormulaBox>
+
       <SymbolLegend accent={ACCENT} symbols={[
-        ['S_t', 'Prix spot du gaz à l\'instant t (€/MWh)'],
-        ['κ', 'Vitesse de retour à la moyenne (an⁻¹) — plus κ est grand, plus vite le prix revient vers μ'],
-        ['μ', 'Prix d\'équilibre long terme (€/MWh) — le "coût fondamental" du gaz'],
-        ['σ', 'Volatilité instantanée (€/MWh/√an) — amplitude des chocs quotidiens'],
-        ['dWₜ', 'Incrément brownien — bruit aléatoire normalisé (moyenne 0, variance dt)'],
+        ['S_t', 'Prix spot du gaz à l\'instant t (€/MWh) — la variable modélisée'],
+        ['\\kappa', 'Vitesse de retour à la moyenne (an⁻¹) — plus κ est grand, plus vite le prix revient vers μ'],
+        ['\\mu', 'Prix d\'équilibre long terme (€/MWh) — le "coût fondamental" du gaz'],
+        ['\\sigma', 'Volatilité instantanée (€/MWh/√an) — amplitude des chocs quotidiens'],
+        ['dW_t', 'Incrément brownien — bruit aléatoire normalisé (moyenne 0, variance dt)'],
+        ['dt', 'Pas de temps infinitésimal — durée d\'une micro-période dans le modèle continu'],
       ]} />
 
+      {/* ── 3. Décomposition terme à terme ──────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
+
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🧲 κ(μ − Sₜ) · dt — La force de rappel</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            C'est le terme <strong>déterministe</strong> : il tire le prix vers μ comme un élastique.
+            <br />
+            • Si <K>{"S_t > \\mu"}</K> (prix au-dessus de l'équilibre), alors <K>{"\\mu - S_t < 0"}</K> → terme <strong>négatif</strong> → prix tiré vers le bas
+            <br />
+            • Si <K>{"S_t < \\mu"}</K>, alors <K>{"\\mu - S_t > 0"}</K> → terme <strong>positif</strong> → prix tiré vers le haut
+            <br />
+            • Plus l'écart <K>{"|S_t - \\mu|"}</K> est grand, plus la force est intense
+            <br /><br />
+            <strong style={{ color: T.text }}>Exemple numérique :</strong> avec <K>{"\\kappa = 1.5"}</K>, <K>{"\\mu = 40"}</K>, <K>{"S_t = 55"}</K> €/MWh :
+            <K display>{"\\kappa(\\mu - S_t) = 1.5 \\times (40 - 55) = 1.5 \\times (-15) = -22.5 \\text{ €/MWh/an}"}</K>
+            Le prix est 15 € au-dessus de l'équilibre → la force de rappel est de −22.5 €/an, soit
+            environ −1.9 €/mois. Sans choc aléatoire, le prix descendrait vers ~53 € en un mois.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🎲 σ · dWₜ — Le choc aléatoire</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            C'est la composante <strong>stochastique</strong> : chaque instant, le prix reçoit un "choc"
+            aléatoire d'amplitude proportionnelle à σ. <K>{"dW_t"}</K> est un bruit blanc gaussien :
+            en moyenne zéro, mais parfois très positif (pic de demande, rupture de pipeline) ou très
+            négatif (hiver doux, afflux de GNL — Gaz Naturel Liquéfié).
+            <br /><br />
+            <strong style={{ color: T.text }}>Exemple numérique :</strong> avec <K>{"\\sigma = 8"}</K>, sur un jour (<K>{"dt = 1/252"}</K>) :
+            <K display>{"\\sigma \\sqrt{dt} = 8 \\times \\sqrt{1/252} = 8 \\times 0.063 \\approx 0.50 \\text{ €/MWh}"}</K>
+            L'écart-type du choc journalier est de ~0.50 €/MWh. Un choc à ±2σ (probabilité ~5%)
+            représente ±1 €/MWh en un seul jour — un mouvement visible sur les écrans Bloomberg.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>⚖️ L'équilibre rappel vs bruit — la demi-vie</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            Le processus OU est un <em>tir à la corde</em> entre la force de rappel (déterministe, qui veut
+            ramener à μ) et les chocs (aléatoires, qui éloignent de μ). Le paramètre qui résume cet
+            équilibre est la <strong>demi-vie</strong> :
+            <K display>{"t_{1/2} = \\frac{\\ln 2}{\\kappa}"}</K>
+            C'est le temps nécessaire pour que l'écart à μ soit divisé par 2 <em>en l'absence de
+            nouveaux chocs</em>.
+            <br /><br />
+            <strong style={{ color: T.text }}>Exemple numérique :</strong> avec κ = 1.5 an⁻¹ :
+            <K display>{"t_{1/2} = \\frac{0.693}{1.5} = 0.462 \\text{ an} \\approx 169 \\text{ jours}"}</K>
+            Si le prix est à 55 € (écart de +15 € par rapport à μ = 40), dans ~169 jours l'écart moyen
+            sera de +7.5 €, soit un prix de ~47.5 €. Encore 169 jours → ~43.75 €.
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── 4. Synthèse intermédiaire ──────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '14px 18px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.text, fontSize: 13, lineHeight: 1.7, fontStyle: 'italic' }}>
+          Le processus OU capture l'essentiel de la dynamique du gaz avec seulement 3 paramètres :
+          un prix ancré autour d'un coût fondamental μ, avec des excursions aléatoires dont la durée
+          dépend de κ et l'amplitude de σ.
+        </div>
+      </div>
+
+      {/* ── 5. Propriétés stationnaires ──────────────────────── */}
+      <SectionTitle accent={ACCENT}>Propriétés stationnaires du processus OU</SectionTitle>
+
+      <FormulaBox accent={ACCENT} label="Distribution stationnaire (long terme)">
+        <K display>{"S_\\infty \\sim \\mathcal{N}\\!\\left(\\mu,\\; \\underbrace{\\frac{\\sigma^2}{2\\kappa}}_{\\text{variance stationnaire}}\\right)"}</K>
+      </FormulaBox>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, margin: '12px 0' }}>
+        {[
+          {
+            label: 'Espérance stationnaire',
+            formula: '\\mathbb{E}[S_\\infty] = \\mu',
+            value: `${mu} €/MWh`, color: T.a4,
+            desc: 'En moyenne à long terme, le prix est exactement μ. C\'est la "gravité" du marché.',
+          },
+          {
+            label: 'Écart-type stationnaire',
+            formula: '\\sigma_{\\text{stat}} = \\sigma / \\sqrt{2\\kappa}',
+            value: `${statStd} €/MWh`, color: T.a5,
+            desc: 'L\'amplitude typique des fluctuations autour de μ. Augmenter κ réduit cette amplitude.',
+          },
+          {
+            label: 'Autocorrélation 1 mois',
+            formula: '\\text{Corr}(S_t, S_{t+h}) = e^{-\\kappa h}',
+            value: `ρ = ${Math.exp(-kappa / 12).toFixed(3)}`, color: ACCENT,
+            desc: 'La "mémoire" du prix. Plus κ est grand, plus les prix oublient vite leur passé.',
+          },
+        ].map(({ label, formula, value, color, desc }) => (
+          <div key={label} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
+            <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label}</div>
+            <K display>{formula}</K>
+            <div style={{ color: T.text, fontWeight: 600, fontSize: 13, margin: '6px 0' }}>{value}</div>
+            <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 6. Comparaison deux régimes ──────────────────────── */}
+      <SectionTitle accent={ACCENT}>Comparaison — deux régimes de marché</SectionTitle>
+
+      <Grid cols={2} gap="16px">
+        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>🐌 Marché calme — κ = 0.5, σ = 4</div>
+          <table style={tableStyle}>
+            <tbody>
+              {[
+                ['Demi-vie', `${(Math.log(2) / 0.5 * 365).toFixed(0)} jours (~1.4 an)`],
+                ['σ stationnaire', `${(4 / Math.sqrt(2 * 0.5)).toFixed(1)} €/MWh`],
+                ['Bande ±2σ_stat', `[${(40 - 2 * 4 / Math.sqrt(1)).toFixed(0)}, ${(40 + 2 * 4 / Math.sqrt(1)).toFixed(0)}] €`],
+                ['Choc journalier (1σ)', `${(4 / Math.sqrt(252)).toFixed(2)} €/MWh`],
+                ['Profil', 'Trajectoires lisses, écarts lents et persistants'],
+              ].map(([k, v]) => (
+                <tr key={k}><Td accent={T.a4}>{k}</Td><Td>{v}</Td></tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+            Un marché "hibernant" : les prix bougent peu et lentement. Le stockage a peu de
+            valeur extrinsèque — les opportunités d'arbitrage sont rares et faibles.
+          </div>
+        </div>
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>⚡ Marché stressé — κ = 3, σ = 18</div>
+          <table style={tableStyle}>
+            <tbody>
+              {[
+                ['Demi-vie', `${(Math.log(2) / 3 * 365).toFixed(0)} jours (~2.7 mois)`],
+                ['σ stationnaire', `${(18 / Math.sqrt(2 * 3)).toFixed(1)} €/MWh`],
+                ['Bande ±2σ_stat', `[${(40 - 2 * 18 / Math.sqrt(6)).toFixed(0)}, ${(40 + 2 * 18 / Math.sqrt(6)).toFixed(0)}] €`],
+                ['Choc journalier (1σ)', `${(18 / Math.sqrt(252)).toFixed(2)} €/MWh`],
+                ['Profil', 'Pics violents mais retour rapide, "spiky"'],
+              ].map(([k, v]) => (
+                <tr key={k}><Td accent={ACCENT}>{k}</Td><Td>{v}</Td></tr>
+              ))}
+            </tbody>
+          </table>
+          <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+            Un marché en ébullition : excursions violentes (+30 %, −20 % en quelques semaines)
+            mais retour rapide. Énorme valeur extrinsèque — chaque pic est une occasion de soutirer.
+          </div>
+        </div>
+      </Grid>
+
+      {/* ── 7. Simulation interactive ──────────────────────── */}
+      <SectionTitle accent={ACCENT}>Simulation interactive — trajectoires du processus OU</SectionTitle>
+
       <Grid cols={4} gap="12px">
-        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="κ — vitesse de retour à la moyenne (an⁻¹)" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="μ — prix moyen long terme (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="σ — volatilité instantanée" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="σ — volatilité instantanée (€/MWh/√an)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="S₀ — prix initial du gaz (€/MWh)" value={s0} min={10} max={80} step={1} onChange={setS0} accent={ACCENT} format={v => `${v}`} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Demi-vie" value={halfLife} unit="jours" accent={ACCENT} />
-        <InfoChip label="Écart-type stationnaire σ/√(2κ)" value={statStd} unit="€/MWh" accent={T.a5} />
-        <InfoChip label="Intervalle ±2σ" value={`[${(mu - 2 * parseFloat(statStd)).toFixed(0)}, ${(mu + 2 * parseFloat(statStd)).toFixed(0)}]`} unit="€" accent={T.muted} />
+        <InfoChip label="σ_stat = σ/√(2κ)" value={statStd} unit="€/MWh" accent={T.a5} />
+        <InfoChip label="Bande ±2σ_stat" value={`[${(mu - 2 * parseFloat(statStd)).toFixed(0)}, ${(mu + 2 * parseFloat(statStd)).toFixed(0)}]`} unit="€" accent={T.muted} />
+        <InfoChip label="Choc journalier (1σ)" value={(sigma / Math.sqrt(252)).toFixed(2)} unit="€/MWh" accent={T.a4} />
         <button onClick={() => setSeed(s => s + 1)} style={{ background: `${ACCENT}22`, border: `1px solid ${ACCENT}44`, borderRadius: 6, padding: '4px 12px', color: ACCENT, fontSize: 11, cursor: 'pointer' }}>
-          Nouvelles trajectoires
+          🔄 Nouvelles trajectoires
         </button>
       </div>
 
-      <ChartWrapper title="3 trajectoires du prix du gaz — Processus OU" accent={ACCENT} height={250}>
+      <ChartWrapper title="3 trajectoires du prix du gaz — Processus OU" accent={ACCENT} height={260}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={paths} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -1809,11 +1975,14 @@ export function PrixTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+
+      {/* Clés de lecture */}
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
         {[
-          { icon: '🟢', text: <>La <strong>ligne verte pointillée μ</strong> = prix d'équilibre. Les trajectoires y reviennent toujours — c'est la mean-reversion.</> },
-          { icon: '📏', text: <>Les <strong>pointillés gris ±2σ</strong> = bande à 95%. Le prix oscille principalement dans cet intervalle.</> },
-          { icon: '⚡', text: <>La <strong>demi-vie</strong> (InfoChip) = temps pour que l'écart à μ soit divisé par 2. Plus κ est grand, plus la demi-vie est courte.</> },
+          { icon: '🟢', text: <>La <strong>ligne verte pointillée μ</strong> = prix d'équilibre. Les trajectoires y reviennent toujours — c'est la mean-reversion. Augmenter κ rend ce retour plus rapide.</> },
+          { icon: '📏', text: <>Les <strong>pointillés gris ±2σ<sub>stat</sub></strong> = bande à 95 %. Le prix oscille principalement dans cet intervalle. ↑ σ élargit la bande ; ↑ κ la rétrécit (car σ<sub>stat</sub> = σ/√(2κ)).</> },
+          { icon: '⚡', text: <>La <strong>demi-vie</strong> (InfoChip) = temps pour que l'écart à μ soit divisé par 2. Si S₀ = 55 et μ = 40, après une demi-vie le prix moyen sera ~47.5 €.</> },
+          { icon: '🔀', text: <>Cliquer <strong>"Nouvelles trajectoires"</strong> génère de nouveaux tirages. Mêmes paramètres, résultats différents — c'est la nature stochastique. Le "cône" de dispersion reste le même.</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
@@ -1822,22 +1991,104 @@ export function PrixTab() {
         ))}
       </div>
 
+      {/* ── 8. Seconde analogie ──────────────────────── */}
+      <IntuitionBlock emoji="🎣" title="Analogie du bouchon de pêche" accent={ACCENT}>
+        Le prix du gaz est comme un bouchon de pêche sur une rivière. Le courant (<K>{"\\kappa"}</K>) le ramène
+        vers le centre de la rivière (<K>{"\\mu"}</K>), mais le vent et les remous (<K>{"\\sigma"}</K>) le
+        poussent à gauche et à droite. Un courant fort (κ élevé) empêche le bouchon de dériver loin,
+        même si le vent souffle fort. Un courant faible (κ bas) le laisse s'éloigner — il finit par
+        revenir, mais lentement. Pour le stockage : un marché à forte mean-reversion (κ ~3-5) voit
+        des pics intenses mais brefs — parfaits pour un stockage rapide qui soutire au moment du pic.
+      </IntuitionBlock>
+
+      {/* ── 9. Discrétisation ──────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Discrétisation en chaîne de Markov</SectionTitle>
-      <FormulaBox accent={ACCENT} label="Solution discrète du processus OU">
-        <K display>{"S_{t+1} = S_t \\cdot e^{-\\kappa \\Delta t} + \\mu(1 - e^{-\\kappa \\Delta t}) + \\sigma_{\\Delta t} \\cdot \\varepsilon \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)"}</K>
-        <K display>{"\\sigma_{\\Delta t} = \\sigma\\sqrt{\\frac{1 - e^{-2\\kappa\\Delta t}}{2\\kappa}}"}</K>
+
+      <IntuitionBlock emoji="🔢" title="Du continu au discret — pourquoi ?" accent={ACCENT}>
+        L'équation OU est définie en temps continu — le prix change à chaque microseconde.
+        L'algorithme de Bellman travaille en temps discret (pas mensuels). Il faut donc
+        <strong> discrétiser</strong> le processus, c'est-à-dire transformer la loi continue en une
+        <strong> matrice de transition </strong> <K>{"\\Pi"}</K> qui dit : "si le prix est à 40 € ce mois-ci,
+        quelle est la probabilité qu'il soit à 35, 40, 45 € le mois prochain ?"
+      </IntuitionBlock>
+
+      <FormulaBox accent={ACCENT} label="Solution exacte discrète du processus OU (pas Δt)">
+        <K display>{"S_{t+\\Delta t} = \\underbrace{S_t \\cdot e^{-\\kappa \\Delta t}}_{\\text{atténuation du prix actuel}} + \\underbrace{\\mu(1 - e^{-\\kappa \\Delta t})}_{\\text{attraction vers }\\mu} + \\underbrace{\\sigma_{\\Delta t} \\cdot \\varepsilon}_{\\text{choc sur la période}} \\qquad \\varepsilon \\sim \\mathcal{N}(0,1)"}</K>
       </FormulaBox>
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, margin: '10px 0' }}>
-        Pour le backward DP (<em>Dynamic Programming</em> — programmation dynamique, résolution par récurrence arrière),
-        on discrétise les états de prix en une grille <K>{"\\{s_1, \\ldots, s_M\\}"}</K> et on calcule la matrice de transition :
-      </div>
-      <FormulaBox accent={ACCENT} label="Matrice de transition">
-        <K display>{"\\Pi_{jk} = \\mathbb{P}(S_{t+1} = s_k \\mid S_t = s_j) \\propto \\exp\\!\\left(-\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}\\right)"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          <K>{"\\bar{s}_j = s_j e^{-\\kappa\\Delta t} + \\mu(1-e^{-\\kappa\\Delta t})"}</K> : espérance conditionnelle. Chaque ligne est normalisée à 1.
+
+      <FormulaBox accent={ACCENT} label="Volatilité conditionnelle sur un pas Δt">
+        <K display>{"\\sigma_{\\Delta t} = \\sigma\\sqrt{\\frac{1 - e^{-2\\kappa\\Delta t}}{2\\kappa}}"}</K>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
+          Ce n'est <strong>pas</strong> simplement <K>{"\\sigma\\sqrt{\\Delta t}"}</K> (comme pour un mouvement
+          brownien géométrique). La mean-reversion "absorbe" une partie de la volatilité sur la
+          période — ce qui réduit σ<sub>Δt</sub> par rapport au cas sans rappel.
         </div>
       </FormulaBox>
 
+      {/* ── 10. Étapes de discrétisation ──────────────────── */}
+      <SectionTitle accent={ACCENT}>Algorithme de discrétisation en 3 étapes</SectionTitle>
+
+      <Step num={1} accent={ACCENT}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div><strong>Construire la grille de prix</strong></div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            Choisir N<sub>S</sub> nœuds régulièrement espacés dans l'intervalle
+            <K>{"[\\mu - 3\\sigma_{\\text{stat}},\\; \\mu + 3\\sigma_{\\text{stat}}]"}</K>.
+            Cette bande couvre 99.7 % de la distribution stationnaire.
+          </div>
+          <FormulaBox accent={ACCENT}>
+            <K display>{"s_j = \\mu - 3\\sigma_{\\text{stat}} + j \\cdot \\frac{6\\sigma_{\\text{stat}}}{N_S - 1}, \\quad j = 0, \\ldots, N_S - 1"}</K>
+          </FormulaBox>
+          <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+            <strong>Exemple :</strong> avec μ = {mu}, σ<sub>stat</sub> = {statStd} → grille
+            de {(mu - 3 * parseFloat(statStd)).toFixed(0)} à {(mu + 3 * parseFloat(statStd)).toFixed(0)} €,
+            soit un pas de ~{(6 * parseFloat(statStd) / 11).toFixed(1)} € entre nœuds (pour N<sub>S</sub> = 12).
+          </div>
+        </div>
+      </Step>
+
+      <Step num={2} accent={ACCENT}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div><strong>Calculer l'espérance conditionnelle pour chaque nœud</strong></div>
+          <FormulaBox accent={ACCENT}>
+            <K display>{"\\bar{s}_j = s_j \\cdot e^{-\\kappa\\Delta t} + \\mu(1-e^{-\\kappa\\Delta t})"}</K>
+          </FormulaBox>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            Pour chaque prix de départ <K>{"s_j"}</K>, le prix espéré au pas suivant —
+            la composante déterministe de la transition.
+            <br />
+            <strong>Exemple :</strong> depuis <K>{"s_j = 55"}</K> € avec κ = {kappa}, Δt = 1/12 :
+            <K display>{`\\bar{s}_j = 55 \\times ${Math.exp(-kappa / 12).toFixed(4)} + 40 \\times ${(1 - Math.exp(-kappa / 12)).toFixed(4)} \\approx ${(55 * Math.exp(-kappa / 12) + 40 * (1 - Math.exp(-kappa / 12))).toFixed(1)} \\text{ €}`}</K>
+          </div>
+        </div>
+      </Step>
+
+      <Step num={3} accent={ACCENT}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          <div><strong>Construire la matrice de transition Π</strong></div>
+          <FormulaBox accent={ACCENT}>
+            <K display>{"\\Pi_{jk} = \\mathbb{P}(S_{t+1} = s_k \\mid S_t = s_j) \\propto \\exp\\!\\left(-\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}\\right)"}</K>
+          </FormulaBox>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            Pour chaque ligne j (prix de départ), évaluer la densité gaussienne centrée sur <K>{"\\bar{s}_j"}</K>
+            à chaque nœud d'arrivée <K>{"s_k"}</K>, puis normaliser la ligne (somme → 1).
+          </div>
+        </div>
+      </Step>
+
+      {/* Pseudocode */}
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Pseudocode — Construction de Π</div>
+        <pre style={{ color: T.text, fontSize: 11, lineHeight: 1.9, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  POUR j = 0 à NS-1 :                               // pour chaque prix de départ
+      s̄ⱼ ← sⱼ × exp(-κ·Δt) + μ × (1 - exp(-κ·Δt))   // espérance conditionnelle
+      POUR k = 0 à NS-1 :                             // pour chaque prix d'arrivée
+          Π[j][k] ← exp(-(sₖ - s̄ⱼ)² / (2·σ²_Δt))    // noyau gaussien
+      Π[j][:] ← Π[j][:] / Σₖ Π[j][k]                 // normalisation → somme = 1`}
+        </pre>
+      </div>
+
+      {/* Matrice affichée */}
       <SectionTitle accent={ACCENT}>Matrice de transition Π (grille 5×5 illustrative)</SectionTitle>
       <div style={{ overflowX: 'auto', margin: '10px 0' }}>
         <table style={{ ...tableStyle, tableLayout: 'fixed' }}>
@@ -1857,28 +2108,134 @@ export function PrixTab() {
           </tbody>
         </table>
       </div>
-      <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>
-        Les valeurs en vert correspondent aux transitions les plus probables (voisins directs dans la grille). Chaque ligne somme à 100%.
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '🟢', text: <>Les <strong>valeurs vertes</strong> (&gt;30 %) sont les transitions les plus probables — vers les nœuds voisins ou le nœud central μ.</> },
+          { icon: '🔶', text: <>Les <strong>valeurs dorées</strong> (10-30 %) sont des transitions possibles mais moins fréquentes — excursions modérées.</> },
+          { icon: '↕️', text: <>Chaque ligne somme à 100 %. La diagonale n'est pas forcément dominante à forte mean-reversion : le prix "saute" vers μ même depuis les extrêmes.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
       </div>
 
+      {/* ── 11. OU vs GBM ──────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Pourquoi OU et pas un Mouvement Brownien Géométrique (GBM) ?</SectionTitle>
+
+      <table style={tableStyle}>
+        <thead>
+          <tr><Th>Caractéristique</Th><Th>OU (Ornstein-Uhlenbeck)</Th><Th>GBM (Mouvement Brownien Géométrique)</Th></tr>
+        </thead>
+        <tbody>
+          {[
+            ['Retour à la moyenne', '✅ Oui — force de rappel κ(μ − S)', '❌ Non — dérive constante μ·S·dt'],
+            ['Distribution stationnaire', '✅ Normale autour de μ', '❌ Diverge (variance → ∞)'],
+            ['Prix négatifs', '⚠️ Possibles (rares si μ ≫ σ)', '❌ Impossibles (log-normal ≥ 0)'],
+            ['Vol. proportionnelle au prix', '❌ Non — σ absolu (€/MWh)', '✅ Oui — σ relatif (%)'],
+            ['Adapté pour…', 'Gaz, électricité, commodités', 'Actions, indices boursiers'],
+            ['Utilisé pour le stockage ?', '✅ Standard industrie', '❌ Inadapté (pas de mean-reversion)'],
+          ].map(([carac, ou, gbm]) => (
+            <tr key={carac}><Td accent={ACCENT}>{carac}</Td><Td accent={T.a4}>{ou}</Td><Td accent={T.muted}>{gbm}</Td></tr>
+          ))}
+        </tbody>
+      </table>
+
+      <div style={{ background: `${T.a5}18`, border: `2px solid ${T.a5}55`, borderRadius: 8, padding: '14px 18px', margin: '12px 0' }}>
+        <div style={{ color: T.text, fontSize: 13, lineHeight: 1.7, fontStyle: 'italic' }}>
+          Le choix du modèle de prix affecte directement la valeur du stockage : un GBM surestimerait
+          la valeur extrinsèque (pas de retour à la moyenne → les pics durent plus longtemps).
+          L'OU est le choix standard pour les commodités avec ancrage fondamental.
+        </div>
+      </div>
+
+      {/* ── 12. Calibration ──────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Calibration — estimer κ, μ, σ sur des données réelles</SectionTitle>
+
+      <Step num={1} accent={ACCENT}>
+        <div>
+          <strong>Estimer μ — moyenne historique des prix</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Prendre la moyenne simple des N observations :
+            <K>{"\\hat{\\mu} = \\frac{1}{N}\\sum_{i=1}^{N} S_i"}</K>.
+            Sur 3-5 ans de données TTF (<em>Title Transfer Facility</em> — hub européen de référence
+            pour le gaz naturel), cela donne une estimation stable.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={2} accent={ACCENT}>
+        <div>
+          <strong>Estimer κ — autocorrélation à 1 pas</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Mesurer la corrélation entre <K>{"S_t"}</K> et <K>{"S_{t+1}"}</K>, puis inverser :
+            <K display>{"\\hat{\\kappa} = -\\frac{\\ln\\bigl(\\text{Corr}(S_t, S_{t+1})\\bigr)}{\\Delta t}"}</K>
+            Alternative : régresser <K>{"S_{t+1} - S_t"}</K> sur <K>{"S_t"}</K> — le coefficient
+            de pente donne directement <K>{"\\hat{\\kappa}"}</K>.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={3} accent={ACCENT}>
+        <div>
+          <strong>Estimer σ — volatilité des résidus</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Après avoir retiré la composante déterministe <K>{"\\kappa(\\mu - S_t)\\Delta t"}</K>,
+            l'écart-type des résidus donne <K>{"\\hat{\\sigma}_{\\Delta t}"}</K>. On en déduit :
+            <K display>{"\\hat{\\sigma} = \\hat{\\sigma}_{\\Delta t} \\cdot \\sqrt{\\frac{2\\hat{\\kappa}}{1 - e^{-2\\hat{\\kappa}\\Delta t}}}"}</K>
+          </div>
+        </div>
+      </Step>
+
+      {/* ── 13. Exercice ──────────────────────────────── */}
       <Accordion title="Exercice — Calibrer κ par la méthode des moments" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.muted, fontSize: 13 }}>
-          On observe 24 prix mensuels du gaz TTF (<em>Title Transfer Facility</em>, hub de référence européen).
-          La corrélation entre <K>{"S_t"}</K> et <K>{"S_{t+1}"}</K> vaut 0.72.
-          Estimer <K>{"\\kappa"}</K> et la demi-vie du processus.
+          On observe 24 prix mensuels du gaz TTF. La corrélation entre <K>{"S_t"}</K> et <K>{"S_{t+1}"}</K>
+          vaut 0.72. L'écart-type empirique des prix est de 5.5 €/MWh.
+          Estimer <K>{"\\kappa"}</K>, la demi-vie du processus et <K>{"\\sigma"}</K>.
         </p>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Corrélation OU" ruleDetail="corr = e^{-κΔt}" accent={ACCENT}>
+            Pour un processus OU, la corrélation entre deux observations séparées de Δt est exactement
+            <K>{"e^{-\\kappa\\Delta t}"}</K>.
+            <br />
             <K>{"\\text{corr}(S_t, S_{t+1}) = e^{-\\kappa \\Delta t} \\Rightarrow e^{-\\kappa/12} = 0.72"}</K>
           </DemoStep>
-          <DemoStep num={2} rule="Résoudre κ" ruleDetail="-ln(corr)/Δt" accent={ACCENT}>
-            <K>{"\\kappa = -12 \\ln(0.72) = -12 \\times (-0.329) \\approx 3.94 \\text{ an}^{-1}"}</K>
+          <DemoStep num={2} rule="Résoudre κ" ruleDetail="κ = −ln(corr)/Δt" accent={ACCENT}>
+            On passe au logarithme :
+            <K display>{"\\kappa = -\\frac{\\ln(0.72)}{1/12} = -12 \\times (-0.329) \\approx 3.94 \\text{ an}^{-1}"}</K>
           </DemoStep>
-          <DemoStep num={3} rule="Demi-vie" ruleDetail="ln(2)/κ" accent={ACCENT}>
-            <K>{"t_{1/2} = \\frac{\\ln 2}{\\kappa} = \\frac{0.693}{3.94} \\approx 0.176 \\text{ an} \\approx 64 \\text{ jours}"}</K>
+          <DemoStep num={3} rule="Demi-vie" ruleDetail="t₁/₂ = ln(2)/κ" accent={ACCENT}>
+            <K display>{"t_{1/2} = \\frac{\\ln 2}{\\kappa} = \\frac{0.693}{3.94} \\approx 0.176 \\text{ an} \\approx 64 \\text{ jours}"}</K>
+            Le marché TTF "oublie" la moitié d'un choc en ~2 mois — mean-reversion forte.
+          </DemoStep>
+          <DemoStep num={4} rule="Déduire σ" ruleDetail="σ_stat = σ/√(2κ)" accent={ACCENT}>
+            On mesure σ<sub>stat</sub> = 5.5 €/MWh empiriquement, donc :
+            <K display>{"\\sigma = \\sigma_{\\text{stat}} \\times \\sqrt{2\\kappa} = 5.5 \\times \\sqrt{2 \\times 3.94} = 5.5 \\times 2.81 \\approx 15.4 \\text{ €/MWh/}\\sqrt{\\text{an}}"}</K>
+            Soit un choc journalier typique de <K>{"15.4 / \\sqrt{252} \\approx 0.97"}</K> €/MWh — cohérent avec le TTF.
           </DemoStep>
         </Demonstration>
       </Accordion>
+
+      {/* ── 14. Récap ──────────────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '16px 20px', margin: '16px 0 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>À retenir</div>
+        <div style={{ color: T.text, fontSize: 12, lineHeight: 1.8 }}>
+          {[
+            'Le processus OU modélise le prix du gaz avec 3 paramètres : κ (vitesse de retour), μ (équilibre), σ (volatilité).',
+            'La demi-vie t₁/₂ = ln(2)/κ résume la "mémoire" du marché — typiquement 2-6 mois sur le TTF.',
+            'La discrétisation en matrice de transition Π est le pont entre modèle continu et algorithme de Bellman.',
+            'Le choix OU (plutôt que GBM) est fondamental : le retour à la moyenne est une propriété physique des commodités.',
+            'La calibration utilise l\'autocorrélation (→ κ) et la volatilité résiduelle (→ σ).',
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+              <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>•</span>
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -1893,12 +2250,10 @@ export function ValeurTab() {
 
   const dpParams = { NV: 12, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, mu, r: 0.05, cOp: 0.5, dt: 1 / 12 }
 
-  // Valeur intrinsèque (déterministe)
   const intrinsic = useMemo(() => {
     return runIntrinsicDP({ ...dpParams, spread })
   }, [spread])
 
-  // Valeur stochastique (Bellman complet)
   const stochastic = useMemo(() => {
     return runBellmanDP({ ...dpParams, NS: 10, kappa, sigma })
   }, [kappa, sigma])
@@ -1906,22 +2261,17 @@ export function ValeurTab() {
   const iMid = 6
   const jMid = 5
 
-  const VI = intrinsic.V[0][iMid]
-    ? intrinsic.V[0][iMid]
-    : 0
   const viVal = intrinsic.V[0] ? linInterp(intrinsic.vGrid, intrinsic.V[0], 50) : 0
   const vstochVal = stochastic.V[0] ? stochastic.V[0][iMid][jMid] : 0
   const VE = Math.max(0, vstochVal - viVal)
   const ratio = vstochVal > 0.01 ? (VE / vstochVal * 100).toFixed(1) : '—'
 
-  // Profile inject/soutire
   const profileData = intrinsic.injProfile.map((u, t) => ({
     mois: MONTHS[t % 12],
     action: +u.toFixed(2),
     prix: +intrinsic.fwd[t].toFixed(1),
   }))
 
-  // VE vs sigma sweep
   const sigmaRange = [2, 4, 6, 8, 10, 12, 15, 18, 22]
   const veVsSigma = useMemo(() => {
     return sigmaRange.map(s => {
@@ -1934,42 +2284,140 @@ export function ValeurTab() {
 
   return (
     <div>
+
+      {/* ── 1. Intuition ─────────────────────────────────── */}
       <IntuitionBlock emoji="💡" title="La décomposition fondamentale V₀ = VI + VE" accent={ACCENT}>
-        Toute la valeur d'un stockage se décompose en deux parties orthogonales :<br />
-        <strong>Valeur Intrinsèque (VI)</strong> = ce qu'on peut gagner aujourd'hui sur la courbe forward actuelle, en supposant que les prix futurs sont déjà connus (problème déterministe).<br />
-        <strong>Valeur Extrinsèque (VE)</strong> = la prime d'optionalité — la valeur supplémentaire que l'incertitude et la flexibilité ajoutent. C'est ce que l'imprévisibilité nous rapporte, pas ce qu'elle nous coûte.
+        <strong>Analogie de l'assurance :</strong> imagine que tu possèdes une maison (= le stockage)
+        dans une région parfois inondée. La maison vaut un loyer certain si tout se passe bien
+        — c'est la <strong>Valeur Intrinsèque (VI)</strong>.
+        Mais en plus, tu as implicitement une "assurance gratuite" : si une opportunité se présente
+        (prix qui flambent = inondation → tu peux revendre du gaz cher), tu en profites. Si rien ne se
+        passe, tu ne perds rien. Cette assurance gratuite, c'est la <strong>Valeur Extrinsèque (VE)</strong>.
+        <br /><br />
+        Toute la valeur d'un stockage se décompose en deux parties :
+        <br />
+        <strong>VI</strong> = ce qu'on gagnerait sur la courbe forward actuelle, <em>si les prix futurs étaient
+        parfaitement connus</em> (problème déterministe).
+        <br />
+        <strong>VE</strong> = la prime d'optionalité — la valeur <em>supplémentaire</em> que l'incertitude
+        et la flexibilité ajoutent. C'est ce que l'imprévisibilité nous <em>rapporte</em>, pas ce
+        qu'elle nous coûte.
       </IntuitionBlock>
 
+      {/* ── 2. Formule annotée ─────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Formule de la décomposition VI / VE</SectionTitle>
+
       <FormulaBox accent={ACCENT} label="Décomposition VI / VE">
-        <K display>{"\\underbrace{\\mathcal{V}_0(V_0, S_0)}_{\\text{Valeur totale (Bellman stochastique)}} = \\underbrace{VI}_{\\text{valeur sur courbe forward figée}} + \\underbrace{VE}_{\\text{prime d'optionalité}}"}</K>
+        <K display>{"\\underbrace{\\mathcal{V}_0(V_0, S_0)}_{\\text{Valeur totale (Bellman)}} = \\underbrace{VI}_{\\text{valeur sur courbe forward figée}} + \\underbrace{VE}_{\\text{prime d'optionalité}}"}</K>
         <K display>{"VE = \\mathcal{V}_0^{\\text{stoch}} - \\mathcal{V}_0^{\\text{déterm}} \\geq 0"}</K>
       </FormulaBox>
 
-      {/* VI section */}
-      <SectionTitle accent={ACCENT}>Valeur Intrinsèque — Le plan déterministe</SectionTitle>
-      <IntuitionBlock emoji="📋" title="VI : optimisation sur courbe forward figée" accent={ACCENT}>
-        La VI correspond à la valeur qu'on obtient en résolvant le même backward DP,
-        mais <strong>sans incertitude sur les prix futurs</strong> : on utilise directement la courbe forward <K>{"F(0,t)"}</K>
-        comme si les prix futurs étaient parfaitement connus aujourd'hui. C'est le "business plan" du stockage.
-      </IntuitionBlock>
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['\\mathcal{V}_0', 'Valeur totale du stockage à t = 0, calculée par Bellman (€)'],
+        ['VI', 'Valeur Intrinsèque — optimisation déterministe sur la courbe forward (€)'],
+        ['VE', 'Valeur Extrinsèque — prime d\'optionalité due à l\'incertitude des prix (€)'],
+        ['F(0,T)', 'Prix forward : prix fixé aujourd\'hui pour une livraison à la date T (€/MWh)'],
+        ['\\text{stoch}', 'Modèle stochastique complet (Bellman avec incertitude sur S)'],
+        ['\\text{déterm}', 'Modèle déterministe (même DP mais avec prix forward connus)'],
+      ]} />
 
-      <FormulaBox accent={ACCENT} label="Valeur Intrinsèque — Problème déterministe">
-        <K display>{"VI = \\max_{\\{u_t\\}} \\sum_{t=0}^{T-1} e^{-rt}\\,\\pi(u_t,\\, F(0,t)) \\quad \\text{s.c. contraintes de stockage}"}</K>
+      {/* ── 3. Décomposition terme à terme ──────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
+
+        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>📋 Valeur Intrinsèque (VI) — le "business plan"</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            La VI répond à : <em>"Si je connaissais parfaitement les prix futurs (la courbe forward),
+            combien pourrais-je gagner en optimisant mes injections et soutirage ?"</em>
+            <br /><br />
+            C'est le même backward DP que Bellman, mais <strong>sans incertitude</strong> : on remplace
+            <K>{"\\mathbb{E}_t[\\mathcal{V}_{t+1}(V', S_{t+1})]"}</K> par
+            <K>{"\\mathcal{V}_{t+1}(V', F(0,t+1))"}</K> directement.
+            <br /><br />
+            <strong style={{ color: T.text }}>Exemple numérique :</strong> spread été/hiver = 15 €, μ = 40 €.
+            Prix été = 32.5 €, prix hiver = 47.5 €. Pour 50 GWh :
+            <K display>{"VI \\approx 50 \\times (47.5 - 32.5 - 2 \\times c_{\\text{op}}) = 50 \\times 14 = 700 \\text{ € (avant actualisation)}"}</K>
+          </div>
+        </div>
+
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🎯 Valeur Extrinsèque (VE) — la "loterie gratuite"</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            La VE répond à : <em>"Combien vaut le droit de changer d'avis en cours de route ?"</em>
+            <br /><br />
+            Elle est <strong>toujours ≥ 0</strong> car le stockage est un actif
+            <strong> convexe</strong> : quand le prix bouge dans n'importe quelle direction,
+            on peut s'adapter — soutirer si le prix monte plus que prévu, injecter s'il baisse.
+            <br /><br />
+            <strong style={{ color: T.text }}>Propriétés clés :</strong>
+            <br />• VE ↑ quand σ ↑ — plus de volatilité = plus d'occasions de profit
+            <br />• VE ↑ quand temps restant ↑ — plus d'horizon = plus de chances de voir des pics
+            <br />• VE = 0 si σ = 0 — sans incertitude, l'optionalité ne vaut rien
+            <br />• VE est convexe en σ — doubler σ fait <em>plus</em> que doubler VE
+          </div>
+        </div>
+
+      </div>
+
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '14px 18px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.text, fontSize: 13, lineHeight: 1.7, fontStyle: 'italic' }}>
+          La VI est le "salaire fixe" du stockage (couvrable dès J = 0), la VE est le "bonus variable"
+          qui dépend des aléas du marché. Un bon opérateur cherche à maximiser les deux.
+        </div>
+      </div>
+
+      {/* ── 4. Section VI ─────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Valeur Intrinsèque — le plan déterministe</SectionTitle>
+
+      <FormulaBox accent={ACCENT} label="Valeur Intrinsèque — optimisation déterministe">
+        <K display>{"VI = \\max_{\\{u_t\\}} \\sum_{t=0}^{T-1} \\underbrace{e^{-rt}}_{\\text{actualisation}} \\cdot \\underbrace{\\pi(u_t,\\, F(0,t))}_{\\text{cashflow au prix forward}} \\quad \\text{s.c. contraintes de stockage}"}</K>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Même backward DP mais <K>{"\\mathbb{E}_t[\\mathcal{V}_{t+1}(V', S_{t+1})]"}</K> remplacé par <K>{"\\mathcal{V}_{t+1}(V', F(0,t+1))"}</K> directement — pas d'intégration stochastique.
+          Même backward DP que Bellman mais avec des prix <em>connus</em> — pas d'intégration stochastique.
         </div>
       </FormulaBox>
+
+      <Step num={1} accent={ACCENT}>
+        <div>
+          <strong>Construire la courbe forward saisonnière</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Les prix forward suivent un profil saisonnier : <strong>bas en été</strong> (faible demande de
+            chauffage, on injecte) et <strong>hauts en hiver</strong> (forte demande, on soutire).
+            Le spread été/hiver détermine l'amplitude de ce cycle.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={2} accent={ACCENT}>
+        <div>
+          <strong>Backward DP déterministe — optimiser sur F(0,t)</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            À chaque pas t et volume V, tester toutes les actions u admissibles. Comme le prix est
+            <em> connu</em> (forward), pas besoin de matrice Π — on calcule directement la valeur future
+            au prix forward du mois suivant.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={3} accent={ACCENT}>
+        <div>
+          <strong>Lire le profil optimal inject/soutire et la VI</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Le résultat est un plan d'injection/soutirage mois par mois et une valeur totale = VI.
+            Ce plan est "lockable" immédiatement par des contrats forward.
+          </div>
+        </div>
+      </Step>
 
       <Slider label="Spread été/hiver — écart saisonnier de prix (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v} €`} />
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Valeur Intrinsèque VI" value={viVal.toFixed(2)} unit="€" accent={ACCENT} />
         <InfoChip label="Spread été/hiver" value={`${spread} €/MWh`} accent={T.a5} />
-        <InfoChip label="Courbe forward : été" value={`${(mu - spread / 2).toFixed(0)} €`} accent={T.a1} />
-        <InfoChip label="Courbe forward : hiver" value={`${(mu + spread / 2).toFixed(0)} €`} accent={T.a8} />
+        <InfoChip label="Prix été" value={`${(mu - spread / 2).toFixed(0)} €/MWh`} accent={T.a1} />
+        <InfoChip label="Prix hiver" value={`${(mu + spread / 2).toFixed(0)} €/MWh`} accent={T.a8} />
       </div>
 
       <Grid cols={2} gap="16px">
-        <ChartWrapper title="Courbe forward saisonnière F(0,t)" accent={ACCENT} height={200}>
+        <ChartWrapper title="Courbe forward saisonnière F(0,T)" accent={ACCENT} height={200}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={profileData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -1995,27 +2443,42 @@ export function ValeurTab() {
         </ChartWrapper>
       </Grid>
 
-      {/* VE section */}
-      <SectionTitle accent={ACCENT}>Valeur Extrinsèque — La prime d'optionalité</SectionTitle>
-      <IntuitionBlock emoji="🎯" title="VE : ce que l'incertitude nous rapporte" accent={ACCENT}>
-        La VE est positive car le stockage est un actif <strong>convexe</strong> (voir onglet Delta &amp; Couverture).
-        Quand le prix bouge dans n'importe quelle direction, on peut s'adapter :
-        soutirer si le prix monte plus que prévu, injecter si il baisse davantage.
-        Cette flexibilité vaut d'autant plus que les prix sont volatils.
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '📉', text: <><strong>Graphe gauche</strong> : la courbe forward. Les creux (été) = période d'injection. Les pics (hiver) = période de soutirage. Le spread entre les deux = marge brute.</> },
+          { icon: '📊', text: <><strong>Graphe droit</strong> : u &gt; 0 (barres vers le haut) = injection. u &lt; 0 = soutirage. Le profil est symétrique et suit la saisonnalité : on remplit le tank en été, on le vide en hiver.</> },
+          { icon: '💰', text: <>La <strong>VI</strong> (InfoChip) augmente linéairement avec le spread : chaque € de spread en plus rapporte directement en marge d'arbitrage saisonnier.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 5. Section VE ─────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Valeur Extrinsèque — la prime d'optionalité</SectionTitle>
+
+      <IntuitionBlock emoji="🎰" title="La VE : pourquoi l'incertitude nous rapporte" accent={ACCENT}>
+        Imagine un jeu de pile ou face : si face, tu gagnes 100 € ; si pile, tu perds 0 €
+        (tu ne fais rien). L'espérance est de +50 €, et elle est <em>toujours</em> positive,
+        quelle que soit la pièce. Le stockage fonctionne pareil : quand le prix monte, tu peux
+        soutirer (gagner) ; quand il baisse, tu ne fais rien (pas de perte). L'asymétrie du payoff
+        fait que <em>tout</em> mouvement de prix a un espérance de gain positive.
       </IntuitionBlock>
 
       <Grid cols={3} gap="12px">
         <Slider label="σ — volatilité du spot (€/MWh)" value={sigma} min={1} max={22} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="κ — vitesse de retour à la moyenne (an⁻¹)" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Valeur totale V₀" value={vstochVal.toFixed(2)} unit="€" accent={T.a4} />
         <InfoChip label="VI (déterministe)" value={viVal.toFixed(2)} unit="€" accent={T.a5} />
         <InfoChip label="VE (optionalité)" value={VE.toFixed(2)} unit="€" accent={ACCENT} />
-        <InfoChip label="Ratio VE/V₀" value={`${ratio}%`} accent={VE > viVal * 0.1 ? ACCENT : T.muted} />
+        <InfoChip label="Ratio VE / V₀" value={`${ratio}%`} accent={VE > viVal * 0.1 ? ACCENT : T.muted} />
       </div>
 
-      <ChartWrapper title="VE en fonction de σ — La VE croît avec la volatilité" accent={ACCENT} height={200}>
+      <ChartWrapper title="VE en fonction de σ — la VE croît et accélère avec la volatilité" accent={ACCENT} height={200}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={veVsSigma} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -2026,60 +2489,99 @@ export function ValeurTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
         {[
-          { icon: '📈', text: <>La courbe est <strong>croissante et convexe</strong> : doubler σ fait plus que doubler la VE — le stockage bénéficie des mouvements de prix dans les deux sens.</> },
-          { icon: '📍', text: <>Si <K>{"\\sigma = 0"}</K>, la VE est nulle — sans incertitude, la valeur se réduit à la VI déterministe. L'optionalité ne vaut rien quand l'avenir est certain.</> },
+          { icon: '📈', text: <>La courbe est <strong>croissante et convexe</strong> : doubler σ fait plus que doubler la VE. Le stockage bénéficie des mouvements de prix dans les deux sens (asymétrie de payoff).</> },
+          { icon: '📍', text: <>Si <K>{"\\sigma = 0"}</K>, la VE est nulle — sans incertitude, la valeur se réduit à la VI. <strong>L'optionalité ne vaut rien quand l'avenir est certain.</strong></> },
+          { icon: '⚡', text: <>↑ κ <strong>réduit</strong> la VE à σ fixé — les pics sont plus brefs et moins extrêmes. Mais κ élevé + σ élevé peut donner des pics violents et fréquents → VE quand même significative.</> },
         ].map(({ icon, text }, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 220 }}>
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
             <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
           </div>
         ))}
       </div>
 
-      {/* Rolling Intrinsic */}
-      <SectionTitle accent={ACCENT}>Stratégie Rolling Intrinsic — La pratique industrielle</SectionTitle>
-      <IntuitionBlock emoji="🔄" title="Comment un fournisseur gère son stockage au quotidien" accent={ACCENT}>
-        La stratégie <strong>Rolling Intrinsic</strong> est la référence industrielle.
-        Elle sépare proprement la valeur certaine (VI, couverte dès le départ) de la valeur optionnelle (VE, capturée progressivement).
-        C'est le standard des trading desks gaz en Europe.
+      {/* ── 6. Rolling Intrinsic ─────────────────────── */}
+      <SectionTitle accent={ACCENT}>Stratégie Rolling Intrinsic — la pratique industrielle</SectionTitle>
+
+      <IntuitionBlock emoji="🔄" title="Comment un fournisseur capture la VE en pratique" accent={ACCENT}>
+        La stratégie <strong>Rolling Intrinsic</strong> est la référence des trading desks gaz en Europe.
+        Elle sépare proprement la valeur certaine (VI, couverte dès le départ) de la valeur optionnelle
+        (VE, capturée progressivement par des reoptimisations).
         <br /><br />
-        <em>Delta-neutre</em> = position dont la valeur ne change pas quand le prix spot bouge de 1€ (on l'obtient en vendant des forwards en quantité = Δ).
-        <br /><em>P&L</em> = Profit & Loss (gains et pertes réalisés).
+        <em>Delta-neutre</em> = position dont la valeur ne change pas quand le prix spot bouge de 1 €
+        (obtenu en vendant des forwards en quantité = Δ).
+        <br /><em>P&amp;L</em> = Profit &amp; Loss (gains et pertes réalisés).
       </IntuitionBlock>
 
-      <div style={panelStyle}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Séquence opérationnelle</div>
-        {[
-          { jour: 'J = 0 (début campagne)', action: 'Calculer la VI sur la courbe forward du jour', resultat: 'Vendre en forward pour "locker" VI = 2 M€. Position : delta-neutre sur VI.' },
-          { jour: 'J = 15', action: 'La courbe forward se tend (hiver anticipé plus froid)', resultat: 'Reoptimiser → nouvelle VI = 2.4 M€. Ajuster la position forward. VE capturée = +0.4 M€.' },
-          { jour: 'J = 45', action: 'Baisse de température → prix hivernal encore plus haut', resultat: 'Reoptimiser → VI = 2.7 M€. Ajuster. VE totale capturée jusqu\'ici = 0.7 M€.' },
-          { jour: 'Échéance', action: 'Exécution physique des injections/soutiages selon le plan final', resultat: 'P&L (Profit & Loss) total = VI initiale + VE capturée - coûts opérationnels.' },
-        ].map(({ jour, action, resultat }) => (
-          <div key={jour} style={{ borderLeft: `3px solid ${ACCENT}44`, paddingLeft: 12, marginBottom: 12 }}>
-            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>{jour}</div>
-            <div style={{ color: T.text, fontSize: 12, marginTop: 2 }}>{action}</div>
-            <div style={{ color: T.muted, fontSize: 11, marginTop: 2 }}>→ {resultat}</div>
+      <Step num={1} accent={ACCENT}>
+        <div>
+          <strong>J = 0 — Locker la VI initiale</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Calculer la VI sur la courbe forward du jour. Vendre en forward pour "locker" cette VI.
+            La position est maintenant delta-neutre sur la composante intrinsèque.
+            <br />
+            <strong>Exemple :</strong> VI = 2 M€ → vendre le profil forward inject/soutire correspondant.
           </div>
-        ))}
+        </div>
+      </Step>
+
+      <Step num={2} accent={ACCENT}>
+        <div>
+          <strong>J = 15, 30, … — Reoptimiser périodiquement</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            La courbe forward a bougé (météo, géopolitique, offre/demande). Recalculer la VI sur la
+            <em> nouvelle</em> courbe. Si la nouvelle VI &gt; ancienne VI → ajuster la position forward →
+            "locker" le gain supplémentaire.
+            <br />
+            <strong>Exemple :</strong> hiver anticipé plus froid → spread ↑ → nouvelle VI = 2.4 M€ →
+            VE capturée cette période = +0.4 M€.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={3} accent={ACCENT}>
+        <div>
+          <strong>Échéance — exécution physique</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Exécuter les injections/soutirages selon le dernier plan optimisé.
+            Le P&amp;L total = VI initiale lockée + somme des VE capturées − coûts opérationnels.
+          </div>
+        </div>
+      </Step>
+
+      {/* Pseudocode Rolling Intrinsic */}
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Pseudocode — Rolling Intrinsic</div>
+        <pre style={{ color: T.text, fontSize: 11, lineHeight: 1.9, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  VI_lockée ← Calculer_VI(courbe_forward_J0)
+  position_forward ← Vendre_profil(VI_lockée)
+
+  POUR chaque date de reoptimisation J :
+      nouvelle_VI ← Calculer_VI(courbe_forward_J)
+      SI nouvelle_VI > VI_lockée :
+          VE_capturée += (nouvelle_VI - VI_lockée)
+          Ajuster position_forward → nouvelle_VI
+          VI_lockée ← nouvelle_VI
+
+  P&L_total = VI_lockée + VE_capturée - coûts_opérationnels`}
+        </pre>
       </div>
 
-      <SectionTitle accent={ACCENT}>Attribution de P&L</SectionTitle>
+      {/* P&L Attribution */}
+      <SectionTitle accent={ACCENT}>Attribution de P&amp;L</SectionTitle>
       <table style={tableStyle}>
         <thead>
-          <tr>
-            <Th>Composante P&L</Th>
-            <Th>Source</Th>
-            <Th>Caractéristiques</Th>
-          </tr>
+          <tr><Th>Composante P&amp;L</Th><Th>Source</Th><Th>Caractéristiques</Th></tr>
         </thead>
         <tbody>
           {[
-            ['P&L Intrinsèque', 'Gain/perte sur les forwards vendus à J=0', 'Quasi-certain, couvert dès le départ'],
-            ['P&L Extrinsèque', 'Reoptimisations successives au fil des jours', 'Variable, dépend de la vol réalisée'],
+            ['P&L Intrinsèque', 'Gain/perte sur les forwards vendus à J = 0', 'Quasi-certain, couvert dès le départ'],
+            ['P&L Extrinsèque', 'Reoptimisations successives au fil des jours', 'Variable, dépend de la volatilité réalisée'],
             ['P&L Opérationnel', 'Coûts réels injection/soutirage vs modèle', 'Friction, toujours négatif (coûts > 0)'],
-            ['P&L Total', 'VI + VE - coûts', 'Objectif : maximiser sur la durée de vie'],
+            ['P&L Total', 'VI + VE − coûts', 'Objectif : maximiser sur la durée de vie'],
           ].map(([comp, source, carac]) => (
             <tr key={comp}>
               <Td accent={ACCENT}>{comp}</Td>
@@ -2090,21 +2592,17 @@ export function ValeurTab() {
         </tbody>
       </table>
 
+      {/* Comparaison profils fournisseur */}
       <SectionTitle accent={ACCENT}>Profil fournisseur : qui valorise quoi ?</SectionTitle>
       <table style={tableStyle}>
         <thead>
-          <tr>
-            <Th>Profil fournisseur</Th>
-            <Th>Demande clients</Th>
-            <Th>Priorité VI/VE</Th>
-            <Th>Stratégie stockage</Th>
-          </tr>
+          <tr><Th>Profil</Th><Th>Demande clients</Th><Th>Priorité VI/VE</Th><Th>Stratégie stockage</Th></tr>
         </thead>
         <tbody>
           {[
-            ['Résidentiel/collectivités', 'Prévisible, très saisonnière', 'VI dominante (plan fixe)', 'Couvrir le pic hivernal, peu de reoptimisation'],
+            ['Résidentiel / collectivités', 'Prévisible, très saisonnière', 'VI dominante', 'Couvrir le pic hivernal, peu de reoptimisation'],
             ['Industriels', 'Variable, sensible à la production', 'VI + VE équilibrées', 'Rolling intrinsic actif, ajustements fréquents'],
-            ['Trader pur', 'Aucune (position nette)', 'VE maximale', 'Maximiser la vol capturée, position gamma long (c.-à-d. la convexité de la valeur bénéficie de tout mouvement de prix)'],
+            ['Trader pur', 'Aucune (position nette)', 'VE maximale', 'Maximiser la vol capturée, gamma long'],
           ].map(([profil, demande, priorite, strategie]) => (
             <tr key={profil}>
               <Td accent={ACCENT}>{profil}</Td>
@@ -2116,25 +2614,62 @@ export function ValeurTab() {
         </tbody>
       </table>
 
+      <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, margin: '8px 0' }}>
+        <em>Gamma long</em> = la convexité de la valeur du stockage en fonction du prix bénéficie de tout mouvement de prix, dans les deux directions. Voir l'onglet Delta &amp; Couverture pour les détails.
+      </div>
+
+      {/* ── 7. Exercice ──────────────────────────────── */}
       <Accordion title="Exercice — Comparer VI et VE selon le scénario météo" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.muted, fontSize: 13 }}>
           Le marché intègre un hiver "normal" (spread = 15 €/MWh). Deux scénarios se matérialisent :
-          A) Hiver très froid → spread réel = 28 €/MWh. B) Hiver doux → spread réel = 5 €/MWh.
-          Pour un fournisseur avec VI lockée à 15 €/MWh : décomposer le P&L dans chaque scénario.
+          A) Hiver très froid → spread réel = 28 €/MWh.
+          B) Hiver doux → spread réel = 5 €/MWh.
+          Pour un fournisseur avec VI lockée à spread = 15 €/MWh : décomposer le P&amp;L dans chaque cas.
         </p>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Scénario A (hiver froid)" ruleDetail="spread réalisé > spread forward" accent={ACCENT}>
-            Le fournisseur a vendu en forward à 15 €/MWh. Le prix réel monte à 28 €/MWh.
-            P&L intrinsèque = VI lockée (protégé). P&L extrinsèque : la reoptimisation hausse la VI à ~28 € → VE ≈ 13 €/MWh capturée si rolling intrinsic correctement géré.
+          <DemoStep num={1} rule="Setup" ruleDetail="VI lockée sur la courbe forward initiale" accent={ACCENT}>
+            Le fournisseur a calculé VI sur un spread de 15 €/MWh et a vendu les forwards correspondants.
+            Prix été = 32.5 €, prix hiver = 47.5 €. VI lockée ≈ 2 M€ (par exemple).
           </DemoStep>
-          <DemoStep num={2} rule="Scénario B (hiver doux)" ruleDetail="spread réalisé < spread forward" accent={ACCENT}>
-            Le spread tombe à 5 €/MWh. Mais la VI a été lockée à 15 €/MWh → pas de perte sur la VI. VE ≈ 0 (pas d'opportunité supplémentaire). Le stockage délivre quand même sa VI.
+          <DemoStep num={2} rule="Scénario A (hiver froid)" ruleDetail="spread réalisé > forward" accent={ACCENT}>
+            Le spread réel monte à 28 €/MWh. La nouvelle VI sur la courbe à jour = ~3.7 M€.
+            En rolling intrinsic, la reoptimisation capture cette hausse :
+            VE capturée = 3.7 − 2 = <strong>+1.7 M€</strong>.
+            <br />P&amp;L total = VI (2 M€) + VE (1.7 M€) − coûts ≈ <strong>+3.5 M€</strong>.
           </DemoStep>
-          <DemoStep num={3} rule="Conclusion" ruleDetail="asymétrie = convexité" accent={ACCENT}>
-            Dans les deux cas, le P&L est supérieur ou égal à VI. C'est l'asymétrie fondamentale : le stockage participe aux bonnes surprises mais est protégé contre les mauvaises (via la couverture initiale).
+          <DemoStep num={3} rule="Scénario B (hiver doux)" ruleDetail="spread réalisé < forward" accent={ACCENT}>
+            Le spread tombe à 5 €/MWh. Mais la VI a été <em>lockée</em> à 15 €/MWh via les forwards !
+            La baisse du spread ne se matérialise pas en perte (les forwards protègent).
+            VE ≈ 0 (pas d'opportunité supplémentaire).
+            <br />P&amp;L total ≈ VI lockée (2 M€) − coûts ≈ <strong>+1.8 M€</strong>.
+          </DemoStep>
+          <DemoStep num={4} rule="Conclusion" ruleDetail="asymétrie = convexité" accent={ACCENT}>
+            Dans les deux cas, P&amp;L ≥ VI initiale. C'est l'<strong>asymétrie fondamentale</strong> :
+            le stockage participe aux bonnes surprises mais est protégé contre les mauvaises
+            (via la couverture forward initiale). C'est exactement le profil de gain d'une option.
           </DemoStep>
         </Demonstration>
       </Accordion>
+
+      {/* ── 8. Récap ──────────────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '16px 20px', margin: '16px 0 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>À retenir</div>
+        <div style={{ color: T.text, fontSize: 12, lineHeight: 1.8 }}>
+          {[
+            'V₀ = VI + VE : la valeur totale du stockage se décompose en valeur intrinsèque (déterministe) et extrinsèque (optionalité).',
+            'La VI se "locke" dès J = 0 par des forwards — c\'est le revenu certain, le "salaire fixe" du stockage.',
+            'La VE ≥ 0 toujours — l\'incertitude ne peut qu\'ajouter de la valeur, jamais en retirer.',
+            'VE croît de façon convexe avec σ : la volatilité est l\'amie de l\'opérateur de stockage.',
+            'Le Rolling Intrinsic capture la VE par des reoptimisations périodiques de la VI.',
+            'Profil trader pur → maximiser VE. Profil fournisseur résidentiel → maximiser VI.',
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+              <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>•</span>
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -2152,13 +2687,8 @@ export function DeltaTab() {
     return runBellmanDP({ NV: 15, NS: 14, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma, r: 0.05, cOp: 0.5, dt: 1 / 12 })
   }, [kappa, mu, sigma])
 
-  const eps = 2 // price epsilon for finite differences
-
-  // Delta as function of V (at S=mu)
   const jMid = 7
   const deltaVData = result.vGrid.map((v, i) => {
-    const vAbove = result.V[0][i].map((_, j) => result.V[0][i][j])
-    // delta = (V(S+eps) - V(S-eps)) / (2*eps) — need neighboring price indices
     const jPlus = Math.min(jMid + 1, result.sGrid.length - 1)
     const jMinus = Math.max(jMid - 1, 0)
     const dS = result.sGrid[jPlus] - result.sGrid[jMinus]
@@ -2166,7 +2696,6 @@ export function DeltaTab() {
     return { volume: +v.toFixed(0), delta: +delta.toFixed(3) }
   })
 
-  // Delta as function of S (at V=50%)
   const iMid = 7
   const deltaSData = result.sGrid.map((s, j) => {
     const jPlus = Math.min(j + 1, result.sGrid.length - 1)
@@ -2176,47 +2705,135 @@ export function DeltaTab() {
     return { prix: +s.toFixed(1), delta: +delta.toFixed(3) }
   })
 
-  // Current delta interpolated
   const jCurr = result.sGrid.reduce((best, s, j) => Math.abs(s - s0) < Math.abs(result.sGrid[best] - s0) ? j : best, 0)
   const jP = Math.min(jCurr + 1, result.sGrid.length - 1)
   const jM = Math.max(jCurr - 1, 0)
   const iCurr = result.vGrid.reduce((best, v, i) => Math.abs(v - v0) < Math.abs(result.vGrid[best] - v0) ? i : best, 0)
   const dSc = result.sGrid[jP] - result.sGrid[jM]
   const currentDelta = (result.V[0][iCurr][jP] - result.V[0][iCurr][jM]) / (dSc + 1e-10)
-  const fwdQty = (currentDelta * 100).toFixed(0) // pour 100 GWh de capacité
+  const fwdQty = (currentDelta * 100).toFixed(0)
 
-  // Smile data (value vs S at V=50%)
   const smileData = result.sGrid.map((s, j) => ({
     prix: +s.toFixed(1),
     valeur: +result.V[0][iMid][j].toFixed(2),
     linéaire: +(result.V[0][iMid][jMid] + currentDelta * (s - result.sGrid[jMid])).toFixed(2),
   }))
 
+  // Gamma computation
+  const gammaData = result.sGrid.map((s, j) => {
+    const jPlus = Math.min(j + 1, result.sGrid.length - 1)
+    const jMinus = Math.max(j - 1, 0)
+    const dS = (result.sGrid[jPlus] - result.sGrid[jMinus]) / 2
+    const d2V = (result.V[0][iMid][jPlus] - 2 * result.V[0][iMid][j] + result.V[0][iMid][jMinus]) / (dS * dS + 1e-10)
+    return { prix: +s.toFixed(1), gamma: +d2V.toFixed(4) }
+  })
+
   return (
     <div>
+
+      {/* ── 1. Intuition ─────────────────────────────────── */}
       <IntuitionBlock emoji="📐" title="Le delta : pont entre modèle et salle des marchés" accent={ACCENT}>
-        Le delta d'un stockage répond à : <strong>"Si le prix monte de 1 €, de combien change ma valeur ?"</strong>
-        C'est à la fois un indicateur de risque et la quantité de forwards à vendre pour être delta-neutre —
-        immunisé contre les mouvements de prix.
+        <strong>Analogie du compteur de vitesse :</strong> quand tu conduis, le compteur de vitesse
+        te dit "si tu continues 1 seconde de plus, tu auras parcouru X mètres". Le delta fait
+        exactement la même chose pour le prix du gaz : <em>"si le prix monte de 1 €, ma valeur
+        change de Δ €."</em>
+        <br /><br />
+        Le delta est à la fois :
+        <br />• Un <strong>indicateur de risque</strong> — à quel point suis-je exposé au prix ?
+        <br />• Une <strong>recette de couverture</strong> — combien de forwards vendre pour être immunisé ?
+        <br />• Un <strong>lien avec Bellman</strong> — il se lit directement dans la grille de valeurs déjà calculée.
       </IntuitionBlock>
+
+      {/* ── 2. Formule annotée ─────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Le delta par différences finies</SectionTitle>
 
       <FormulaBox accent={ACCENT} label="Delta par différences finies">
         <K display>{"\\Delta_t(V, S) \\approx \\frac{\\overbrace{\\mathcal{V}_t(V,\\, S+\\varepsilon)}^{\\text{valeur si prix monte}} - \\overbrace{\\mathcal{V}_t(V,\\, S-\\varepsilon)}^{\\text{valeur si prix baisse}}}{\\underbrace{2\\varepsilon}_{\\text{écart de prix testé}}}"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Directement calculable depuis la grille Bellman déjà connue — on lit deux valeurs voisines dans la grille et on divise par l'écart.
-          <br />Ex : <K>{"\\mathcal{V}(50,\\,42) = 380"}</K>, <K>{"\\mathcal{V}(50,\\,38) = 355"}</K>, <K>{"\\varepsilon = 2"}</K> → <K>{"\\Delta \\approx \\frac{380-355}{4} = 6.25"}</K> € par €/MWh.
-        </div>
       </FormulaBox>
 
-      <FormulaBox accent={ACCENT} label="Récurrence du delta (théorème de l'enveloppe)">
-        <K display>{"\\Delta_t(V, S) = \\underbrace{-u^* \\cdot \\Delta t}_{\\text{sensibilité immédiate}} + e^{-r\\Delta t} \\cdot \\underbrace{e^{-\\kappa\\Delta t}}_{\\text{persistance}} \\cdot \\mathbb{E}_t[\\Delta_{t+1}(V', S_{t+1})]"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Le terme <K>{"e^{-\\kappa\\Delta t}"}</K> est la persistance du choc de prix : un choc est atténué par le retour à la moyenne. Plus κ est grand, plus vite le choc "s'oublie" et moins le delta futur compte.
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['\\Delta_t(V, S)', 'Delta = sensibilité de la valeur au prix, à l\'instant t (€ par €/MWh)'],
+        ['\\mathcal{V}_t', 'Fonction valeur du stockage, calculée par Bellman (€)'],
+        ['\\varepsilon', 'Petit écart de prix pour le calcul numérique (typiquement 1 nœud de grille)'],
+        ['V', 'Volume actuellement en stock (GWh)'],
+        ['S', 'Prix spot actuel du gaz (€/MWh)'],
+      ]} />
+
+      {/* ── 3. Décomposition ──────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
+
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>📖 Comment lire la formule ?</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            On prend <strong>deux valeurs voisines</strong> dans la grille Bellman (même volume, deux prix
+            adjacents) et on divise par l'écart. C'est exactement le calcul d'une dérivée par la
+            <strong> méthode des différences finies centrées</strong>.
+            <br /><br />
+            <strong style={{ color: T.text }}>Exemple numérique :</strong> V = 50 GWh, S = 40 €, ε = 2 €.
+            La grille Bellman donne :
+            <K display>{"\\mathcal{V}(50,\\,42) = 380\\text{ €}, \\quad \\mathcal{V}(50,\\,38) = 355\\text{ €}"}</K>
+            <K display>{"\\Delta \\approx \\frac{380 - 355}{2 \\times 2} = \\frac{25}{4} = 6.25 \\text{ € par €/MWh}"}</K>
+            <em>Interprétation :</em> si le prix du gaz monte de 1 €/MWh, la valeur du stockage
+            augmente d'environ 6.25 €.
+          </div>
         </div>
+
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🛡️ Du delta à la couverture</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            Le delta indique <strong>combien de forwards vendre</strong> pour être immunisé :
+            <K display>{"\\text{Forwards à vendre} = \\Delta \\times \\text{capacité du stockage}"}</K>
+            <strong>Exemple :</strong> Δ = 6.25, capacité = 100 GWh → vendre 625 GWh en forward.
+            Si le prix monte de 1 € : gain stockage ≈ +625 €, perte forward = −625 €. Net ≈ 0 €.
+            <br /><br />
+            C'est le <strong>delta hedging</strong> — la même technique que pour couvrir une option
+            financière, mais appliquée à un actif physique.
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── 4. Formule de récurrence ──────────────────── */}
+      <SectionTitle accent={ACCENT}>Récurrence du delta (théorème de l'enveloppe)</SectionTitle>
+
+      <FormulaBox accent={ACCENT} label="Récurrence du delta">
+        <K display>{"\\Delta_t(V, S) = \\underbrace{-u^* \\cdot \\Delta t}_{\\text{sensibilité immédiate}} + \\underbrace{e^{-r\\Delta t} \\cdot e^{-\\kappa\\Delta t}}_{\\text{actualisation × persistance}} \\cdot \\underbrace{\\mathbb{E}_t[\\Delta_{t+1}(V', S_{t+1})]}_{\\text{delta futur espéré}}"}</K>
       </FormulaBox>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, margin: '12px 0' }}>
+        {[
+          {
+            label: '−u* · Δt', color: T.a4,
+            desc: 'Le soutirage immédiat crée une exposition directe au prix. Si u* = −10 (soutire), vendre 10·Δt GWh → delta positif.',
+          },
+          {
+            label: 'e^{−κΔt}', color: T.a5,
+            desc: "La persistance du choc de prix. Un choc est atténué par la mean-reversion. Plus κ est grand, plus le choc \"s'oublie\" vite.",
+          },
+          {
+            label: '𝔼[Δₜ₊₁]', color: ACCENT,
+            desc: 'Le delta futur espéré — contribution des décisions futures. Se propage récursivement depuis l\'échéance.',
+          },
+        ].map(({ label, color, desc }) => (
+          <div key={label} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
+            <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 6 }}><K>{label}</K></div>
+            <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '14px 18px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.text, fontSize: 13, lineHeight: 1.7, fontStyle: 'italic' }}>
+          Le delta est la somme d'un effet immédiat (action u* de ce mois) et d'effets futurs
+          (propagation récursive), le tout pondéré par la persistance du choc (mean-reversion).
+        </div>
+      </div>
+
+      {/* ── 5. Simulation interactive ──────────────────── */}
+      <SectionTitle accent={ACCENT}>Explorer le delta interactivement</SectionTitle>
 
       <Grid cols={3} gap="12px">
-        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="κ — vitesse de retour à la moyenne (an⁻¹)" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="μ — prix moyen long terme (€/MWh)" value={mu} min={20} max={70} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
         <Slider label="σ — volatilité du spot (€/MWh)" value={sigma} min={1} max={20} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="V — volume actuel dans le tank (GWh)" value={v0} min={0} max={100} step={5} onChange={setV0} accent={ACCENT} format={v => `${v}`} />
@@ -2224,8 +2841,8 @@ export function DeltaTab() {
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '12px 0' }}>
         <InfoChip label="Δ(V, S) courant" value={currentDelta.toFixed(3)} accent={ACCENT} />
-        <InfoChip label="Forwards à vendre (sur 100 GWh cap.)" value={`${fwdQty} GWh`} accent={T.a4} />
-        <InfoChip label="Action optimale" value={result.policy[0][iCurr][jCurr] > 0.5 ? 'INJECTION' : result.policy[0][iCurr][jCurr] < -0.5 ? 'SOUTIRAGE' : 'ATTENTE'} accent={result.policy[0][iCurr][jCurr] > 0.5 ? T.a1 : result.policy[0][iCurr][jCurr] < -0.5 ? T.a4 : T.muted} />
+        <InfoChip label="Forwards à vendre (100 GWh cap.)" value={`${fwdQty} GWh`} accent={T.a4} />
+        <InfoChip label="Action optimale u*" value={result.policy[0][iCurr][jCurr] > 0.5 ? 'INJECTION' : result.policy[0][iCurr][jCurr] < -0.5 ? 'SOUTIRAGE' : 'ATTENTE'} accent={result.policy[0][iCurr][jCurr] > 0.5 ? T.a1 : result.policy[0][iCurr][jCurr] < -0.5 ? T.a4 : T.muted} />
       </div>
 
       <Grid cols={2} gap="16px">
@@ -2254,11 +2871,12 @@ export function DeltaTab() {
           </ResponsiveContainer>
         </ChartWrapper>
       </Grid>
+
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
         {[
-          { icon: '🟥', text: <><strong>Graphe gauche Δ(V)</strong> : le delta décroît quand le tank se remplit — un stock plein est moins sensible au prix (il va soutirer quoi qu'il arrive).</> },
-          { icon: '🟨', text: <><strong>Graphe droite Δ(S)</strong> : le delta augmente avec le prix — plus le prix est élevé, plus le stockage "veut" soutirer, donc plus il est exposé au marché.</> },
-          { icon: '📊', text: <><strong>Forwards à vendre</strong> (InfoChip vert) = <K>{"\\Delta \\times 100"}</K> GWh — c'est la couverture instantanée pour neutraliser le risque prix.</> },
+          { icon: '🟥', text: <><strong>Graphe gauche Δ(V)</strong> : le delta décroît quand le tank se remplit — un stock plein est moins sensible au prix (il va soutirer quoi qu'il arrive). Stock vide → delta maximal (beaucoup de flexibilité restante).</> },
+          { icon: '🟨', text: <><strong>Graphe droit Δ(S)</strong> : le delta augmente avec le prix — plus le prix est élevé, plus le stockage "veut" soutirer, donc plus il est exposé au marché.</> },
+          { icon: '📊', text: <><strong>Forwards à vendre</strong> (InfoChip vert) = Δ × capacité — c'est la couverture instantanée pour neutraliser le risque prix que porte le stockage.</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
@@ -2267,6 +2885,16 @@ export function DeltaTab() {
         ))}
       </div>
 
+      {/* ── 6. Seconde analogie ──────────────────────── */}
+      <IntuitionBlock emoji="🧭" title="Analogie de la boussole financière" accent={ACCENT}>
+        Le delta est comme une boussole qui indique en permanence "vers quel montant le vent du
+        marché pousse ta valeur". Si Δ &gt; 0, tu es exposé à la hausse (tu gagnes si le prix monte).
+        Si Δ &lt; 0, tu es exposé à la baisse. Vendre des forwards en quantité Δ, c'est comme
+        <em> tourner ton bateau face au vent</em> pour que la houle ne te fasse plus tanguer —
+        tu deviens insensible aux vagues de prix.
+      </IntuitionBlock>
+
+      {/* ── 7. Cas particuliers ──────────────────────── */}
       <SectionTitle accent={ACCENT}>Cas particuliers du delta</SectionTitle>
       <table style={tableStyle}>
         <thead>
@@ -2274,40 +2902,144 @@ export function DeltaTab() {
         </thead>
         <tbody>
           {[
-            ['V = 0, loin de T, prix bas', 'Élevé (≈1)', 'Stock vide, prix bas → on va injecter beaucoup. Très sensible au prix futur.'],
-            ['V = 0, à l\'échéance T', '= 0', 'Plus de temps pour agir. Un stock vide à T ne peut rien rapporter.'],
-            ['V = 0, prix très élevé', 'Faible', 'Même avec un stock vide, injecter maintenant est trop coûteux.'],
+            ['V = 0, loin de T, prix bas', 'Élevé (≈ 1)', 'Stock vide, prix bas → on va injecter beaucoup. Très sensible au prix futur.'],
+            ['V = 0, à l\'échéance T', '= 0', 'Plus de temps pour agir. Un stock vide à T ne vaut rien.'],
+            ['V = 0, prix très élevé', 'Faible', 'Stock vide : pas de gaz à soutirer, même à prix élevé.'],
             ['V = V_max, prix élevé', 'Négatif ou faible', 'On va soutirer de toute façon. Position "short" naturelle sur le prix.'],
-            ['V intermédiaire, prix = μ', 'Modéré', 'Zone d\'incertitude : injecter/attendre/soutirer selon le spread futur attendu.'],
+            ['V intermédiaire, S = μ', 'Modéré', 'Zone d\'incertitude : injecter/attendre/soutirer dépend du spread futur.'],
           ].map(([sit, delta, intuition]) => (
             <tr key={sit}><Td accent={ACCENT}>{sit}</Td><Td accent={T.a5}>{delta}</Td><Td>{intuition}</Td></tr>
           ))}
         </tbody>
       </table>
 
-      <SectionTitle accent={ACCENT}>Convexité — Le stockage comme actif optionnel</SectionTitle>
+      {/* ── 8. Convexité / Gamma ──────────────────────── */}
+      <SectionTitle accent={ACCENT}>Convexité (Γ) — le stockage comme actif optionnel</SectionTitle>
+
       <FormulaBox accent={ACCENT} label="Développement de Taylor au 2ᵉ ordre">
-        <K display>{"\\mathcal{V}(S + \\delta S) \\approx \\mathcal{V}(S) + \\underbrace{\\Delta}_{>0} \\cdot \\delta S + \\frac{1}{2}\\underbrace{\\Gamma}_{>0} \\cdot (\\delta S)^2"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          <K>{"\\Gamma > 0"}</K> signifie que la valeur est convexe en S : les hausses de prix rapportent plus que la droite tangente, les baisses coûtent moins. <strong>Le stockage bénéficie de la volatilité.</strong>
-        </div>
+        <K display>{"\\mathcal{V}(S + \\delta S) \\approx \\mathcal{V}(S) + \\underbrace{\\Delta}_{\\text{pente}} \\cdot \\delta S + \\frac{1}{2}\\underbrace{\\Gamma}_{\\text{courbure > 0}} \\cdot (\\delta S)^2"}</K>
       </FormulaBox>
 
-      <ChartWrapper title="Valeur V(S) — Courbe convexe vs approximation linéaire (Δ seul)" accent={ACCENT} height={220}>
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={smileData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-            <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
-            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-            <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
-            <Line type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2.5} dot={false} name="V(S) — courbe réelle (convexe)" />
-            <Line type="monotone" dataKey="linéaire" stroke={T.muted} strokeWidth={1.5} dot={false} strokeDasharray="5 3" name="Δ·(S-S₀) — approx. linéaire" />
-          </LineChart>
-        </ResponsiveContainer>
-      </ChartWrapper>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '12px 0' }}>
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Γ &gt; 0 — pourquoi c'est fondamental</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            <K>{"\\Gamma > 0"}</K> signifie que la valeur est <strong>convexe</strong> en S :
+            les hausses de prix rapportent <em>plus</em> que ce que la droite tangente (Δ) prédit,
+            et les baisses coûtent <em>moins</em>. Résultat : le stockage <strong>bénéficie
+            de la volatilité</strong>.
+            <br /><br />
+            C'est la propriété fondamentale d'une option : l'asymétrie du payoff.
+            Le propriétaire du stockage est "long gamma" — il profite de tout mouvement
+            de prix, dans les deux directions.
+          </div>
+        </div>
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Le P&amp;L gamma en pratique</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            Si le prix bouge de <K>{"\\delta S"}</K> et qu'on est couvert en delta :
+            <K display>{"\\text{P\\&L}_{\\text{gamma}} = \\frac{1}{2}\\Gamma \\cdot (\\delta S)^2 \\geq 0"}</K>
+            Ce gain est <strong>toujours positif</strong> (carré !). C'est le mécanisme par lequel
+            le trading desk capture la VE : chaque mouvement de prix génère un P&amp;L positif
+            proportionnel au carré du mouvement.
+            <br /><br />
+            <strong>Exemple :</strong> Γ = 0.1, δS = 5 € → P&amp;L = ½ × 0.1 × 25 = 1.25 €.
+          </div>
+        </div>
+      </div>
 
-      <SectionTitle accent={ACCENT}>Comparaison Stockage / Option financière</SectionTitle>
+      <Grid cols={2} gap="16px">
+        <ChartWrapper title="V(S) — Courbe convexe vs approximation linéaire" accent={ACCENT} height={220}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={smileData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+              <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+              <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
+              <Line type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2.5} dot={false} name="V(S) convexe" />
+              <Line type="monotone" dataKey="linéaire" stroke={T.muted} strokeWidth={1.5} dot={false} strokeDasharray="5 3" name="Δ·(S−S₀) linéaire" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+        <ChartWrapper title="Gamma Γ(S) — courbure de la fonction valeur" accent={ACCENT} height={220}>
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={gammaData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+              <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+              <ReferenceLine y={0} stroke={T.muted} strokeDasharray="3 3" />
+              <Line type="monotone" dataKey="gamma" stroke={T.a5} strokeWidth={2.5} dot={false} name="Γ(50, S)" />
+            </LineChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '📈', text: <><strong>Graphe gauche</strong> : la courbe rouge (valeur réelle) est <em>au-dessus</em> de la droite grise (approximation Δ) aux extrêmes. C'est la convexité Γ &gt; 0 : les mouvements de prix rapportent plus que prévu par Δ seul.</> },
+          { icon: '🔔', text: <><strong>Graphe droit</strong> : le gamma est maximal autour de S ≈ μ (zone d'incertitude maximale) et diminue aux extrêmes (où la décision est "évidente" : soutirer tout ou injecter tout).</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── 9. Algorithme de couverture ──────────────── */}
+      <SectionTitle accent={ACCENT}>Procédure de delta hedging quotidien</SectionTitle>
+
+      <Step num={1} accent={ACCENT}>
+        <div>
+          <strong>Observer (V, S) et lire Δ dans la grille Bellman</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Chaque matin, relever le prix spot S et le niveau du tank V.
+            Interpoler dans la fonction valeur pré-calculée pour obtenir Δ(V, S).
+          </div>
+        </div>
+      </Step>
+
+      <Step num={2} accent={ACCENT}>
+        <div>
+          <strong>Calculer la position forward cible</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            <K>{"\\text{Position cible} = \\Delta(V, S) \\times \\text{capacité}"}</K>.
+            Comparer avec la position forward détenue actuellement.
+          </div>
+        </div>
+      </Step>
+
+      <Step num={3} accent={ACCENT}>
+        <div>
+          <strong>Ajuster — acheter ou vendre la différence en forward</strong>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
+            Si Δ<sub>nouveau</sub> &gt; Δ<sub>ancien</sub> → acheter des forwards (exposition augmentée).
+            Si Δ<sub>nouveau</sub> &lt; Δ<sub>ancien</sub> → vendre des forwards.
+            Le coût du rebalancement est typiquement faible (marché forward liquide).
+          </div>
+        </div>
+      </Step>
+
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Pseudocode — Delta Hedging quotidien</div>
+        <pre style={{ color: T.text, fontSize: 11, lineHeight: 1.9, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  CHAQUE jour J :
+      Observer (V_J, S_J)
+      Δ_J ← Lire_grille_Bellman(V_J, S_J, t_J)         // interpolation bilinéaire
+      Position_cible ← Δ_J × Capacité
+      Déséquilibre ← Position_cible - Position_actuelle
+      SI |Déséquilibre| > seuil_minimum :
+          Acheter/vendre Déséquilibre en forward
+          Position_actuelle ← Position_cible
+      P&L_gamma ← ½ × Γ_J × (ΔS_J)²                    // gain de convexité`}
+        </pre>
+      </div>
+
+      {/* ── 10. Comparaison stockage / option ──────────── */}
+      <SectionTitle accent={ACCENT}>Stockage vs option financière</SectionTitle>
+
       <table style={tableStyle}>
         <thead>
           <tr><Th>Caractéristique</Th><Th>Option financière</Th><Th>Stockage de gaz</Th></tr>
@@ -2317,32 +3049,61 @@ export function DeltaTab() {
             ['Droit sans obligation', 'Acheter au strike K', 'Soutirer quand prix haut'],
             ['Convexité Γ > 0', 'Oui (Black-Scholes)', 'Oui (Bellman DP)'],
             ['Bénéfice de la vol (Vega > 0)', 'Oui', 'Oui (VE augmente avec σ)'],
-            ['Couverture Delta hedging', 'Sur le sous-jacent spot', 'Sur la courbe forward'],
-            ['Exercice', 'Date fixe (européenne) ou tout moment', 'Continu, avec contraintes de chemin'],
-            ['Dépendance de chemin', 'Non (européenne)', 'Oui — chaque décision modifie les options futures'],
+            ['Couverture delta hedging', 'Sur le sous-jacent spot', 'Sur la courbe forward'],
+            ['Exercice', 'Date fixe (europ.) ou tout moment', 'Continu, contraintes de chemin'],
+            ['Dépendance de chemin', 'Non (européenne)', 'Oui — chaque décision modifie l\'état'],
           ].map(([carac, option, stockage]) => (
             <tr key={carac}><Td accent={ACCENT}>{carac}</Td><Td>{option}</Td><Td accent={T.a4}>{stockage}</Td></tr>
           ))}
         </tbody>
       </table>
 
+      {/* ── 11. Exercice ──────────────────────────────── */}
       <Accordion title="Exercice — Construire la couverture delta au jour J" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.muted, fontSize: 13 }}>
-          Volume : 60 GWh, prix spot : 52 €/MWh (au-dessus de μ=40), capacité totale : 100 GWh.
-          Le modèle donne Δ = 0.65. Comment couvrir ce stockage sur le marché forward ?
+          Volume : 60 GWh, prix spot : 52 €/MWh (au-dessus de μ = 40), capacité totale : 100 GWh.
+          Le modèle Bellman donne Δ = 0.65. Comment couvrir ? Que se passe-t-il le lendemain
+          si le prix monte de 5 € ?
         </p>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Quantité forward" ruleDetail="Δ × capacité" accent={ACCENT}>
-            Vendre 0.65 × 100 = 65 GWh en forward (livraison dans 1 à 3 mois selon le profil de soutirage attendu).
+            Vendre <K>{"0.65 \\times 100 = 65"}</K> GWh en forward (livraison 1 à 3 mois selon
+            le profil de soutirage attendu). Position delta-neutre.
           </DemoStep>
-          <DemoStep num={2} rule="Couverture delta-neutre" ruleDetail="exposition résiduelle = 0" accent={ACCENT}>
-            Si le prix monte de 5 €/MWh : gain sur le stockage = +Δ×5×100 = +325 €, perte sur les forwards = -65×5 = -325 €. Net = 0.
+          <DemoStep num={2} rule="Vérification delta-neutre" ruleDetail="gain + perte = 0" accent={ACCENT}>
+            Si S monte de 5 € : gain stockage ≈ +Δ × 5 × 100 = +325 €,
+            perte forward = −65 × 5 = −325 €. <strong>Net ≈ 0 €</strong> (couvert).
           </DemoStep>
-          <DemoStep num={3} rule="Rebalancement quotidien" ruleDetail="delta change avec V et S" accent={ACCENT}>
-            Le lendemain, V et S ont changé → Δ a changé. Recalculer Δ depuis la grille, ajuster la position forward. C'est le delta hedging dynamique.
+          <DemoStep num={3} rule="Gain gamma" ruleDetail="½Γ(δS)²" accent={ACCENT}>
+            En réalité, Δ a changé pendant le mouvement (convexité). Si Γ = 0.05 :
+            <K display>{"\\text{P\\&L}_{\\text{gamma}} = \\tfrac{1}{2} \\times 0.05 \\times 5^2 = 0.625 \\text{ €}"}</K>
+            Ce gain de convexité est la <strong>VE réalisée</strong> — il s'accumule au fil des jours.
+          </DemoStep>
+          <DemoStep num={4} rule="Rebalancement J+1" ruleDetail="nouveau Δ" accent={ACCENT}>
+            Le lendemain, V et S ont changé (soutirage effectué, prix monté). Recalculer Δ
+            depuis la grille, ajuster la position forward. C'est le <strong>delta hedging dynamique</strong>.
           </DemoStep>
         </Demonstration>
       </Accordion>
+
+      {/* ── 12. Récap ──────────────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '16px 20px', margin: '16px 0 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>À retenir</div>
+        <div style={{ color: T.text, fontSize: 12, lineHeight: 1.8 }}>
+          {[
+            'Le delta Δ = ∂V/∂S se calcule par différences finies sur la grille Bellman — pas besoin de résoudre une nouvelle équation.',
+            'Δ donne directement la couverture : vendre Δ × capacité en forward pour être delta-neutre.',
+            'Le delta décroît avec le volume (stock plein ≈ obligation de soutirer) et croît avec le prix (prix haut ≈ soutirage imminent).',
+            'Γ > 0 (convexité) → le stockage bénéficie de tout mouvement de prix → c\'est une option réelle.',
+            'Le P&L gamma = ½Γ(δS)² est le mécanisme par lequel le trading desk capture la VE jour après jour.',
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+              <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>•</span>
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }
@@ -2352,7 +3113,7 @@ export function DeltaTab() {
 export function ForwardRiskTab() {
   const [spread, setSpread] = useState(15)
   const [level, setLevel] = useState(40)
-  const [tilt, setTilt] = useState(0) // additional slope winter vs summer
+  const [tilt, setTilt] = useState(0)
 
   const months = MONTHS
   const fwdData = months.map((m, t) => {
@@ -2370,21 +3131,45 @@ export function ForwardRiskTab() {
     return res.V[0] ? linInterp(res.vGrid, res.V[0], 50).toFixed(2) : '—'
   }, [spread, level])
 
+  // Simplified delta vector by maturity
+  const deltaVector = months.map((m, t) => {
+    const seasonal = spread * 0.5 * Math.cos(2 * Math.PI * t / 12 + Math.PI)
+    const F = level + seasonal
+    const isInjection = F < level
+    return {
+      mois: m,
+      delta: +(isInjection ? 0.3 + 0.4 * (level - F) / (spread / 2 + 0.1) : -0.2 - 0.5 * (F - level) / (spread / 2 + 0.1)).toFixed(2),
+    }
+  })
+
   return (
     <div>
+
+      {/* ── 1. Intuition ─────────────────────────────────── */}
       <IntuitionBlock emoji="📈" title="Le vrai sous-jacent : la courbe forward F(t,T)" accent={ACCENT}>
-        Un opérateur de stockage ne se couvre pas sur le prix spot <K>{"S_t"}</K> — il livre du gaz physiquement et ne contrôle pas le spot.
-        Ce qui l'intéresse, c'est la <strong>courbe forward</strong> <K>{"F(t,T)"}</K> : le prix auquel le marché accepte <em>aujourd'hui</em>
-        de livrer du gaz à la date <K>{"T"}</K> future. C'est la <strong>déformation de cette courbe</strong> qui crée ou détruit la valeur.
+        <strong>Analogie de l'égaliseur audio :</strong> un égaliseur a des curseurs pour chaque
+        fréquence (graves, médiums, aigus). La courbe forward, c'est pareil : chaque maturité mensuelle
+        (jan, fév, mar…) est un "curseur" de prix indépendant. Quand tu bouges un curseur (le prix
+        forward de mars change), ça n'affecte pas forcément les autres. Le stockeur doit surveiller
+        et couvrir <em>chaque curseur séparément</em>, pas juste le volume global.
+        <br /><br />
+        Un opérateur de stockage ne se couvre pas sur le prix spot <K>{"S_t"}</K> — il livre du gaz
+        physiquement et ne contrôle pas le spot. Ce qui l'intéresse, c'est la <strong>courbe forward</strong>
+        <K>{"F(t,T)"}</K> : le prix auquel le marché accepte <em>aujourd'hui</em> de livrer du gaz
+        à la date <K>{"T"}</K> future. C'est la <strong>déformation de cette courbe</strong> qui crée
+        ou détruit la valeur du stockage.
       </IntuitionBlock>
+
+      {/* ── 2. Sliders + graphique ──────────────────────── */}
+      <SectionTitle accent={ACCENT}>Explorer la courbe forward interactivement</SectionTitle>
 
       <Grid cols={3} gap="12px">
         <Slider label="μ — niveau moyen de la courbe (€/MWh)" value={level} min={20} max={70} step={1} onChange={setLevel} accent={ACCENT} format={v => `${v}`} />
         <Slider label="Spread — écart été/hiver (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="Tilt — pente additionnelle (contango/backwardation)" value={tilt} min={-10} max={10} step={0.5} onChange={setTilt} accent={ACCENT} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
+        <Slider label="Tilt — pente contango/backwardation (€)" value={tilt} min={-10} max={10} step={0.5} onChange={setTilt} accent={ACCENT} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
-        <InfoChip label="VI calculée (V=50 GWh)" value={`${intrinsicFromSpread} €`} accent={ACCENT} />
+        <InfoChip label="VI calculée (V = 50 GWh)" value={`${intrinsicFromSpread} €`} accent={ACCENT} />
         <InfoChip label="Prix été" value={`${(level - spread / 2).toFixed(0)} €/MWh`} accent={T.a1} />
         <InfoChip label="Prix hiver" value={`${(level + spread / 2).toFixed(0)} €/MWh`} accent={T.a8} />
         <InfoChip label="Spread" value={`${spread} €/MWh`} accent={T.a5} />
@@ -2402,11 +3187,12 @@ export function ForwardRiskTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
         {[
-          { icon: '❄️', text: <><strong>Creux = été</strong> (injection) : le gaz coûte moins cher, on remplit le tank. <strong>Pic = hiver</strong> (soutirage) : forte demande de chauffage, prix élevés.</> },
-          { icon: '💰', text: <>La <strong>VI du stockage</strong> (InfoChip rouge) augmente avec le spread : c'est la différence de prix entre l'achat estival et la vente hivernale, diminuée des coûts opérationnels.</> },
-          { icon: '📀', text: <>Le <strong>Tilt</strong> incline toute la courbe : tilt positif = contango (prix futurs &gt; prix proches), tilt négatif = backwardation (prix proches &gt; prix futurs).</> },
+          { icon: '❄️', text: <><strong>Creux = été</strong> (injection) : gaz moins cher, on remplit. <strong>Pic = hiver</strong> (soutirage) : forte demande de chauffage, prix élevés.</> },
+          { icon: '💰', text: <>La <strong>VI du stockage</strong> (InfoChip) augmente avec le spread : c'est la différence entre achat estival et vente hivernale, moins les coûts opérationnels.</> },
+          { icon: '📀', text: <>Le <strong>Tilt</strong> incline toute la courbe : tilt positif = contango (prix lointains &gt; prix proches), négatif = backwardation (prix proches &gt; lointains).</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
@@ -2415,62 +3201,135 @@ export function ForwardRiskTab() {
         ))}
       </div>
 
+      {/* ── 3. Formule annotée — Vecteur de deltas ──────── */}
       <SectionTitle accent={ACCENT}>Vecteur de deltas par maturité</SectionTitle>
+
       <IntuitionBlock emoji="🎯" title="Un delta par point de la courbe, pas un seul delta global" accent={ACCENT}>
-        En réalité, la position de couverture d'un stockage n'est pas un seul forward, mais un <strong>vecteur</strong> de positions
-        à chaque maturité. Chaque composante répond à : "si le prix forward de livraison en mars monte de 1€, ma valeur change de combien ?"
-        Un déplacement parallèle de toute la courbe est couvert par le delta global.
-        Mais un <strong>changement de pente</strong> (l'hiver se tend, l'été se détend) n'est couvert que par ce vecteur complet.
+        La position de couverture d'un stockage n'est pas un seul forward, mais un <strong>vecteur</strong>
+        de positions à chaque maturité. Chaque composante répond à : <em>"si le prix forward de livraison
+        en mars monte de 1 €, ma valeur change de combien ?"</em>
+        <br /><br />
+        Un déplacement <strong>parallèle</strong> de toute la courbe est couvert par le delta global.
+        Mais un <strong>changement de pente</strong> (l'hiver se tend, l'été se détend) n'est couvert
+        que par ce vecteur complet.
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Vecteur de sensibilités forward">
-        <K display>{"\\vec{\\Delta} = \\left(\\frac{\\partial \\mathcal{V}}{\\partial F(0, T_1)},\\ \\frac{\\partial \\mathcal{V}}{\\partial F(0, T_2)},\\ \\ldots,\\ \\frac{\\partial \\mathcal{V}}{\\partial F(0, T_n)}\\right)"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Le fournisseur doit couvrir chaque composante en vendant/achetant des contrats forward à chaque maturité correspondante.
-        </div>
+        <K display>{"\\vec{\\Delta} = \\left(\\underbrace{\\frac{\\partial \\mathcal{V}}{\\partial F(0, T_1)}}_{\\text{delta janv.}},\\; \\underbrace{\\frac{\\partial \\mathcal{V}}{\\partial F(0, T_2)}}_{\\text{delta fév.}},\\; \\ldots,\\; \\underbrace{\\frac{\\partial \\mathcal{V}}{\\partial F(0, T_{12})}}_{\\text{delta déc.}}\\right)"}</K>
       </FormulaBox>
 
-      <SectionTitle accent={ACCENT}>Les 3 facteurs PCA (<em>Principal Component Analysis</em>) de la courbe forward</SectionTitle>
-      <div style={{ ...panelStyle }}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
-          Décomposition en Composantes Principales — Pourquoi on réduit la dimension
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['\\vec{\\Delta}', 'Vecteur de deltas forward — une composante par maturité mensuelle'],
+        ['\\partial \\mathcal{V} / \\partial F(0,T_k)', 'Sensibilité de la valeur du stockage au prix forward de maturité T_k (€ par €/MWh)'],
+        ['F(0,T_k)', 'Prix forward observé aujourd\'hui pour une livraison au mois k (€/MWh)'],
+      ]} />
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '12px 0' }}>
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Mois d'injection (été) → Δ &gt; 0</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            Si le prix forward d'été <em>baisse</em>, on injecte moins cher → valeur du stockage ↑.
+            L'opérateur est <strong>long</strong> les forward été (il achète du gaz, donc il bénéficie
+            d'une baisse de prix).
+          </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
-          {[
-            { num: '1', label: 'Déplacement parallèle', variance: '~80%', desc: 'Toute la courbe monte ou baisse uniformément. Couvert par le delta global du stockage.', color: ACCENT },
-            { num: '2', label: 'Changement de pente (été/hiver)', variance: '~15%', desc: "Le spread été/hiver s'élargit ou se rétrécit. C'est le risque principal du stockage — sa valeur intrinsèque en dépend directement.", color: T.a5 },
-            { num: '3', label: 'Changement de courbure', variance: '~5%', desc: "Les maturités intermédiaires bougent différemment des extrêmes. Résiduel, souvent non couvert.", color: T.muted },
-          ].map(({ num, label, variance, desc, color }) => (
-            <div key={num} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                <div style={{ color, fontWeight: 700, fontSize: 12 }}>Facteur {num} — {label}</div>
-                <div style={{ background: `${color}22`, borderRadius: 4, padding: '2px 8px', color, fontSize: 11, fontWeight: 700 }}>{variance}</div>
-              </div>
-              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>{desc}</div>
-            </div>
-          ))}
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Mois de soutirage (hiver) → Δ &lt; 0</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            Si le prix forward d'hiver <em>monte</em>, on soutire plus cher → valeur du stockage ↑.
+            L'opérateur est <strong>short</strong> les forward hiver (il vendra du gaz → bénéficie
+            d'une hausse de prix de vente).
+          </div>
         </div>
       </div>
 
-      <IntuitionBlock emoji="🔢" title="Malédiction de la dimension — Pourquoi on réduit à 2-3 facteurs" accent={ACCENT}>
-        Si on modélise 12 maturités forward comme 12 variables d'état de Bellman,
-        la grille aurait <K>{"N_V \\times N_{S_1} \\times \\cdots \\times N_{S_{12}}"}</K> nœuds.
-        Avec 10 points par dimension : <K>{"10^{13}"}</K> nœuds — impossible à calculer.
-        La PCA (<em>Principal Component Analysis</em> — Analyse en Composantes Principales) réduit à 2-3 facteurs → <K>{"10^3"}</K> à <K>{"10^4"}</K> nœuds → tractable.
-        On perd un peu de précision sur les termes résiduels, mais on capture l'essentiel.
+      {/* Exemple numérique delta vector */}
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Exemple — Profil typique du vecteur Δ</div>
+        <div style={{ overflowX: 'auto' }}>
+          <table style={tableStyle}>
+            <thead>
+              <tr>
+                <Th>Mois</Th>
+                {months.map(m => <Th key={m}>{m}</Th>)}
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <Td accent={ACCENT}>Δ_k</Td>
+                {deltaVector.map((d, i) => (
+                  <Td key={i} accent={d.delta > 0 ? T.a4 : d.delta < 0 ? ACCENT : T.muted}>
+                    {d.delta > 0 ? '+' : ''}{d.delta}
+                  </Td>
+                ))}
+              </tr>
+              <tr>
+                <Td accent={T.muted}>F(0,T_k)</Td>
+                {fwdData.map((d, i) => (
+                  <Td key={i} accent={d.F < level ? T.a1 : T.a8}>{d.F}</Td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Les deltas positifs (vert) correspondent aux mois d'injection — l'opérateur est "long" ces maturités.
+          Les deltas négatifs (rouge) correspondent au soutirage — "short" ces maturités. Les profils se compensent partiellement.
+        </div>
+      </div>
+
+      {/* ── 4. PCA ──────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Les 3 facteurs PCA de la courbe forward</SectionTitle>
+
+      <IntuitionBlock emoji="🎛️" title="PCA = réduire 12 curseurs à 3 manettes" accent={ACCENT}>
+        En pratique, les 12 prix forward ne bougent pas indépendamment — ils sont très corrélés.
+        L'Analyse en Composantes Principales (PCA — <em>Principal Component Analysis</em>) identifie
+        les 3 "manettes" fondamentales qui expliquent ~95 % des mouvements de la courbe.
+        <br /><br />
+        <em>Pourquoi c'est crucial ?</em> Si on modélisait 12 maturités comme 12 variables d'état
+        dans Bellman, la grille aurait <K>{"N_V \\times N_{S_1} \\times \\cdots \\times N_{S_{12}}"}</K>
+        nœuds. Avec 10 points par dimension : <K>{"10^{13}"}</K> nœuds — impossible à calculer.
+        La PCA réduit à 2-3 facteurs → <K>{"10^3"}</K> à <K>{"10^4"}</K> nœuds → tractable.
       </IntuitionBlock>
 
-      <SectionTitle accent={ACCENT}>Tableau comparatif des méthodes d'optimisation</SectionTitle>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, margin: '12px 0' }}>
+        {[
+          { num: '1', label: 'Déplacement parallèle', variance: '~80 %', desc: 'Toute la courbe monte ou baisse uniformément. Couvert par le delta global du stockage.', color: ACCENT },
+          { num: '2', label: 'Changement de pente (spread)', variance: '~15 %', desc: "Le spread été/hiver s'élargit ou se rétrécit. C'est le risque PRINCIPAL du stockage — la VI en dépend directement.", color: T.a5 },
+          { num: '3', label: 'Changement de courbure', variance: '~5 %', desc: 'Les maturités intermédiaires bougent différemment des extrêmes. Résiduel, souvent non couvert.', color: T.muted },
+        ].map(({ num, label, variance, desc, color }) => (
+          <div key={num} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+              <div style={{ color, fontWeight: 700, fontSize: 12 }}>Facteur {num} — {label}</div>
+              <div style={{ background: `${color}22`, borderRadius: 4, padding: '2px 8px', color, fontSize: 11, fontWeight: 700 }}>{variance}</div>
+            </div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>{desc}</div>
+          </div>
+        ))}
+      </div>
+
+      <FormulaBox accent={ACCENT} label="Décomposition PCA de la courbe forward">
+        <K display>{"\\Delta F(0,T_k) \\approx \\underbrace{\\beta_1 \\cdot \\mathbf{e}_1(k)}_{\\text{parallèle}} + \\underbrace{\\beta_2 \\cdot \\mathbf{e}_2(k)}_{\\text{pente}} + \\underbrace{\\beta_3 \\cdot \\mathbf{e}_3(k)}_{\\text{courbure}}"}</K>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
+          <K>{"\\mathbf{e}_i(k)"}</K> = vecteur propre i évalué à la maturité k (la "forme" du mouvement).
+          <K>{"\\beta_i"}</K> = amplitude du mouvement dans la direction i (le score du facteur). Les
+          <K>{"\\beta_i"}</K> sont indépendants entre eux, ce qui facilite la couverture et la simulation.
+        </div>
+      </FormulaBox>
+
+      {/* ── 5. Comparaison des méthodes ──────────────── */}
+      <SectionTitle accent={ACCENT}>Méthodes d'optimisation — comparaison</SectionTitle>
+
       <table style={tableStyle}>
         <thead>
-          <tr><Th>Méthode</Th><Th>Avantage principal</Th><Th>Limite principale</Th><Th>Usage typique</Th></tr>
+          <tr><Th>Méthode</Th><Th>Avantage</Th><Th>Limite</Th><Th>Usage typique</Th></tr>
         </thead>
         <tbody>
           {[
-            ['Bellman (DP)', 'Optimal global + politique + delta', 'Malédiction de la dimension (≤3 facteurs)', 'Standard industrie (stockage simple)'],
-            ['LSMC (Least-Squares Monte Carlo)', 'Gère haute dimension, Monte Carlo', 'Approximation, bruit, pas de politique exacte', 'Actifs multi-sous-jacents, options complexes'],
-            ['PDE (Partial Diff. Equation — Hamilton-Jacobi-Bellman)', 'Continu, élégant, grande précision', 'Complexe à implémenter, 2D max', 'Recherche académique'],
-            ['LP (Linear Programming — programmation linéaire)', 'Très rapide si prix connus', 'Ignore la stochasticité → sous-optimal', 'Valeur intrinsèque uniquement'],
+            ['Bellman (DP)', 'Optimal global + politique + delta', 'Malédiction dimension (≤ 3 facteurs)', 'Standard industrie (stockage simple)'],
+            ['LSMC', 'Gère haute dimension, Monte Carlo', 'Approximation, bruit, pas de politique exacte', 'Multi-sous-jacents, options complexes'],
+            ['PDE (Hamilton-Jacobi-Bellman)', 'Continu, élégant, grande précision', 'Complexe, 2D max en pratique', 'Recherche académique'],
+            ['LP (programmation linéaire)', 'Très rapide si prix connus', 'Ignore la stochasticité → sous-optimal', 'Valeur intrinsèque uniquement'],
           ].map(([methode, avantage, limite, usage]) => (
             <tr key={methode}>
               <Td accent={ACCENT}>{methode}</Td>
@@ -2482,71 +3341,87 @@ export function ForwardRiskTab() {
         </tbody>
       </table>
 
-      <SectionTitle accent={ACCENT}>Intégration multi-actifs — Le portefeuille de flexibilités</SectionTitle>
+      <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, margin: '8px 0' }}>
+        <em>LSMC</em> = Least-Squares Monte Carlo (méthode de Longstaff-Schwartz).
+        <em> PDE</em> = Partial Differential Equation (équation aux dérivées partielles).
+        <em> LP</em> = Linear Programming (programmation linéaire). <em> DP</em> = Dynamic Programming (programmation dynamique).
+      </div>
+
+      {/* ── 6. Portefeuille de flexibilités ──────────── */}
+      <SectionTitle accent={ACCENT}>Intégration multi-actifs — le portefeuille de flexibilités</SectionTitle>
+
       <IntuitionBlock emoji="🗂️" title="Le stockage n'est qu'un outil parmi d'autres" accent={ACCENT}>
-        Un fournisseur d'énergie dispose de plusieurs actifs de flexibilité pour équilibrer son portefeuille.
-        Le stockage souterrain est le plus flexible mais aussi le plus coûteux à acquérir.
-        En pratique, on optimise l'ensemble du portefeuille de flexibilités — le même framework Bellman,
-        mais avec plusieurs contrôles simultanés.
+        Un fournisseur d'énergie dispose de <strong>plusieurs actifs de flexibilité</strong> pour
+        équilibrer son portefeuille. Le stockage est le plus flexible mais aussi le plus coûteux.
+        En pratique, on optimise l'<strong>ensemble</strong> — le même framework Bellman, mais avec
+        plusieurs contrôles simultanés. Comme un chef d'orchestre qui coordonne
+        les instruments : chacun a un rôle, l'objectif est l'harmonie du portefeuille.
       </IntuitionBlock>
 
       <table style={tableStyle}>
         <thead>
-          <tr><Th>Actif de flexibilité</Th><Th>Flexibilité</Th><Th>Coût d'accès</Th><Th>Liquidité marché</Th><Th>Rôle clé</Th></tr>
+          <tr><Th>Actif</Th><Th>Flexibilité</Th><Th>Coût d'accès</Th><Th>Rôle clé</Th></tr>
         </thead>
         <tbody>
           {[
-            ['Stockage souterrain', 'Très haute (inject/soutire librement)', 'Élevé (enchères)', 'Faible (OTC — gré à gré)', 'Tampon saisonnier + trading spread'],
-            ['Contrat Swing', 'Modérée (volume min/max quotidien)', 'Moyen (prime swing)', 'Moyenne', 'Flexibilité court-terme, complément stockage'],
-            ['Capacité LNG (Gaz Naturel Liquéfié)', 'Bonne (livraisons par cargaisons)', 'Variable (spot ou term)', 'Bonne (marché global)', 'Approvisionnement alternatif en pointe'],
-            ['Interruptibilité clients industriels', 'Haute (réduire livraison clients)', 'Bas (tarif préférentiel client)', 'Nulle (bilatéral)', 'Dernier recours, éviter pénalités déséquilibre'],
-          ].map(([actif, flex, cout, liq, role]) => (
+            ['Stockage souterrain', 'Très haute (inject/soutire)', 'Élevé (enchères)', 'Tampon saisonnier + trading spread'],
+            ['Contrat Swing', 'Modérée (vol. min/max jour)', 'Moyen (prime swing)', 'Flexibilité court-terme'],
+            ['Capacité LNG', 'Bonne (cargaisons)', 'Variable (spot/term)', 'Approvisionnement alternatif pointe'],
+            ['Interruptibilité clients', 'Haute (réduire livraison)', 'Bas (tarif préférentiel)', 'Dernier recours, éviter pénalités'],
+          ].map(([actif, flex, cout, role]) => (
             <tr key={actif}>
               <Td accent={ACCENT}>{actif}</Td>
               <Td>{flex}</Td>
               <Td>{cout}</Td>
-              <Td>{liq}</Td>
               <Td accent={T.muted}>{role}</Td>
             </tr>
           ))}
         </tbody>
       </table>
 
-      <div style={{ ...panelStyle, marginTop: 16 }}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>
-          Optimisation de portefeuille de flexibilités — Extension naturelle de Bellman
-        </div>
-        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          L'état devient <K>{"(V_{\\text{stock}},\\ V_{\\text{LNG}},\\ Q_{\\text{swing}},\\ S)"}</K> et le contrôle devient vectoriel :
-          <K display>{"\\mathbf{u}_t = (u_{\\text{stock}},\\ u_{\\text{LNG}},\\ u_{\\text{swing}},\\ u_{\\text{interr}})"}</K>
-          La même équation de Bellman s'applique — le max est pris sur tous les contrôles simultanément.
-          La malédiction de la dimension impose ici d'utiliser LSMC (<em>Least-Squares Monte Carlo</em>) ou une approximation par fonctions de base.
-        </div>
+      <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, margin: '8px 0' }}>
+        <em>LNG</em> = Liquefied Natural Gas (Gaz Naturel Liquéfié). <em>OTC</em> = Over The Counter (marché de gré à gré).
       </div>
 
+      <FormulaBox accent={ACCENT} label="Extension Bellman multi-actifs">
+        <K display>{"\\text{État} : (V_{\\text{stock}},\\; V_{\\text{LNG}},\\; Q_{\\text{swing}},\\; S) \\qquad \\text{Contrôle} : \\mathbf{u}_t = (u_{\\text{stock}},\\; u_{\\text{LNG}},\\; u_{\\text{swing}},\\; u_{\\text{interr}})"}</K>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
+          La même équation de Bellman s'applique — le max est pris sur <strong>tous les contrôles
+          simultanément</strong>. La malédiction de la dimension impose ici d'utiliser LSMC
+          ou une approximation par fonctions de base.
+        </div>
+      </FormulaBox>
+
+      {/* ── 7. Exercice ──────────────────────────────── */}
       <Accordion title="Exercice — Impact d'un élargissement du spread sur la VI" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.muted, fontSize: 13 }}>
-          Un fournisseur possède un stockage de 100 GWh (50 GWh déjà injectés).
-          La courbe forward actuelle a un spread été/hiver de 12 €/MWh avec <K>{"\\mu = 40"}</K> €.
-          Suite à des prévisions météo froides, le spread élargit à 20 €/MWh. Estimer l'impact sur la VI.
+          Un fournisseur possède un stockage de 100 GWh (50 GWh injectés).
+          Courbe forward initiale : spread = 12 €/MWh, μ = 40 €.
+          Prévisions météo froides → spread élargit à 20 €/MWh. Estimer l'impact sur la VI.
         </p>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Courbe forward initiale" ruleDetail="spread = 12 €" accent={ACCENT}>
-            Prix été = <K>{"40 - 6 = 34"}</K> €/MWh, prix hiver = <K>{"40 + 6 = 46"}</K> €/MWh.
-            En injectant l'été et soutirant l'hiver : recette brute <K>{"\\approx 50 \\times (46 - 34) = 600"}</K> € (hors coûts op.).
+          <DemoStep num={1} rule="Courbe initiale" ruleDetail="spread = 12 €" accent={ACCENT}>
+            Prix été = <K>{"40 - 6 = 34"}</K> €, hiver = <K>{"40 + 6 = 46"}</K> €.
+            Recette brute : <K>{"50 \\times (46 - 34) = 600"}</K> € (hors coûts op.).
           </DemoStep>
-          <DemoStep num={2} rule="Courbe forward après choc" ruleDetail="spread = 20 €" accent={ACCENT}>
-            Prix été = <K>{"40 - 10 = 30"}</K> €/MWh, prix hiver = <K>{"40 + 10 = 50"}</K> €/MWh.
-            Recette brute <K>{"\\approx 50 \\times (50 - 30) = 1\\,000"}</K> €.
+          <DemoStep num={2} rule="Courbe après choc météo" ruleDetail="spread = 20 €" accent={ACCENT}>
+            Prix été = <K>{"40 - 10 = 30"}</K> €, hiver = <K>{"40 + 10 = 50"}</K> €.
+            Recette brute : <K>{"50 \\times (50 - 30) = 1\\,000"}</K> €.
           </DemoStep>
-          <DemoStep num={3} rule="Variation de VI" ruleDetail="ΔVI = VI_new - VI_old" accent={ACCENT}>
-            <K>{"\\Delta VI \\approx 1\\,000 - 600 = +400"}</K> €. Le fournisseur a gagné 400€ de valeur sans rien faire —
-            c'est la revalorisation de son stockage. En rolling intrinsic, il ajusterait sa position forward pour
-            "locker" ce gain supplémentaire.
+          <DemoStep num={3} rule="Variation de VI" ruleDetail="ΔVI = nouvelle − ancienne" accent={ACCENT}>
+            <K>{"\\Delta VI \\approx 1\\,000 - 600 = +400"}</K> €. Le fournisseur a gagné 400 € de valeur
+            sans rien faire — simple revalorisation par le marché. En rolling intrinsic, il ajuste
+            ses forwards pour "locker" ce gain.
+          </DemoStep>
+          <DemoStep num={4} rule="Sensibilité au spread" ruleDetail="ΔVI / Δspread" accent={ACCENT}>
+            <K>{"\\frac{\\Delta VI}{\\Delta \\text{spread}} = \\frac{400}{8} = 50 \\text{ €/(€/MWh)}"}</K>.
+            Chaque euro de spread supplémentaire rapporte ~50 € de VI. C'est la <strong>sensibilité
+            au facteur 2 de la PCA</strong> (changement de pente).
           </DemoStep>
         </Demonstration>
       </Accordion>
 
+      {/* ── 8. Liens ──────────────────────────────── */}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
         {[
           { label: 'Forward Curves', path: 'Marchés Énergie › Forward Curves', desc: 'Structure de terme et saisonnalité' },
@@ -2560,6 +3435,26 @@ export function ForwardRiskTab() {
             </div>
           </div>
         ))}
+      </div>
+
+      {/* ── 9. Récap ──────────────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '16px 20px', margin: '16px 0 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>À retenir</div>
+        <div style={{ color: T.text, fontSize: 12, lineHeight: 1.8 }}>
+          {[
+            'Le sous-jacent du stockage n\'est pas le spot mais la courbe forward F(0,T) — un objet multi-dimensionnel.',
+            'La couverture nécessite un vecteur de deltas (un par maturité), pas un seul delta global.',
+            'La PCA réduit les 12 maturités à 3 facteurs : parallèle (~80 %), pente (~15 %), courbure (~5 %).',
+            'Le facteur 2 (spread été/hiver) est le risque principal du stockage — c\'est lui qui drive la VI.',
+            'Le portefeuille de flexibilités (stockage + swing + LNG + interruptibilité) s\'optimise conjointement.',
+            'La malédiction de la dimension impose LSMC ou PCA pour les problèmes multi-facteurs.',
+          ].map((item, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
+              <span style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>•</span>
+              <span>{item}</span>
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )

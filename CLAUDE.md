@@ -5,7 +5,7 @@ Pas de backend, pas de state management externe — tout est local / en mémoire
 
 ---
 
-## Structure du projet
+## Structure du projet (à updater à chaque mise à jour)
 
 ```
 src/
