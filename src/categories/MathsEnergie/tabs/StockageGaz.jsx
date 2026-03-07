@@ -457,210 +457,178 @@ export function BellmanTab() {
   return (
     <div>
 
-      {/* ── Bloc 1 : Intuition ─────────────────────────────────────────────── */}
-      <IntuitionBlock emoji="♟️" title="L'idée de Bellman — décider à rebours" accent={ACCENT}>
-        Imaginez que vous gérez un entrepôt de gaz sur 12 mois. En janvier, vous devez décider
-        combien injecter ou soutirer. Mais cette décision dépend de ce qui se passera en février,
-        mars… jusqu'en décembre. Problème classique : pour choisir aujourd'hui, il faut connaître
-        la valeur de demain. Mais pour connaître demain, il faut connaître après-demain… et ainsi de suite.
+      {/* ── Intuition ────────────────────────────────────────────────────────── */}
+      <IntuitionBlock emoji="♟️" title="L'idée de Bellman — raisonner à rebours" accent={ACCENT}>
+        Un gestionnaire d'entrepôt de gaz doit décider chaque mois : injecter, soutirer, ou attendre.
+        Le problème est que la bonne décision en janvier dépend de ce qui se passera en février,
+        mars… jusqu'en décembre. Pour décider aujourd'hui, il faut connaître la valeur de demain —
+        mais pour connaître demain, il faut connaître après-demain. <em>On tourne en rond.</em>
         <br /><br />
-        <strong>Bellman a eu une idée géniale en 1957 : résoudre à l'envers.</strong>
-        On commence par la fin (décembre) : la réponse est simple, aucun cashflow futur, valeur = 0.
-        On remonte ensuite mois par mois : <em>"si je suis en novembre avec X GWh et un prix de Y €/MWh,
-        quelle est la meilleure action sachant ce que je sais sur décembre ?"</em>
+        <strong>Le coup de génie de Bellman (1957) : résoudre à l'envers.</strong>{' '}
+        À l'échéance (décembre), la réponse est triviale — plus aucune décision possible, valeur = 0.
+        On remonte ensuite mois par mois :{' '}
+        <em>"En novembre, avec ce volume et ce prix, quelle action maximise le gain immédiat
+        + ce que j'ai déjà calculé pour décembre ?"</em>
         <br /><br />
-        À chaque étape, on a <strong>déjà calculé la valeur de toutes les situations possibles du mois suivant</strong>.
-        On choisit l'action qui maximise : <strong>gain immédiat + valeur future actualisée</strong>.
-        C'est le <strong>Principe d'Optimalité</strong> : une décision optimale ne dépend que de l'état
-        actuel (volume en stock + prix du gaz), pas du chemin parcouru pour y arriver.
+        À chaque étape, la table du mois suivant est <strong>entièrement connue</strong>.
+        On choisit l'action qui maximise gain immédiat + valeur future actualisée.
+        C'est le <strong>Principe d'Optimalité</strong> : la décision optimale ne dépend que de
+        l'état actuel (volume + prix), jamais de l'historique qui y a conduit — propriété dite de <strong>Markov</strong>.
       </IntuitionBlock>
 
-      {/* ── Bloc 2 : Formule décryptée terme à terme ───────────────────────── */}
-      <SectionTitle accent={ACCENT}>La formule — chaque terme expliqué</SectionTitle>
+      {/* ── Formule annotée ─────────────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>L'équation de Bellman — lire la formule terme à terme</SectionTitle>
 
       <FormulaBox accent={ACCENT} label="Équation de Bellman — Fonction valeur du stockage">
-        <K display>{"\\mathcal{V}_t(V,\\, S) = \\max_{u \\,\\in\\, \\mathcal{U}(V)} \\Bigl[\\; \\underbrace{\\pi(u, S)}_{\\textcircled{1}\\;\\text{gain immédiat}} \\;+\\; \\underbrace{e^{-r\\Delta t}}_{\\textcircled{2}\\;\\text{actualisation}} \\cdot \\underbrace{\\mathbb{E}_t\\!\\left[\\mathcal{V}_{t+1}(V + u\\Delta t,\\; S_{t+1})\\right]}_{\\textcircled{3}\\;\\text{valeur future espérée}} \\;\\Bigr]"}</K>
+        <K display>{"\\mathcal{V}_t(V,\\, S) = \\max_{u \\,\\in\\, \\mathcal{U}(V)} \\Bigl[\\; \\underbrace{\\pi(u, S)}_{\\text{gain immédiat}} \\;+\\; \\underbrace{e^{-r\\Delta t}}_{\\text{actualisation}} \\cdot \\underbrace{\\mathbb{E}_t\\!\\left[\\mathcal{V}_{t+1}(V + u\\Delta t,\\; S_{t+1})\\right]}_{\\text{valeur future espérée}} \\;\\Bigr]"}</K>
       </FormulaBox>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '16px 0' }}>
-        {[
-          {
-            tag: '𝒱ₜ(V, S)', color: ACCENT,
-            title: 'La fonction valeur — "combien vaut mon stockage ?"',
-            lines: [
-              { k: 'Définition', v: 'La valeur totale optimale espérée du stockage à partir de la date t, étant donné l\'état actuel (V, S).' },
-              { k: 'En français', v: '"Si j\'optimise parfaitement toutes mes décisions futures, combien ce stockage va-t-il me rapporter au total ?"' },
-              { k: 'Variables d\'état', v: 'V = volume actuel en stock (GWh) · S = prix spot actuel du gaz (€/MWh). Ce sont les deux informations suffisantes pour décider.' },
-              { k: 'Interprétation', v: 'C\'est une surface en 3D : pour chaque combinaison (V, S, t), elle donne la meilleure valeur atteignable.' },
-            ],
-          },
-          {
-            tag: 'max u ∈ 𝒰(V)', color: T.a5,
-            title: 'Le "max" — choisir la meilleure action',
-            lines: [
-              { k: 'u (le contrôle)', v: 'Débit d\'injection (u > 0, on achète du gaz) ou de soutirage (u < 0, on vend), en GWh/mois. u = 0 = on attend.' },
-              { k: '𝒰(V) (les actions possibles)', v: 'Ensemble des u autorisés physiquement : on ne peut pas soutirer plus que ce qu\'on a (u ≥ −V/Δt), ni injecter au-delà de la capacité max (u ≤ q_inj), ni dépasser V_max.' },
-              { k: 'Le "max"', v: 'On teste toutes les actions possibles et on choisit celle qui donne le gain total le plus élevé. C\'est le cœur de l\'optimisation.' },
-            ],
-          },
-          {
-            tag: '① π(u, S)', color: T.a4,
-            title: 'Le cashflow immédiat — ce qu\'on gagne ou paie maintenant',
-            lines: [
-              { k: 'Formule', v: 'π(u, S) = −u · S · Δt − c_op · |u|' },
-              { k: 'Soutirage (u < 0)', v: 'On vend |u| GWh au prix S → recette = |u| · S · Δt euros (cashflow positif).' },
-              { k: 'Injection (u > 0)', v: 'On achète u GWh au prix S → dépense = u · S · Δt euros (cashflow négatif).' },
-              { k: 'c_op · |u|', v: 'Coût opérationnel (compression, usure, frais TSO) proportionnel au débit, dans les deux sens.' },
-            ],
-          },
-          {
-            tag: '② e^{−rΔt}', color: T.a2,
-            title: 'L\'actualisation — un euro demain vaut moins qu\'aujourd\'hui',
-            lines: [
-              { k: 'r', v: 'Taux d\'actualisation annuel (ex : 5%). Représente le coût du capital — si on peut placer l\'argent à 5%/an, il faut actualiser les gains futurs.' },
-              { k: 'Δt', v: 'Pas de temps = 1/12 an (1 mois). Sur un mois à r=5% : e^(−0.05/12) ≈ 0.9958 → la valeur de demain est réduite de ~0.4%.' },
-              { k: 'Rôle', v: 'Sans actualisation (r=0), un gain en décembre vaut autant qu\'en janvier. Avec r > 0, on préfère encaisser tôt.' },
-            ],
-          },
-          {
-            tag: '③ 𝔼ₜ[𝒱ₜ₊₁(…)]', color: T.a7,
-            title: 'L\'espérance — le futur est incertain, on en prend la moyenne pondérée',
-            lines: [
-              { k: 'Pourquoi une espérance ?', v: 'S_{t+1} (le prix du mois prochain) est aléatoire — on ne le connaît pas encore en t. On calcule la moyenne de 𝒱ₜ₊₁ sur tous les prix possibles, pondérée par leurs probabilités.' },
-              { k: 'En pratique', v: 'S est discrétisé en NS valeurs sur une grille. La matrice de transition Π[j][k] donne la probabilité de passer du prix S_j au prix S_k en un mois (calculée depuis le processus OU — voir onglet "Processus de Prix").' },
-              { k: 'Calcul', v: '𝔼[𝒱ₜ₊₁(V\', S\')] = Σ_k Π[j][k] · 𝒱ₜ₊₁(V\', S_k) — somme pondérée sur tous les prix futurs possibles S_k.' },
-              { k: 'V\' = V + u·Δt', v: 'Le volume au mois suivant est déterministe une fois u choisi : nouvelle quantité en stock après injection/soutirage.' },
-            ],
-          },
-        ].map(({ tag, color, title, lines }) => (
-          <div key={tag} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: '14px 16px' }}>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
-              <code style={{ color, fontWeight: 800, fontSize: 12, background: `${color}18`, padding: '3px 8px', borderRadius: 4, whiteSpace: 'nowrap', flexShrink: 0 }}>{tag}</code>
-              <span style={{ color, fontWeight: 700, fontSize: 13 }}>{title}</span>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
-              {lines.map(({ k, v }) => (
-                <div key={k} style={{ display: 'flex', gap: 8, fontSize: 12, lineHeight: 1.65 }}>
-                  <span style={{ color, fontWeight: 700, minWidth: 140, flexShrink: 0 }}>{k} :</span>
-                  <span style={{ color: T.muted }}>{v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['𝒱ₜ(V, S)', '"Combien vaut mon stockage ?" — valeur totale optimale espérée depuis l\'état (V, S) au temps t'],
+        ['V', 'Volume en stock (GWh) — état physique, entre V_min et V_max'],
+        ['S', 'Prix spot du gaz (€/MWh) — état de marché, aléatoire (processus Ornstein-Uhlenbeck, voir onglet suivant)'],
+        ['u', 'Contrôle (GWh/mois) — u > 0 : injection (achat), u < 0 : soutirage (vente), u = 0 : attente'],
+        ['𝒰(V)', 'Ensemble des contrôles physiquement faisables — limités par V_min, V_max, q_inj, q_wit'],
+        ['π(u, S)', 'Cashflow immédiat = −u·S·Δt − c_op·|u|·Δt  (positif si soutirage, négatif si injection)'],
+        ['c_op', 'Coût opérationnel (€/GWh) — compression, usure, frais TSO (Gestionnaire de Réseau de Transport)'],
+        ['e^{−rΔt}', 'Facteur d\'actualisation sur un mois — r = taux d\'actualisation annuel, Δt = 1/12 an'],
+        ['𝔼ₜ[…]', 'Espérance conditionnelle sur S_{t+1} — moyenne pondérée sur la matrice de transition Markovienne'],
+      ]} />
+
+      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: '14px 18px', margin: '12px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Décoder π(u, S) — le cashflow immédiat selon le signe de u</div>
+        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+          • <strong style={{ color: T.a4 }}>Soutirage (u &lt; 0)</strong> : on vend |u|·Δt GWh au prix S
+          → recette = |u|·S·Δt &gt; 0, moins le coût opérationnel c_op·|u|·Δt.<br />
+          • <strong style={{ color: T.a5 }}>Injection (u &gt; 0)</strong> : on achète u·Δt GWh au prix S
+          → dépense = u·S·Δt, π est négatif — on investit aujourd'hui pour vendre plus cher plus tard.<br />
+          • <strong style={{ color: T.muted }}>Attente (u = 0)</strong> : aucun mouvement de gaz, π = 0 — on conserve l'optionalité.
+        </div>
       </div>
 
       <FormulaBox accent={ACCENT} label="Condition terminale — point de départ du calcul à rebours">
         <K display>{"\\mathcal{V}_T(V, S) = 0"}</K>
         <div style={{ color: T.muted, fontSize: 13, marginTop: 8, lineHeight: 1.75 }}>
-          <strong style={{ color: T.text }}>Pourquoi zéro ?</strong> À l'échéance T, plus aucune décision
-          n'est possible — le contrat de stockage est terminé. Il n'y a donc plus de cashflows futurs à optimiser.
-          C'est le point de départ du calcul à rebours : on sait que 𝒱_T = 0, on peut donc calculer 𝒱_{T-1}, puis 𝒱_{T-2}, etc.
+          À l'échéance T, plus aucune décision n'est possible → valeur = 0.
+          C'est de là que part le calcul : on connaît 𝒱_T, on peut calculer 𝒱_{T-1}, puis 𝒱_{T-2}, etc.
           <br /><br />
           <strong style={{ color: T.text }}>Variante avec pénalité de restitution :</strong> certains contrats
-          imposent de restituer le stock à un niveau minimum <K>{"V_{\\min}^T"}</K> (ex : remplissage de début de saison).
-          On ajoute alors une pénalité pour les stocks trop bas :
+          imposent un stock minimum <K>{"V_{\\min}^T"}</K> à l'échéance (ex : restitution de début de saison hivernale).
           <K display>{"\\mathcal{V}_T(V, S) = -\\lambda \\cdot \\max(V_{\\min}^T - V,\\; 0)"}</K>
-          où <K>{"\\lambda"}</K> (€/GWh) est le prix de pénalité. Cela force l'algorithme à anticiper
-          la restitution dès les mois précédents.
+          où <K>{"\\lambda"}</K> (€/GWh) est le prix de pénalité — l'algorithme anticipe alors la restitution
+          dès les mois précédents.
         </div>
       </FormulaBox>
 
-      {/* ── Bloc 3 : Algorithme pas à pas ─────────────────────────────────── */}
-      <SectionTitle accent={ACCENT}>Comment on résout concrètement — algorithme pas à pas</SectionTitle>
+      {/* ── Exemple chiffré minimal ─────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Un calcul à la main pour ancrer l'intuition</SectionTitle>
+
+      <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px', margin: '12px 0' }}>
+        <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          Situation : 1 mois restant, V = 50 GWh, S₀ = 45 €/MWh, q_wit = 10 GWh/mois, c_op = 0.5 €/GWh, r = 0, Δt = 1/12 an
+        </div>
+        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.85 }}>
+          Deux actions possibles : <strong style={{ color: T.a4 }}>soutirer 10 GWh (u = −10)</strong> ou{' '}
+          <strong style={{ color: T.muted }}>attendre (u = 0)</strong>.
+          La valeur terminale dans 1 mois est 𝒱₁ = 0 (fin de contrat → plus rien à optimiser).
+          <br /><br />
+          <strong>u = 0 (attendre) :</strong>
+          <br />
+          <span style={{ marginLeft: 16 }}>
+            π(0, 45) = 0. Espérance future : 𝔼[𝒱₁] = 0.
+            <strong style={{ color: T.muted }}> → Gain total = 0 €</strong>
+          </span>
+          <br /><br />
+          <strong>u = −10 (soutirer 10 GWh/mois) :</strong>
+          <br />
+          <span style={{ marginLeft: 16 }}>
+            <K>{"\\pi = +10 \\times 45 \\times \\tfrac{1}{12} \\;-\\; 0.5 \\times 10 \\times \\tfrac{1}{12} = 37.50 - 0.42 = +37.1\\text{ €}"}</K>
+            <br />
+            Espérance future : 𝔼[𝒱₁] = 0.
+            <strong style={{ color: ACCENT }}> → Gain total = 37.1 €</strong>
+          </span>
+          <br /><br />
+          <strong style={{ color: ACCENT }}>𝒱₀(50, 45) = max(0, 37.1) = 37.1 €  →  u* = soutirer immédiatement.</strong>
+          <br />
+          <span style={{ color: T.muted, fontSize: 12 }}>
+            Sur 12 mois réels, 𝒱₁ ≠ 0 — garder du gaz en stock vaut quelque chose (espoir de vendre plus cher).
+            L'arbitrage "encaisser maintenant vs attendre un pic" devient le cœur du problème.
+          </span>
+        </div>
+      </div>
+
+      {/* ── Algorithme DP ───────────────────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Résolution — Programmation Dynamique (DP) backward</SectionTitle>
 
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
-        On discrétise le problème sur trois grilles : <strong style={{ color: ACCENT }}>NV nœuds de volume</strong> (de V_min à V_max),
-        <strong style={{ color: T.a5 }}> NS nœuds de prix</strong> (centré sur μ, étalé sur ±3σ),
-        et <strong style={{ color: T.a4 }}> NT pas de temps</strong> (12 mois). Total : 15 × 12 × 12 = <strong>2 160 nœuds</strong>,
-        chacun avec sa valeur et sa politique optimale.
+        Le problème est discrétisé sur trois grilles :{' '}
+        <strong style={{ color: ACCENT }}>NV = 15 nœuds de volume</strong> (0 → 100 GWh),{' '}
+        <strong style={{ color: T.a5 }}>NS = 12 nœuds de prix</strong> (centré sur μ ± 3σ),{' '}
+        <strong style={{ color: T.a4 }}>NT = 12 pas de temps</strong> (1 mois chacun).
+        Total : 15 × 12 × 12 = <strong>2 160 nœuds</strong>, chacun avec sa valeur et sa décision optimale stockées.
       </div>
 
       <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', gap: 2 }}>
         <Step num={1} accent={ACCENT}>
           <div>
-            <strong>Initialisation (t = T) :</strong> poser{' '}
+            <strong>Initialisation (t = T) :</strong>{' '}
             <code style={{ color: T.a4, background: `${T.a4}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[T][i][j] = 0</code>{' '}
-            pour tous les nœuds (i = indice de volume, j = indice de prix). C'est notre condition terminale.
+            pour tous les nœuds volume × prix. Condition terminale — point de départ du calcul.
           </div>
         </Step>
         <Step num={2} accent={ACCENT}>
           <div>
-            <strong>Boucle backward : de t = T−1 jusqu'à t = 0.</strong> À chaque pas, la table du mois
-            suivant est déjà complète — on peut donc l'utiliser pour calculer la table du mois courant.
+            <strong>Boucle backward t = T−1, T−2, …, 0 :</strong> pour chaque nœud (V_i, S_j),
+            tester toutes les actions u ∈ {'{−q_wit, …, 0, …, +q_inj}'}, éliminer celles
+            qui sortent de [V_min, V_max], et calculer :{' '}
+            <code style={{ color: T.a5, background: `${T.a5}18`, padding: '1px 5px', borderRadius: 3 }}>
+              gain(u) = π(u, S_j) + e^(−rΔt) · Σ_k Π[j][k] · interp(𝒱ₜ₊₁[V + u·Δt][k])
+            </code>
+            <br />
+            Π[j][k] est la matrice de transition Markovienne du processus OU (voir onglet suivant) ;
+            l'interpolation linéaire gère les V' tombant entre deux nœuds de la grille.
           </div>
         </Step>
         <Step num={3} accent={ACCENT}>
           <div>
-            <strong>Pour chaque nœud (V_i, S_j) :</strong> on se pose la question "si je suis
-            dans cette situation précise au mois t, quelle est la meilleure action ?"
-          </div>
-        </Step>
-        <Step num={4} accent={ACCENT}>
-          <div>
-            <strong>Tester toutes les actions u :</strong> on énumère u ∈ {'{'}−q_wit, …, 0, …, +q_inj{'}'} (ici 11 valeurs).
-            Pour chaque u, on calcule V' = V_i + u·Δt et on vérifie V_min ≤ V' ≤ V_max.
-            Si la contrainte est violée, on ignore cette action (pas physiquement réalisable).
-          </div>
-        </Step>
-        <Step num={5} accent={ACCENT}>
-          <div>
-            <strong>Calculer l'espérance du mois suivant :</strong>{' '}
-            <code style={{ color: T.a5, background: `${T.a5}18`, padding: '1px 5px', borderRadius: 3 }}>
-              𝔼[𝒱ₜ₊₁(V', S')] = Σ_k Π[j][k] · interp(𝒱ₜ₊₁[·][k], V')
-            </code>{' '}
-            où Π[j][k] est la probabilité que le prix passe de S_j à S_k. L'interpolation linéaire
-            gère les volumes V' qui tombent entre deux nœuds de la grille.
-          </div>
-        </Step>
-        <Step num={6} accent={ACCENT}>
-          <div>
-            <strong>Calculer le gain total et sélectionner le meilleur u :</strong>{' '}
-            <code style={{ color: T.a4, background: `${T.a4}18`, padding: '1px 5px', borderRadius: 3 }}>
-              gain(u) = π(u, S_j) + e^(−rΔt) · 𝔼[𝒱ₜ₊₁(V', S')]
-            </code>.
-            On retient u* = argmax gain(u) et on stocke{' '}
-            <code style={{ color: ACCENT, background: `${ACCENT}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[t][i][j] = gain(u*)</code>{' '}
-            ainsi que la politique <code>u*[t][i][j]</code>.
-          </div>
-        </Step>
-        <Step num={7} accent={ACCENT}>
-          <div>
-            <strong>Lecture du résultat :</strong> après avoir remonté jusqu'à t = 0, on lit{' '}
+            <strong>Sélectionner et enregistrer :</strong>{' '}
+            u* = argmax gain(u),{' '}
+            <code style={{ color: ACCENT, background: `${ACCENT}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[t][i][j] = gain(u*)</code>.
+            Après t = 0,{' '}
             <code style={{ color: ACCENT, background: `${ACCENT}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[0][i₀][j₀]</code>{' '}
-            = valeur totale du stockage à l'état initial. La table <code>u*[t][i][j]</code> donne
-            la décision optimale à prendre chaque mois en fonction de l'état réalisé.
+            est la valeur totale du stockage à l'état initial ; la table u* donne la règle de décision
+            optimale pour tous les états futurs.
           </div>
         </Step>
       </div>
 
-      {/* ── Bloc 4 : Simulation interactive ────────────────────────────────── */}
+      {/* ── Simulation interactive ──────────────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Explorer l'effet de chaque paramètre</SectionTitle>
 
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
-        Faites varier les paramètres ci-dessous et observez comment la{' '}
-        <strong style={{ color: ACCENT }}>fonction valeur</strong> (graphe gauche) et la{' '}
-        <strong style={{ color: T.a4 }}>politique optimale</strong> (graphe droite) réagissent.
-        Résultats affichés à prix médian S = μ et en début de période t = 0, avec 50 GWh en stock.
+        Les deux graphiques montrent une coupe à <strong>prix médian S = μ</strong> et <strong>t = 0</strong>
+        (début de la période de 12 mois, 50 GWh en stock pour les métriques).
+        Gauche : <em>"combien vaut mon stockage selon son remplissage ?"</em> —
+        Droite : <em>"que dois-je faire selon l'état du stock ?"</em>
       </div>
 
       <Grid cols={3} gap="12px">
-        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="κ — vitesse de retour à la moyenne du prix" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="μ — prix d'équilibre long terme (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v} €`} />
-        <Slider label="σ — volatilité instantanée (€/MWh)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="σ — volatilité instantanée du prix (€/MWh)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
         <Slider label="r — taux d'actualisation annuel" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={ACCENT} format={v => `${(v * 100).toFixed(1)}%`} />
-        <Slider label="q_inj — débit max injection (GWh/mois)" value={qinj} min={2} max={20} step={1} onChange={setQinj} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="q_wit — débit max soutirage (GWh/mois)" value={qwit} min={2} max={20} step={1} onChange={setQwit} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="q_inj — débit max d'injection (GWh/mois)" value={qinj} min={2} max={20} step={1} onChange={setQinj} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="q_wit — débit max de soutirage (GWh/mois)" value={qwit} min={2} max={20} step={1} onChange={setQwit} accent={ACCENT} format={v => `${v}`} />
       </Grid>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '12px 0' }}>
-        <InfoChip label="𝒱₀(50 GWh, μ)" value={v0.toFixed(2)} unit="€" accent={ACCENT} />
+        <InfoChip label="𝒱₀(50 GWh, prix médian)" value={v0.toFixed(2)} unit="€" accent={ACCENT} />
         <InfoChip label="Décision optimale u*" value={u0 > 0.5 ? `+${u0.toFixed(1)} inj` : u0 < -0.5 ? `${u0.toFixed(1)} sout` : '0 attente'} accent={u0 > 0.5 ? T.a1 : u0 < -0.5 ? T.a4 : T.muted} />
         <InfoChip label="Grille DP" value="15×12×12" unit="nœuds" accent={T.muted} />
       </div>
 
       <Grid cols={2} gap="16px">
-        <ChartWrapper title="Fonction valeur 𝒱₀(V, S=μ) — valeur selon le niveau de stock" accent={ACCENT} height={220}>
+        <ChartWrapper title="Fonction valeur 𝒱₀(V, S=μ) — valeur selon le remplissage du stockage" accent={ACCENT} height={220}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={valueData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -671,7 +639,7 @@ export function BellmanTab() {
             </LineChart>
           </ResponsiveContainer>
         </ChartWrapper>
-        <ChartWrapper title="Politique optimale u*(V, S=μ) — action selon le niveau de stock" accent={ACCENT} height={220}>
+        <ChartWrapper title="Politique optimale u*(V, S=μ) — la règle de décision au prix d'équilibre" accent={ACCENT} height={220}>
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={policyData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -692,8 +660,8 @@ export function BellmanTab() {
             title: 'Lire la fonction valeur (gauche)', color: ACCENT,
             items: [
               'Croissante : plus de stock = plus de flexibilité future = plus de valeur.',
-              'S\'aplatit en V_max : on ne peut plus injecter → valeur marginale du GWh supplémentaire → 0.',
-              'S\'aplatit en V_min : plus rien à soutirer → même phénomène à l\'autre extrême.',
+              'S\'aplatit à V_max : on ne peut plus injecter, la valeur marginale du GWh supplémentaire → 0.',
+              'S\'aplatit à V_min : plus rien à soutirer → même phénomène à l\'autre extrême.',
               'Augmenter σ → courbe plus haute : le stockage est convexe, il profite de la volatilité (valeur d\'option).',
               'Augmenter r → courbe plus basse : les gains futurs sont davantage dépréciés.',
             ],
@@ -701,11 +669,11 @@ export function BellmanTab() {
           {
             title: 'Lire la politique optimale (droite)', color: T.a4,
             items: [
-              'Zone u > 0 (en haut) : stock bas → on injecte pour se reconstituer en vue d\'un pic de prix futur.',
-              'Zone u < 0 (en bas) : stock élevé → on soutire pour encaisser au prix actuel.',
-              'Zone u ≈ 0 (au milieu) : stock intermédiaire + prix médian → on attend un signal plus fort.',
-              'Augmenter q_wit ou q_inj → les seuils s\'élargissent, la politique est plus agressive.',
-              'Augmenter σ → la zone d\'attente se rétrécit : avec plus de volatilité, agir tôt est plus rentable.',
+              'u > 0 (zone haute) : stock bas → on injecte pour se reconstituer avant un pic de prix futur.',
+              'u < 0 (zone basse) : stock élevé → on soutire pour encaisser au prix actuel.',
+              'u ≈ 0 (zone médiane) : stock intermédiaire + prix médian → on attend un signal plus fort.',
+              'Augmenter q_wit ou q_inj → seuils élargis, politique plus agressive.',
+              'Augmenter σ → la zone d\'attente se rétrécit : agir tôt est plus rentable avec plus de volatilité.',
             ],
           },
         ].map(({ title, color, items }) => (
@@ -721,44 +689,45 @@ export function BellmanTab() {
         ))}
       </div>
 
-      {/* ── Bloc 5 : Exercice ──────────────────────────────────────────────── */}
-      <Accordion title="Exercice — Calculer manuellement un nœud de la grille Bellman" accent={ACCENT} badge="Difficile">
+      {/* ── Exercice guidé ──────────────────────────────────────────────────── */}
+      <Accordion title="Exercice — Calculer manuellement un nœud avec deux états de prix futurs" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.muted, fontSize: 13, lineHeight: 1.75 }}>
-          Stockage simplifié : 2 pas de temps (t=0 et t=1), 1 nœud de volume (V = 50 GWh),
-          2 états de prix possibles au pas suivant : S_bas = 30 €/MWh (probabilité 0.4)
-          et S_haut = 60 €/MWh (probabilité 0.6). Condition terminale : 𝒱₁ = 0 partout.
-          Paramètres : q_wit = 10 GWh/mois, c_op = 0.5 €/GWh, r = 0, Δt = 1/12 an.
-          Prix actuel S₀ = 45 €/MWh.
+          Stockage simplifié : 2 pas de temps (t = 0 et t = 1), V = 50 GWh, prix actuel S₀ = 45 €/MWh.
+          Au mois suivant, deux prix possibles : S_bas = 30 €/MWh (prob. 0.4) et S_haut = 60 €/MWh (prob. 0.6).
+          Condition terminale : 𝒱₁ = 0 partout.
+          Paramètres : q_wit = 10, c_op = 0.5 €/GWh, r = 0, Δt = 1/12 an.
           <br /><br />
-          <strong>Question :</strong> calculer 𝒱₀(50 GWh, 45 €/MWh). Quelle est la décision optimale ?
+          <strong>Question :</strong> calculer 𝒱₀(50, 45) en testant u = 0 et u = −10. Quelle décision est optimale,
+          et pourquoi le résultat serait différent si la valeur terminale n'était pas nulle ?
         </p>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Condition terminale" ruleDetail="valeur nulle à l'échéance" accent={ACCENT}>
+          <DemoStep num={1} rule="Condition terminale" ruleDetail="𝒱₁ = 0 partout" accent={ACCENT}>
             𝒱₁(V', S_bas) = 0 et 𝒱₁(V', S_haut) = 0 pour tout V'.
-            Aucun cashflow possible après t=1 → valeur nulle. C'est notre point de départ.
+            Fin de contrat → aucun cashflow futur → valeur nulle. Point de départ du backward.
           </DemoStep>
-          <DemoStep num={2} rule="Tester u = 0 (attendre)" ruleDetail="π = 0, espérance = 0" accent={ACCENT}>
-            Pas de mouvement de gaz → π(0, 45) = 0. Volume inchangé : V' = 50 GWh.{' '}
-            <K>{"\\mathbb{E}[\\mathcal{V}_1] = 0.4 \\times 0 + 0.6 \\times 0 = 0"}</K>.{' '}
-            Gain(u=0) = 0 + 0 = <strong style={{ color: T.a5 }}>0 €</strong>.
-          </DemoStep>
-          <DemoStep num={3} rule="Tester u = −10 (soutirer 10 GWh)" ruleDetail="π = −u·S·Δt − c_op·|u|" accent={ACCENT}>
-            <K>{"\\pi = -(-10) \\times 45 \\times \\tfrac{1}{12} - 0.5 \\times 10 \\times \\tfrac{1}{12} = +37.5 - 0.42 = +37.1 \\;\\text{€}"}</K>
+          <DemoStep num={2} rule="Tester u = 0 (attente)" ruleDetail="π = 0, 𝔼[𝒱₁] = 0" accent={ACCENT}>
+            Aucun mouvement de gaz → π(0, 45) = 0. Volume inchangé, espérance future nulle.
             <br />
-            V' = 50 − 10/12 = 49.2 GWh. Espérance future :{' '}
-            <K>{"0.4 \\times 0 + 0.6 \\times 0 = 0"}</K>.{' '}
-            Gain(u=−10) = 37.1 + 0 = <strong style={{ color: ACCENT }}>+37.1 €</strong>.
+            <strong style={{ color: T.muted }}>Gain(u = 0) = 0 €</strong>
+          </DemoStep>
+          <DemoStep num={3} rule="Tester u = −10 (soutirer)" ruleDetail="π = |u|·S·Δt − c_op·|u|·Δt" accent={ACCENT}>
+            <K>{"\\pi = 10 \\times 45 \\times \\tfrac{1}{12} \\;-\\; 0.5 \\times 10 \\times \\tfrac{1}{12} = 37.50 - 0.42 = +37.1\\text{ €}"}</K>
+            <br />
+            V' = 50 − 10/12 ≈ 49.2 GWh.{' '}
+            Espérance future : <K>{"0.4 \\times 0 + 0.6 \\times 0 = 0"}</K>.
+            <br />
+            <strong style={{ color: ACCENT }}>Gain(u = −10) = 37.1 €</strong>
           </DemoStep>
           <DemoStep num={4} rule="Sélection du maximum" ruleDetail="u* = argmax gain(u)" accent={ACCENT}>
-            max(0, 37.1) = 37.1 → <strong>u* = −10 GWh/mois (soutirer au maximum)</strong>.
+            max(0, 37.1) = 37.1 → <strong>u* = −10 GWh/mois (soutirer immédiatement).</strong>
             <br />
-            <strong style={{ color: ACCENT }}>𝒱₀(50, 45) = 37.1 €</strong>.
+            <strong style={{ color: ACCENT }}>𝒱₀(50, 45) = 37.1 €</strong>
             <br />
             <span style={{ color: T.muted }}>
-              Interprétation : avec une valeur terminale nulle (pas de cashflow futur dans ce mini-exemple),
-              le mieux est de vendre immédiatement le gaz disponible plutôt qu'attendre.
-              Dans le modèle complet à 12 mois, l'espérance future serait non nulle et l'arbitrage
-              entre "vendre maintenant" et "attendre un prix plus haut" serait moins trivial.
+              Avec 𝒱₁ = 0, garder le gaz ne sert à rien — il faut vendre maintenant.
+              Dans le modèle complet (12 mois), 𝒱₁ ≠ 0 : conserver 1 GWh a une valeur d'option
+              (possibilité de le vendre à 60 €/MWh si S_haut se réalise). L'arbitrage "encaisser maintenant
+              vs attendre un prix plus haut" devient non-trivial, et c'est précisément ce que résout Bellman.
             </span>
           </DemoStep>
         </Demonstration>
