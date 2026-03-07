@@ -52,32 +52,116 @@ src/
 
 L'objectif du dashboard est d'être **compréhensible par quelqu'un qui voit le concept pour la première fois**, tout en étant **rigoureux pour un praticien**.
 
+**Référence de profondeur :** L'onglet `BellmanTab` dans `src/categories/MathsEnergie/tabs/StockageGaz.jsx` illustre le niveau de détail visé. Chaque onglet doit atteindre une densité comparable (~800–1300 lignes JSX), adaptée au sujet.
+
 Il n'y a pas de schéma bloc imposé — l'organisation dépend du sujet. Ce qui est obligatoire, c'est de respecter ces **principes** :
 
-### Partir de l'intuition, pas de la formule
+---
+
+### 1. Partir de l'intuition, pas de la formule
 - Avant toute notation, expliquer **à quoi ça sert** et **comment ça fonctionne** en langage courant
-- Une analogie concrète (un gestionnaire de stock, un joueur d'échecs, un marché de fruits) vaut mieux qu'une définition formelle
-- Utiliser `<IntuitionBlock>` pour ce point d'entrée
+- Ouvrir avec un `<IntuitionBlock>` contenant une analogie concrète du monde réel
+- Présenter les variables / concepts clés et les enjeux **avant** la première formule ou le premier bloc de code
+- Minimum **2 analogies distinctes** par onglet (une en introduction, une dans le cœur du contenu)
+- *Exemples d'analogies par domaine :* gestionnaire de stock (énergie), joueur d'échecs (optimisation), recette de cuisine (algorithme), balance à plateaux (algèbre), paris sportifs (probabilités), assurance (risk management)
 
-### Ne jamais lâcher une formule sans l'expliquer
-- Chaque symbole doit être défini : (1) ce que c'est littéralement, (2) son unité ou ses valeurs possibles, (3) son rôle intuitif dans le calcul
-- Pour les formules denses, utiliser `\underbrace{}` LaTeX pour annoter directement dans la formule
-- `<SymbolLegend>` ou des encadrés inline selon la densité du contenu
+### 2. Ne jamais lâcher une formule sans l'expliquer — à 3 niveaux
 
-### Toujours avoir un exemple chiffré
-- Un calcul numérique concret, idéalement fait à la main, ancre le concept bien mieux qu'une généralité
-- Utiliser `<Accordion>` + `<Demonstration>` + `<DemoStep>` pour les exercices guidés
-- Chaque étape de démonstration = une seule règle appliquée, expliquée en français d'abord
+> S'applique aux onglets à contenu mathématique. Pour les onglets de programmation pure, remplacer « formule » par « snippet de code » et adapter les niveaux ci-dessous en conséquence (commentaires inline, décomposition ligne par ligne, glossaire des fonctions/méthodes).
 
-### La simulation doit s'expliquer d'elle-même
-- Les labels de sliders doivent dire ce que contrôle le paramètre, pas juste son nom (ex : "κ — vitesse de retour à la moyenne" plutôt que "κ")
-- Ajouter des clés de lecture des graphiques quand ce n'est pas immédiatement évident
-- `<InfoChip>` pour les métriques clés recalculées en temps réel
+**Niveau A — Annotation directe :**
+- Utiliser `\underbrace{}` LaTeX pour annoter chaque terme directement dans la formule
+- Minimum requis sur toute formule centrale de l'onglet
 
-### Règles transversales
-- **Jamais d'acronyme sans définition** au premier usage (DP, OU, TSO, GWh…)
-- Alterner : concept vulgarisé → formulation technique → exemple chiffré
-- Chaque section doit avoir un titre explicite — l'utilisateur doit pouvoir naviguer sans tout lire dans l'ordre
+**Niveau B — Décomposition terme à terme :**
+- Après la formule annotée, créer un panneau coloré par terme (3–5 panneaux typiquement)
+- Chaque panneau contient : emoji + nom intuitif du terme, explication en langage courant, formule isolée en `<K>`, et un **exemple numérique concret** avec des valeurs réalistes
+- Pour les termes complexes, décomposer en sous-étapes (a, b, c, d) avec un calcul chiffré à chaque niveau
+
+**Niveau C — Légende des symboles :**
+- `<SymbolLegend>` obligatoire après la première apparition d'une formule avec plus de 3 symboles
+- Format : `[['symbole', 'définition (unité) — rôle intuitif']]`
+
+### 3. Exemples concrets — au moins 3 par onglet
+
+Les exemples doivent être **concrets, réalistes et faits à la main**. Trois types obligatoires (adapter la forme au domaine) :
+
+**a) Exemple minimal inline :**
+- Juste après la formule / le concept, un calcul rapide ou un cas d'usage simple pour montrer le mécanisme
+- Peut être intégré directement dans les panneaux de décomposition (niveau B ci-dessus)
+- *Programmation :* un snippet minimal qui tient en 5–10 lignes avec sa sortie attendue
+
+**b) Exemple comparatif :**
+- Comparer au moins 2 scénarios côte à côte (`<Grid cols={2}>`)
+- Un cas trivial vs un cas réaliste, ou deux approches différentes du même problème
+- *Math/Finance :* tableaux de comparaison (5–7 lignes × 4–6 colonnes) avec mise en surbrillance du résultat optimal
+- *Programmation :* avant/après refactoring, complexité O(n²) vs O(n log n), etc.
+
+**c) Exercice guidé en Accordion :**
+- `<Accordion badge="Moyen|Difficile">` avec un énoncé clair et contextualisé
+- `<Demonstration>` + `<DemoStep>` : chaque étape = **une seule règle** nommée + le calcul / raisonnement appliqué
+- Minimum 3–4 DemoSteps par exercice
+- L'exercice doit **utiliser les concepts vus** — pas être déconnecté du contenu
+
+### 4. Algorithmes et procédures — décomposition en étapes numérotées
+
+Pour tout processus multi-étape (algorithme, méthode de calcul, procédure de calibration, pattern de code) :
+
+- Utiliser `<Step num={1/2/3}>` pour chaque grande étape
+- Chaque étape contient : `<FormulaBox>` ou snippet, explication, **et son propre exemple**
+- Les étapes complexes doivent être décomposées en sous-blocs numérotés (①②③ ou a/b/c/d)
+- Un pseudocode résumé en `<pre>` monospace après les étapes détaillées
+
+### 5. Visualisations et simulations interactives
+
+**Données :**
+- Tableaux colorés avec mise en surbrillance quand pertinent (heatmap, comparaison, etc.)
+- Visualisations custom quand utile (timeline, grille d'états, diagramme de flux, arbre de décision…)
+- Regrouper les visualisations secondaires dans un `<Accordion badge="Détail">` dédié
+
+**Simulation interactive (quand le sujet s'y prête) :**
+- Sliders avec labels descriptifs : `"κ — vitesse de retour à la moyenne (an⁻¹)"` et non `"κ"`
+- `<InfoChip>` pour les métriques clés recalculées en temps réel (3+ par simulation)
+- Graphiques Recharts avec titre explicite dans `<ChartWrapper>`
+
+**Clés de lecture — OBLIGATOIRES pour chaque graphique :**
+- Bloc de 3–5 bullet points sous chaque graphique (emoji + `<strong>élément visuel</strong>` + explication)
+- Expliquer ce que l'utilisateur doit **observer**, pas juste ce que le graphique montre
+- Pour les graphiques interactifs : expliquer comment les sliders affectent le résultat visible
+
+### 6. Règles transversales
+
+- **Jamais d'acronyme sans définition** au premier usage (DP = Dynamic Programming, OU = Ornstein-Uhlenbeck, TSO = Transport System Operator, GWh, API, DOM…)
+- **Flow pédagogique systématique :** Intuition → formule/concept annoté → décomposition terme à terme → synthèse 1 phrase → exemples comparatifs → algorithme/procédure en étapes → pseudocode → visualisation → simulation interactive → clés de lecture → exercice guidé
+  - Tous les onglets n'auront pas toutes ces étapes (un onglet de maths pures n'a pas forcément de simulation, un onglet d'algorithmique n'a pas forcément de formule). **Appliquer les étapes pertinentes au sujet**, mais ne jamais en sauter une qui s'applique.
+- Chaque section doit avoir un `<SectionTitle>` explicite — l'utilisateur doit pouvoir naviguer sans tout lire dans l'ordre
+- **Toujours utiliser LaTeX pour les formules mathématiques** — même inline. Utiliser `<K>{"formule"}</K>` pour l'inline et `<K display>{"formule"}</K>` pour les blocs centrés. Ne jamais écrire une expression mathématique en texte brut (ex : écrire `<K>{"e^{-r \\Delta t}"}</K>` et non `e^{-rΔt}`)
+- **Synthèse intermédiaire :** Après chaque bloc dense (formule + décomposition, ou concept + exemple), résumer en **une phrase italique** encadrée ce que l'utilisateur doit retenir
+- Préférer les **analogies concrètes** aux formulations abstraites dans les clés de lecture et explications
+- **Récap en fin d'onglet :** Un encadré "À retenir" ou un exercice de synthèse qui force à mobiliser les concepts vus
+
+### Checklist rapide — Validation d'un onglet
+
+Avant de considérer un onglet terminé, vérifier les critères **applicables au sujet** :
+
+| # | Critère | Math | Finance | Énergie | Prog | Présent ? |
+|---|---------|:----:|:-------:|:-------:|:----:|-----------|
+| 1 | `<IntuitionBlock>` en ouverture avec analogie concrète | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 2 | Formule/concept principal avec `\underbrace{}` ou commentaires inline | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 3 | `<SymbolLegend>` après la première formule dense | ✓ | ✓ | ✓ | — | ☐ |
+| 4 | Décomposition terme à terme (panneaux colorés) | ✓ | ✓ | ✓ | ~ | ☐ |
+| 5 | Au moins 1 exemple numérique/concret inline | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 6 | Au moins 1 comparaison côte à côte | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 7 | Étapes numérotées (`<Step>`) pour tout algorithme/procédure | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 8 | Pseudocode ou snippet résumé si algorithme | ~ | ~ | ✓ | ✓ | ☐ |
+| 9 | Simulation interactive (sliders + graphiques) | ~ | ✓ | ✓ | ~ | ☐ |
+| 10 | Clés de lecture sous chaque graphique (3–5 bullets) | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 11 | Exercice guidé en `<Accordion>` avec `<DemoStep>` (3+ étapes) | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 12 | Tous les acronymes définis au premier usage | ✓ | ✓ | ✓ | ✓ | ☐ |
+| 13 | Aucune formule en texte brut (tout en `<K>`) | ✓ | ✓ | ✓ | ~ | ☐ |
+| 14 | Sliders avec labels descriptifs (pas juste le symbole) | ✓ | ✓ | ✓ | ✓ | ☐ |
+
+*(✓ = obligatoire, ~ = si applicable, — = non pertinent)*
 
 ---
 

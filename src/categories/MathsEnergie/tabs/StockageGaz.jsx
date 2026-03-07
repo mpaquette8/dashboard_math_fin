@@ -738,47 +738,814 @@ export function BellmanTab() {
       {/* ── Algorithme DP ───────────────────────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Résolution — Programmation Dynamique (DP) backward</SectionTitle>
 
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
-        Le problème est discrétisé sur trois grilles :{' '}
-        <strong style={{ color: ACCENT }}>NV = 15 nœuds de volume</strong> (0 → 100 GWh),{' '}
-        <strong style={{ color: T.a5 }}>NS = 12 nœuds de prix</strong> (centré sur μ ± 3σ),{' '}
-        <strong style={{ color: T.a4 }}>NT = 12 pas de temps</strong> (1 mois chacun).
-        Total : 15 × 12 × 12 = <strong>2 160 nœuds</strong>, chacun avec sa valeur et sa décision optimale stockées.
+      <IntuitionBlock emoji="♟️" title="L'idée clé : raisonner à l'envers" accent={ACCENT}>
+        Imaginez que vous jouez aux échecs et que vous voulez connaître votre meilleur coup à la première
+        minute. La difficulté : votre décision maintenant dépend de ce qui peut arriver dans 12 mois.
+        On ne peut pas résoudre ça en avançant dans le temps — on ne sait pas encore quels prix le marché
+        proposera. La Programmation Dynamique résout ce paradoxe en partant de <strong>la fin</strong> et en remontant
+        vers le présent : "si à l'échéance mon stock et le prix sont dans tels états, que vaut mon stockage ? 0 €, 
+        par définition." Puis : "un mois avant l'échéance, sachant que dans un mois il vaudra 0, combien 
+        vaut-il ?" Et ainsi de suite, jusqu'à t = 0.
+      </IntuitionBlock>
+
+      {/* Pourquoi discrétiser */}
+      <div style={{ ...panelStyle, margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Pourquoi discrétiser l'espace continu ?</div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+          L'équation de Bellman est définie sur un espace continu : le volume <K>{"V \\in [0, 100]"}</K> GWh et le
+          prix <K>{"S \\in \\mathbb{R}^+"}</K> peuvent prendre une infinité de valeurs. On ne peut pas stocker une
+          infinité de valeurs en mémoire — on <strong>discrétise</strong> : on choisit un nombre fini de points représentatifs
+          sur chaque dimension, et on calcule la valeur exactement en ces points. Entre deux points, on
+          <strong> interpole linéairement</strong> (comme lire un thermomètre gradué tous les 5°C et estimer 17°C par interpolation).
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, marginTop: 12 }}>
+          {[
+            { label: 'NV = 15 nœuds de volume', range: '0 → 100 GWh', detail: 'Un nœud tous les ~7 GWh. Entre deux nœuds, V\' = V + u·Δt est interpolé.', color: ACCENT },
+            { label: 'NS = 12 nœuds de prix', range: 'μ ± 3σ (couvre 99.7% des prix OU)', detail: 'Centré sur la moyenne de long terme μ, avec suffisamment d\'amplitude pour capturer les queues.', color: T.a5 },
+            { label: 'NT = 12 pas de temps', range: '1 mois chacun', detail: 'Δt = 1 mois. Total : 15 × 12 × 12 = 2 160 nœuds, chacun avec sa valeur et sa politique.', color: T.a4 },
+          ].map(({ label, range, detail, color }) => (
+            <div key={label} style={{ background: `${color}10`, border: `1px solid ${color}33`, borderRadius: 6, padding: '10px 12px' }}>
+              <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>{label}</div>
+              <div style={{ color: T.text, fontSize: 12, marginBottom: 4 }}>{range}</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{detail}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
-      <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', gap: 2 }}>
+      {/* Les 3 étapes */}
+      <div style={{ ...panelStyle, display: 'flex', flexDirection: 'column', gap: 16 }}>
+
+        {/* Étape 1 */}
         <Step num={1} accent={ACCENT}>
-          <div>
-            <strong>Initialisation (t = T) :</strong>{' '}
-            <code style={{ color: T.a4, background: `${T.a4}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[T][i][j] = 0</code>{' '}
-            pour tous les nœuds volume × prix. Condition terminale — point de départ du calcul.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <strong>Initialisation à l'échéance (<K>{"t = T"}</K>) — la condition terminale</strong>
+            </div>
+            <FormulaBox accent={ACCENT}>
+              <K display>{"\\mathcal{V}_T(V_i,\\, S_j) = 0 \\qquad \\forall\\, i,\\, j"}</K>
+            </FormulaBox>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+              À l'échéance du contrat, <strong>plus aucune décision n'est possible</strong> : on ne peut plus ni injecter
+              ni soutirer. Le stockage ne vaut donc rien de plus — quelle que soit la quantité de gaz restante
+              ou le prix du marché. C'est le seul moment où la valeur est connue <em>exactement</em>, sans calcul.
+              <br /><br />
+              💡 <em>Analogie :</em> imaginez un bon de réduction qui expire ce soir. Qu'il reste 50 € ou 0 € dessus,
+              si le magasin est fermé et que vous ne pouvez plus l'utiliser, il vaut 0 € maintenant.
+              C'est exactement ça la condition terminale.
+              <br /><br />
+              <strong style={{ color: T.text }}>Variante avec pénalité :</strong> certains contrats imposent de restituer
+              un stock minimum <K>{"V_{\\min}^T"}</K> à l'échéance. Dans ce cas{' '}
+              <K>{"\\mathcal{V}_T = -\\lambda \\max(V_{\\min}^T - V,\\, 0)"}</K> — l'algorithme anticipe cette
+              contrainte dès les mois précédents en se reconstituant progressivement.
+            </div>
           </div>
         </Step>
+
+        <div style={{ borderTop: `1px solid ${T.border}` }} />
+
+        {/* Étape 2 */}
         <Step num={2} accent={ACCENT}>
-          <div>
-            <strong>Boucle backward t = T−1, T−2, …, 0 :</strong> pour chaque nœud (V_i, S_j),
-            tester toutes les actions u ∈ {'{−q_wit, …, 0, …, +q_inj}'}, éliminer celles
-            qui sortent de [V_min, V_max], et calculer :{' '}
-            <code style={{ color: T.a5, background: `${T.a5}18`, padding: '1px 5px', borderRadius: 3 }}>
-              gain(u) = π(u, S_j) + e^(−rΔt) · Σ_k Π[j][k] · interp(𝒱ₜ₊₁[V + u·Δt][k])
-            </code>
-            <br />
-            Π[j][k] est la matrice de transition Markovienne du processus OU (voir onglet suivant) ;
-            l'interpolation linéaire gère les V' tombant entre deux nœuds de la grille.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div>
+              <strong>Boucle backward <K>{"t = T{-}1,\\, \\ldots,\\, 0"}</K> — le cœur du calcul</strong>
+            </div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+              À chaque pas de temps <K>{"t"}</K>, pour chaque nœud <K>{"(V_i,\\, S_j)"}</K> de la grille, on se pose
+              la question : <em>"si je suis dans cet état, quelle action u maximise mon gain total ?"</em>
+              On teste <strong>toutes les actions admissibles</strong> et on garde la meilleure.
+            </div>
+
+            {/* Sous-bloc : les 3 composantes du gain */}
+            <div style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 8, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ color: T.text, fontWeight: 600, fontSize: 12, marginBottom: 2 }}>Les 3 composantes de gain(u) :</div>
+              <FormulaBox accent={ACCENT}>
+                <K display>{"\\text{gain}(u) = \\underbrace{\\pi(u,\\,S_j)}_{\\text{① cashflow immédiat}} + \\underbrace{e^{-r\\Delta t}}_{\\text{② facteur actualisation}} \\underbrace{\\sum_k \\Pi[j][k]\\cdot\\mathcal{V}_{t+1}\\bigl[V{+}u{\\cdot}\\Delta t\\bigr][k]}_{\\text{③ espérance de la valeur future}}"}</K>
+              </FormulaBox>
+              {[
+                {
+                  num: '①', color: T.a5, title: 'Cashflow immédiat π(u, Sⱼ)',
+                  tech: <><K>{"\\pi = -u \\cdot S_j \\cdot \\Delta t - c_{\\text{op}} \\cdot |u|"}</K></>,
+                  plain: 'Ce qu\'on encaisse (ou dépense) ce mois-ci. Si u < 0 (soutirage) : vente de |u|·Δt GWh au prix Sⱼ. Si u > 0 (injection) : achat de gaz, cashflow négatif. Le coût op c_op·|u| est payé dans les deux cas.',
+                },
+                {
+                  num: '②', color: T.a3, title: 'Facteur d\'actualisation',
+                  tech: <><K>{"e^{-r \\Delta t}"}</K> avec <K>{"\\Delta t = 1/12"}</K> an</>,
+                  plain: <span>Un euro gagné dans 1 mois ne vaut que <K>{"e^{-r/12} \\approx 1 - r/12"}</K> euros aujourd'hui. Avec r = 5 %, ce facteur vaut ≈ 0.9958 — quasi 1 sur un mois, mais significatif sur 12 mois.</span>,
+                },
+                {
+                  num: '③', color: T.a4, title: 'Espérance de la valeur future — décomposition pas à pas',
+                  tech: <><K>{"\\sum_k \\Pi[j][k] \\cdot \\mathcal{V}_{t+1}\\bigl[V{+}u{\\cdot}\\Delta t\\bigr][k]"}</K></>,
+                  plain: (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+                      {/* Intro */}
+                      <div>
+                        Cette somme est le cœur de Bellman. Elle répond à : <em>"si je prends la décision u maintenant,
+                        combien vaudra mon stockage le mois prochain, en moyenne sur tous les prix futurs possibles ?"</em>
+                        Elle se décompose en 4 éléments imbriqués :
+                      </div>
+                      {/* 4 sous-blocs */}
+                      {[
+                        {
+                          tag: 'a', color: ACCENT,
+                          title: <><K>{"V + u \\cdot \\Delta t"}</K> — ce que ta décision fait au stock</>,
+                          body: <>
+                            Tu as <K>{"V"}</K> GWh dans le tank. Tu décides <K>{"u"}</K> (négatif = soutirer, positif = injecter).
+                            Résultat physique :{' '}
+                            <K>{"V' = V + u \\cdot \\Delta t"}</K> — le volume qui sera dans le tank le mois prochain.
+                            <br />
+                            <span style={{ color: T.muted }}>Ex : V = 50 GWh, u = −10 GWh/mois, Δt = 1 mois → V' = 40 GWh.</span>
+                            <br />
+                            <em>C'est la seule chose que tu contrôles à 100 %.</em>
+                          </>,
+                        },
+                        {
+                          tag: 'b', color: T.a5,
+                          title: <><K>{"\\mathcal{V}_{t+1}[V'][k]"}</K> — ce que vaudra le stockage le mois prochain</>,
+                          body: <>
+                            Pour <strong>chaque prix futur possible</strong> <K>{"S_k"}</K> (12 nœuds dans la grille),
+                            l'algorithme a <strong>déjà calculé</strong> combien vaut un stock de <K>{"V'"}</K> GWh
+                            si le prix est <K>{"S_k"}</K>. C'est le résultat du backward au pas <K>{"t+1"}</K>.
+                            <br />
+                            <span style={{ color: T.muted }}>Ex : 𝒱ₜ₊₁(40 GWh, 38 €) = 280 € · 𝒱ₜ₊₁(40 GWh, 45 €) = 340 € · 𝒱ₜ₊₁(40 GWh, 55 €) = 430 €</span>
+                          </>,
+                        },
+                        {
+                          tag: 'c', color: T.a3,
+                          title: <><K>{"\\Pi[j][k]"}</K> — la probabilité que le prix passe de <K>{"S_j"}</K> à <K>{"S_k"}</K></>,
+                          body: <>
+                            La <strong>matrice de transition</strong> <K>{"\\Pi"}</K> encode le processus OU (voir onglet suivant) :
+                            étant donné le prix actuel <K>{"S_j"}</K>, quelle est la probabilité d'observer chaque prix
+                            futur <K>{"S_k"}</K> dans un mois ?
+                            <br />
+                            <span style={{ color: T.muted }}>Ex avec S_j = 45 € : Π[j][bas] = 0.20 · Π[j][med] = 0.50 · Π[j][haut] = 0.30</span>
+                          </>,
+                        },
+                        {
+                          tag: 'd', color: T.a4,
+                          title: <>La somme — moyenne pondérée des valeurs futures</>,
+                          body: <>
+                            On multiplie <strong>chaque valeur future</strong> par <strong>sa probabilité</strong>, puis on additionne —
+                            exactement comme une note moyenne pondérée :
+                            <K display>{"\\sum_k \\Pi[j][k]\\cdot\\mathcal{V}_{t+1}[V'][k] = \\underbrace{0.20}_{\\text{prob}} \\times \\underbrace{280}_{S_k=38\\,\\text{€}} + \\underbrace{0.50}_{} \\times \\underbrace{340}_{S_k=45\\,\\text{€}} + \\underbrace{0.30}_{} \\times \\underbrace{430}_{S_k=55\\,\\text{€}} = 355\\,\\text{€}"}</K>
+                            Résultat : <em>"en moyenne, si je soutire 10 GWh ce mois-ci, mon stockage vaudra 355 € le mois prochain."</em>
+                            <br />
+                            Multiplié par <K>{"e^{-r\\Delta t}"}</K> pour actualiser, on obtient la valeur future ramenée à aujourd'hui.
+                          </>,
+                        },
+                      ].map(({ tag, color, title, body }) => (
+                        <div key={tag} style={{ display: 'flex', gap: 8, alignItems: 'flex-start', paddingLeft: 4 }}>
+                          <div style={{ width: 18, height: 18, borderRadius: 3, background: `${color}22`, border: `1px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontWeight: 800, fontSize: 10, flexShrink: 0, marginTop: 1 }}>{tag}</div>
+                          <div>
+                            <div style={{ color, fontWeight: 600, fontSize: 11 }}>{title}</div>
+                            <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.65, marginTop: 3 }}>{body}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ),
+                },
+              ].map(({ num, color, title, tech, plain }) => (
+                <div key={num} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 4, background: `${color}22`, border: `1px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontWeight: 800, fontSize: 12, flexShrink: 0 }}>{num}</div>
+                  <div>
+                    <div style={{ color, fontWeight: 600, fontSize: 12 }}>{title}</div>
+                    <div style={{ color: T.muted, fontSize: 11, marginTop: 2 }}>{tech}</div>
+                    <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, marginTop: 3 }}>{plain}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Contrainte d'admissibilité */}
+            <div style={{ background: `${T.a2}10`, border: `1px solid ${T.a2}30`, borderRadius: 6, padding: '10px 14px' }}>
+              <div style={{ color: T.a2, fontWeight: 600, fontSize: 12, marginBottom: 4 }}>⚠️ Contraintes d'admissibilité — toutes les actions ne sont pas autorisées</div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+                Pour chaque action <K>{"u"}</K> testée, on vérifie que le nouveau stock <K>{"V' = V_i + u \\cdot \\Delta t"}</K>
+                reste dans les bornes physiques :{' '}
+                <K>{"V_{\\min} \\leq V' \\leq V_{\\max}"}</K>.{' '}
+                Et que le débit respecte les limites contractuelles :{' '}
+                <K>{"-q_{\\text{wit}} \\leq u \\leq +q_{\\text{inj}}"}</K>.{' '}
+                Les actions violant l'une de ces conditions sont simplement ignorées (gain = −∞).
+              </div>
+            </div>
+
+            {/* Interpolation */}
+            <div style={{ background: `${T.a3}10`, border: `1px solid ${T.a3}30`, borderRadius: 6, padding: '10px 14px' }}>
+              <div style={{ color: T.a3, fontWeight: 600, fontSize: 12, marginBottom: 4 }}>📐 Pourquoi interpoler ?</div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+                Après soutirage, <K>{"V' = V_i + u \\cdot \\Delta t"}</K> tombe <em>entre</em> deux nœuds de la grille de volume
+                (ex : V' = 43.7 GWh alors que la grille a des nœuds à 42.9 et 50 GWh). On estime{' '}
+                <K>{"\\mathcal{V}_{t+1}[V'][k]"}</K> par interpolation linéaire entre les deux nœuds voisins —
+                comme lire une valeur entre deux graduations d'une règle.
+              </div>
+            </div>
           </div>
         </Step>
+
+        <div style={{ borderTop: `1px solid ${T.border}` }} />
+
+        {/* Étape 3 */}
         <Step num={3} accent={ACCENT}>
-          <div>
-            <strong>Sélectionner et enregistrer :</strong>{' '}
-            u* = argmax gain(u),{' '}
-            <code style={{ color: ACCENT, background: `${ACCENT}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[t][i][j] = gain(u*)</code>.
-            Après t = 0,{' '}
-            <code style={{ color: ACCENT, background: `${ACCENT}18`, padding: '1px 5px', borderRadius: 3 }}>𝒱[0][i₀][j₀]</code>{' '}
-            est la valeur totale du stockage à l'état initial ; la table u* donne la règle de décision
-            optimale pour tous les états futurs.
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <strong>Sélectionner, enregistrer, et remonter au pas précédent</strong>
+            </div>
+
+            {/* Formule + explication du argmax */}
+            <FormulaBox accent={ACCENT}>
+              <K display>{"u^*_{t,i,j} = \\arg\\max_{u\\;\\text{admissible}}\\;\\text{gain}(u) \\qquad \\mathcal{V}_t[i][j] = \\text{gain}(u^*)"}</K>
+            </FormulaBox>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+              On a calculé <K>{"\\text{gain}(u)"}</K> pour chaque action testée (11 valeurs de{' '}
+              <K>{"u"}</K> entre <K>{"- q_{\\text{wit}}"}</K> et <K>{"+ q_{\\text{inj}}"}</K>).{' '}
+              <K>{"\\arg\\max"}</K> signifie : <em>"retourne l'action qui donne le gain le plus grand"</em>.{' '}
+              On stocke deux choses en mémoire pour chaque nœud <K>{"(t,\\,V_i,\\,S_j)"}</K> :{' '}
+              <strong style={{ color: ACCENT }}>la valeur maximale</strong> <K>{"\\mathcal{V}_t[i][j]"}</K> et{' '}
+              <strong style={{ color: T.a4 }}>l'action optimale</strong> <K>{"u^*_{t,i,j}"}</K>.
+              On passe ensuite au nœud voisin, puis au pas de temps <K>{"t-1"}</K> — on utilise les valeurs
+              <K>{"\\mathcal{V}_t"}</K> qu'on vient de calculer pour alimenter le pas <K>{"t-1"}</K>.
+            </div>
+
+            {/* Timeline pédagogique */}
+            <div style={{ background: `${ACCENT}0e`, border: `1px solid ${ACCENT}33`, borderRadius: 6, padding: '10px 14px' }}>
+              <div style={{ color: ACCENT, fontWeight: 600, fontSize: 12, marginBottom: 6 }}>
+                📅 Repère temporel — où se situe t = 11 dans le contrat ?
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+                Le contrat de stockage couvre <K>{"T = 12"}</K> mois (<K>{"t = 0"}</K> = aujourd'hui,{' '}
+                <K>{"t = 12"}</K> = expiration).
+                L'algorithme part de <K>{"t = 12"}</K> et remonte vers <K>{"t = 0"}</K> :{' '}
+              </div>
+              {/* Frise temporelle */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 0, marginTop: 10, overflowX: 'auto' }}>
+                {[...Array(13)].map((_, t) => {
+                  const isTerminal = t === 12
+                  const isCurrent = t === 11
+                  const isStart = t === 0
+                  return (
+                    <React.Fragment key={t}>
+                      <div style={{
+                        flexShrink: 0,
+                        display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
+                      }}>
+                        <div style={{
+                          width: 28, height: 28, borderRadius: '50%', border: `2px solid ${isCurrent ? ACCENT : isTerminal ? T.a5 : isStart ? T.a4 : T.border}`,
+                          background: isCurrent ? `${ACCENT}33` : isTerminal ? `${T.a5}22` : isStart ? `${T.a4}22` : T.panel2,
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          color: isCurrent ? ACCENT : isTerminal ? T.a5 : isStart ? T.a4 : T.muted,
+                          fontWeight: (isCurrent || isTerminal || isStart) ? 700 : 400,
+                          fontSize: 10,
+                        }}>
+                          {t}
+                        </div>
+                        <div style={{ fontSize: 9, color: isCurrent ? ACCENT : isTerminal ? T.a5 : isStart ? T.a4 : 'transparent', whiteSpace: 'nowrap', fontWeight: 600 }}>
+                          {isCurrent ? '← ici' : isTerminal ? 'T=12' : isStart ? 't=0' : ''}
+                        </div>
+                      </div>
+                      {t < 12 && (
+                        <div style={{ flexShrink: 0, height: 2, width: t === 10 ? 14 : 14, background: t === 11 ? `${ACCENT}55` : T.border }} />
+                      )}
+                    </React.Fragment>
+                  )
+                })}
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+                <span style={{ color: ACCENT, fontWeight: 600 }}>t = 11</span> = <strong>dernier mois opérationnel</strong> (décembre si le contrat finit fin décembre).{' '}
+                Le pas d'après, <span style={{ color: T.a5, fontWeight: 600 }}>t = 12</span>, c'est l'expiration :{' '}
+                <K>{"\\mathcal{V}_{12}[i][j] = 0"}</K> pour tous les états (condition terminale, étape 1).
+              </div>
+            </div>
+
+            {/* Exemple 1 : t=11, dernier pas — 𝔼=0 */}
+            <div style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: ACCENT, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>Exemple A</span>
+                <span style={{ color: T.text, fontWeight: 600, fontSize: 12 }}>Nœud (t = 11, V = 50 GWh, S = 45 €/GWh) — <em>dernier mois</em></span>
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 8 }}>
+                Comme <K>{"t+1 = 12 = T"}</K>, la condition terminale s'applique :{' '}
+                <K>{"\\mathcal{V}_{12}[\\cdot][\\cdot] = 0"}</K> partout.{' '}
+                Donc <K>{"e^{-r\\Delta t}\\,\\mathbb{E}[\\mathcal{V}_{12}] = 0"}</K> <strong>quelle que soit l'action choisie</strong>.{' '}
+                Il ne reste que le gain immédiat <K>{"\\pi(u)"}</K> :{' '}
+                <K display>{"\\text{gain}(u) = \\underbrace{\\pi(u)}_{\\text{seul terme qui compte}} + \\underbrace{0}_{\\mathbb{E}[\\mathcal{V}_{12}]=0}"}</K>
+                <strong>Conséquence directe :</strong> au dernier mois, il faut toujours soutirer au maximum <K>{"(u^* = -q_{\\text{wit}})"}</K>.
+                On ne garde aucun gaz pour "plus tard" — il n'y a plus de plus tard.
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                <thead>
+                  <tr>
+                    {["Action u", "V' résultant", "π = |u|×(S−c)", "𝔼[𝒱₁₂] (= 0)", "gain(u) = π + 0", ""].map((h, i) => (
+                      <th key={i} style={{ padding: '4px 8px', borderBottom: `1px solid ${ACCENT}44`, color: ACCENT, fontWeight: 700, textAlign: 'left', fontSize: 11 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { u: '−10 (soutirer max)', vp: '40 GWh', pi: '10×(45−0.5) = +445 €', esp: '0 €', gain: '+445 €', best: true },
+                    { u: '−5', vp: '45 GWh', pi: '5×(45−0.5) = +222 €', esp: '0 €', gain: '+222 €', best: false },
+                    { u: '0 (attendre)', vp: '50 GWh', pi: '0 €', esp: '0 €', gain: '0 €', best: false },
+                    { u: '+5 (injecter)', vp: '55 GWh', pi: '−5×(45+0.5) = −228 €', esp: '0 €', gain: '−228 €', best: false },
+                    { u: '+10 (injecter max)', vp: '60 GWh', pi: '−10×(45+0.5) = −455 €', esp: '0 €', gain: '−455 €', best: false },
+                  ].map(({ u, vp, pi, esp, gain, best }) => (
+                    <tr key={u} style={{ background: best ? `${ACCENT}15` : 'transparent' }}>
+                      <td style={{ padding: '4px 8px', color: best ? ACCENT : T.text, fontWeight: best ? 700 : 400, fontSize: 11 }}>{u}</td>
+                      <td style={{ padding: '4px 8px', color: T.muted, fontSize: 11 }}>{vp}</td>
+                      <td style={{ padding: '4px 8px', color: T.muted, fontSize: 11 }}>{pi}</td>
+                      <td style={{ padding: '4px 8px', color: T.a5, fontSize: 11, fontStyle: 'italic' }}>{esp}</td>
+                      <td style={{ padding: '4px 8px', color: best ? ACCENT : T.muted, fontWeight: best ? 700 : 400, fontSize: 11 }}>{gain}</td>
+                      <td style={{ padding: '4px 8px', fontSize: 11 }}>{best && <span style={{ background: ACCENT, color: '#000', borderRadius: 3, padding: '1px 6px', fontWeight: 700 }}>✓ u*</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+                → <K>{"u^* = -10"}</K> GWh/mois, <K>{"\\mathcal{V}_{11}[50][45] = 445\\,\\text{€}"}</K>.
+                Décision triviale : on vidange le tank au prix du marché.
+              </div>
+            </div>
+
+            {/* Exemple 2 : t=6, milieu — 𝔼 ≠ 0, vrai arbitrage */}
+            <div style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 8, padding: '12px 14px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: T.a4, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>Exemple B</span>
+                <span style={{ color: T.text, fontWeight: 600, fontSize: 12 }}>Nœud (t = 6, V = 50 GWh, S = 45 €/GWh) — <em>milieu de contrat</em></span>
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 8 }}>
+                Ici <K>{"t+1 = 7"}</K> — il reste encore 6 mois. Les valeurs <K>{"\\mathcal{V}_7[i][j]"}</K> ont déjà été calculées lors
+                du passage au nœud <K>{"t=7"}</K>.{' '}
+                L'espérance future <strong>dépend du stock résultant <K>{"V'"}</K></strong> :{' '}
+                plus le tank est plein, plus la valeur future potentielle est grande (on aura du gaz à vendre si les prix montent).
+                <br />
+                <K display>{"\\text{gain}(u) = \\underbrace{\\pi(u)}_{\\text{profit spot}} + e^{-r\\Delta t}\\underbrace{\\mathbb{E}[\\mathcal{V}_7(V+u\\cdot\\Delta t,\\,S_{t+1})]}_{\\text{valeur future — dépend de } u}"}</K>
+                Il y a maintenant un <strong>vrai arbitrage</strong> entre capter un profit immédiat et préserver du gaz pour l'avenir.
+              </div>
+              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+                <thead>
+                  <tr>
+                    {["Action u", "V' résultant", "π immédiat", "e⁻ʳ·𝔼[𝒱₇(V',·)]", "gain(u)", ""].map((h, i) => (
+                      <th key={i} style={{ padding: '4px 8px', borderBottom: `1px solid ${T.a4}55`, color: T.a4, fontWeight: 700, textAlign: 'left', fontSize: 11 }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { u: '−10 (soutirer max)', vp: '40 GWh', pi: '+445 €', esp: '+275 €', gain: '+720 €', best: true, note: 'tank bas → futur limité' },
+                    { u: '−5', vp: '45 GWh', pi: '+222 €', esp: '+315 €', gain: '+537 €', best: false, note: '' },
+                    { u: '0 (attendre)', vp: '50 GWh', pi: '0 €', esp: '+355 €', gain: '+355 €', best: false, note: 'conserver optionalité' },
+                    { u: '+5 (injecter)', vp: '55 GWh', pi: '−228 €', esp: '+395 €', gain: '+167 €', best: false, note: '' },
+                    { u: '+10 (injecter max)', vp: '60 GWh', pi: '−455 €', esp: '+430 €', gain: '−25 €', best: false, note: 'coût > hausse future' },
+                  ].map(({ u, vp, pi, esp, gain, best, note }) => (
+                    <tr key={u} style={{ background: best ? `${T.a4}15` : 'transparent' }}>
+                      <td style={{ padding: '4px 8px', color: best ? T.a4 : T.text, fontWeight: best ? 700 : 400, fontSize: 11 }}>{u}</td>
+                      <td style={{ padding: '4px 8px', color: T.muted, fontSize: 11 }}>{vp}</td>
+                      <td style={{ padding: '4px 8px', color: T.muted, fontSize: 11 }}>{pi}</td>
+                      <td style={{ padding: '4px 8px', color: T.a4, fontSize: 11 }}>{esp}{note && <span style={{ color: T.muted, fontStyle: 'italic' }}> ({note})</span>}</td>
+                      <td style={{ padding: '4px 8px', color: best ? T.a4 : T.muted, fontWeight: best ? 700 : 400, fontSize: 11 }}>{gain}</td>
+                      <td style={{ padding: '4px 8px', fontSize: 11 }}>{best && <span style={{ background: T.a4, color: '#000', borderRadius: 3, padding: '1px 6px', fontWeight: 700 }}>✓ u*</span>}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+                → <K>{"u^* = -10"}</K> ici aussi, mais <em>pour d'autres raisons</em> : le profit spot l'emporte sur la valeur future perdue.
+                Si le prix spot avait été très bas (ex : <K>{"S = 20"}</K> €/GWh), l'arbitrage pourrait basculer vers <K>{"u = 0"}</K>
+                ou même <K>{"u > 0"}</K> (stocker pour profiter d'une remontée des prix).
+                C'est précisément ce que le DP calcule sans que vous n'ayez à l'anticiper manuellement.
+              </div>
+            </div>
+
+            {/* Récap comparatif des deux exemples */}
+            <div style={{ background: `${T.a5}10`, border: `1px solid ${T.a5}33`, borderRadius: 6, padding: '10px 14px' }}>
+              <div style={{ color: T.a5, fontWeight: 600, fontSize: 12, marginBottom: 6 }}>
+                🔑 Ce que ces deux exemples illustrent
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+                <strong>Exemple A (t = 11)</strong> — dernier mois : <K>{"\\mathbb{E}[\\mathcal{V}_{t+1}] = 0"}</K>,
+                la décision est triviale (soutirer tout). <em>La valeur du stockage réside uniquement dans le flux immédiat.</em>
+                <br />
+                <strong>Exemple B (t = 6)</strong> — milieu de contrat : <K>{"\\mathbb{E}[\\mathcal{V}_{t+1}] \\neq 0"}</K>,
+                et elle <em>varie selon l'action choisie</em>. L'algorithme évalue toutes les actions et choisit le meilleur compromis.
+                <br />
+                <strong>C'est la récursion :</strong> pour calculer l'exemple B, il a fallu calculer 𝒱₇ d'abord —
+                qui lui-même avait besoin de 𝒱₈, …, jusqu'à 𝒱₁₂ = 0. C'est pourquoi on part de la fin.
+              </div>
+            </div>
+
+            {/* Pourquoi stocker u* */}
+            <div style={{ background: `${T.a4}10`, border: `1px solid ${T.a4}33`, borderRadius: 6, padding: '10px 14px' }}>
+              <div style={{ color: T.a4, fontWeight: 600, fontSize: 12, marginBottom: 4 }}>
+                💡 Pourquoi stocker <K>{"u^*"}</K> en plus de <K>{"\\mathcal{V}"}</K> ?
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+                <K>{"\\mathcal{V}_0[i_0][j_0]"}</K> répond à <em>"combien vaut mon stockage ?"</em> —
+                c'est un nombre, utile pour la valorisation et la vente du contrat.
+                Mais pour <strong>opérer le stockage au quotidien</strong>, il faut une règle concrète :{' '}
+                <em>"ce mois-ci, avec ce niveau de stock et ce prix, qu'est-ce que je fais ?"</em>
+                <br /><br />
+                La table <K>{"u^*[t][i][j]"}</K> est exactement ça : un <strong>look-up instantané</strong>.
+                À chaque début de mois, l'opérateur observe le prix spot <K>{"S"}</K> et le niveau du tank <K>{"V"}</K>,
+                trouve le nœud <K>{"(i, j)"}</K> le plus proche, et lit la décision :
+                <br />
+                <span style={{ color: T.a4, fontFamily: 'monospace', fontSize: 12, marginTop: 4, display: 'block' }}>
+                  t=3, V=45 GWh, S=52 €/MWh → u* = −8 GWh/mois (soutirer)
+                </span>
+                <span style={{ color: T.a4, fontFamily: 'monospace', fontSize: 12 }}>
+                  t=8, V=20 GWh, S=30 €/MWh → u* = +6 GWh/mois (injecter)
+                </span>
+                <br />
+                Sans cette table, il faudrait relancer tout le calcul DP à chaque mois — ce qui prendrait
+                plusieurs minutes. Avec la table pré-calculée, la décision est instantanée.
+              </div>
+            </div>
+
+            {/* Ce qu'on obtient à la fin — version enrichie */}
+            <div style={{ background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`, borderRadius: 6, padding: '12px 14px' }}>
+              <div style={{ color: ACCENT, fontWeight: 600, fontSize: 12, marginBottom: 10 }}>Les deux livrables après t = 0 :</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+                {[
+                  {
+                    icon: '💰',
+                    label: <><K>{"\\mathcal{V}_0[i_0][j_0]"}</K> — la valeur économique du stockage</>,
+                    color: ACCENT,
+                    desc: <>
+                      C'est <strong>le prix juste du contrat de stockage</strong> à l'état initial (volume V₀, prix spot S₀).
+                      Un acheteur rationnel devrait payer exactement ce montant pour acquérir ce stockage —
+                      ni plus (il perdrait de l'argent), ni moins (le vendeur laisserait de la valeur sur la table).
+                      <br />
+                      <span style={{ color: T.muted, fontSize: 11 }}>En pratique : avec κ=1.5, μ=40, σ=8, q=10 GWh/mois — la simulation donne ~390 € pour 50 GWh à prix médian.</span>
+                    </>,
+                  },
+                  {
+                    icon: '🗺️',
+                    label: <><K>{"u^*[t][i][j]"}</K> — la carte de décision complète (la "policy")</>,
+                    color: T.a4,
+                    desc: <>
+                      Un tableau 3D : <K>{"N_T \\times N_V \\times N_S = 12 \\times 15 \\times 12 = 2\\,160"}</K> entrées,
+                      chacune contenant la décision optimale pour cet état.
+                      C'est la <strong>stratégie complète</strong> : peu importe l'état futur observé, la réponse optimale
+                      est déjà calculée et prête à être appliquée.
+                      <br />
+                      <span style={{ color: T.muted, fontSize: 11 }}>
+                        La simulation interactive ci-dessous visualise une coupe de cette table : la politique optimale
+                        <K>{"u^*(V, S{=}\\mu)"}</K> au mois t=0, à prix médian.
+                      </span>
+                    </>,
+                  },
+                ].map(({ icon, label, color, desc }) => (
+                  <div key={icon} style={{ display: 'flex', gap: 10, alignItems: 'flex-start', padding: '8px 0', borderTop: `1px solid ${T.border}` }}>
+                    <span style={{ flexShrink: 0, fontSize: 18, lineHeight: 1 }}>{icon}</span>
+                    <div>
+                      <div style={{ color, fontSize: 12, fontWeight: 600, marginBottom: 4 }}>{label}</div>
+                      <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>{desc}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
           </div>
         </Step>
       </div>
+
+      {/* Résumé visuel de la boucle */}
+      <div style={{ ...panelStyle, margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Vue d'ensemble — ordre d'exécution de l'algorithme</div>
+        <pre style={{ color: T.text, fontSize: 11, lineHeight: 2, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  t = T    → 𝒱[T][i][j] = 0  pour tous les (i, j)          ← INITIALISATION
+
+  t = T-1  → pour chaque (V_i, S_j) :
+               tester u ∈ {-q_wit, ..., +q_inj}
+               gain(u) = π(u, Sⱼ) + e⁻ʳᐩᵗ · Σₖ Π[j][k] · 𝒱[T][V'][k]
+               u*[T-1][i][j] = argmax gain(u)
+               𝒱[T-1][i][j] = max gain(u)
+
+  t = T-2  → même boucle, mais utilise 𝒱[T-1] déjà calculé
+     ⋮
+  t = 0    → 𝒱[0][i₀][j₀] = valeur du stockage à l'état initial
+             u*[0][i₀][j₀] = action optimale ce mois-ci`}
+        </pre>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+          Chaque ligne utilise la ligne suivante déjà calculée — c'est le principe du <em>backward induction</em>.
+          On ne devine pas l'avenir : on le <strong>récapitule</strong> en probabilités via <K>{"\\Pi"}</K>, puis on recule.
+        </div>
+      </div>
+
+      {/* ── Visualisation pédagogique des structures de données ──────────────── */}
+      <Accordion title="Visualisation complète — grilles, matrice Π et backward pas à pas" accent={ACCENT} badge="Détail">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+
+          {/* 1. Les 3 axes de la grille */}
+          <div>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>1. Les trois axes de la grille 3D</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+              L'espace complet est un cube <K>{"N_T \\times N_V \\times N_S = 12 \\times 15 \\times 12 = 2\\,160"}</K> nœuds.
+              Chaque axe est une grille discrète de valeurs régulièrement espacées :
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 10 }}>
+              {/* Volume */}
+              <div style={{ background: T.panel2, border: `1px solid ${T.a4}44`, borderRadius: 6, padding: '10px 12px' }}>
+                <div style={{ color: T.a4, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Volume V — NV = 15 nœuds</div>
+                <div style={{ color: T.muted, fontSize: 10, marginBottom: 6 }}>
+                  de <K>{"V_{\\min}=0"}</K> à <K>{"V_{\\max}=100"}</K> GWh, pas <K>{"\\approx 7.1"}</K> GWh
+                </div>
+                {[0, 7.1, 14.3, 21.4, 28.6, 35.7, 42.9, 50, 57.1, 64.3, 71.4, 78.6, 85.7, 92.9, 100].map((v, i) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <div style={{ width: `${v + 4}%`, maxWidth: '60%', minWidth: 8, height: 7, background: i === 7 ? T.a4 : `${T.a4}44`, borderRadius: 2, transition: 'width 0.2s', flexShrink: 0 }} />
+                    <span style={{ color: i === 7 ? T.a4 : T.muted, fontSize: 9, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      V[{i}]={v} GWh{i === 7 ? ' ←' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Prix */}
+              <div style={{ background: T.panel2, border: `1px solid ${ACCENT}44`, borderRadius: 6, padding: '10px 12px' }}>
+                <div style={{ color: ACCENT, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Prix S — NS = 12 nœuds</div>
+                <div style={{ color: T.muted, fontSize: 10, marginBottom: 6 }}>
+                  de <K>{"\\mu-3\\sigma=16\\,\\text{€}"}</K> à <K>{"\\mu+3\\sigma=64\\,\\text{€}"}</K>, pas <K>{"\\approx 4.4\\,\\text{€}"}</K>
+                </div>
+                {[16, 20.4, 24.7, 29.1, 33.5, 37.8, 42.2, 46.5, 50.9, 55.3, 59.6, 64].map((s, j) => (
+                  <div key={j} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <div style={{ width: `${(s - 16) / (64 - 16) * 60 + 8}%`, maxWidth: '65%', minWidth: 8, height: 7, background: j === 5 ? ACCENT : `${ACCENT}44`, borderRadius: 2, flexShrink: 0 }} />
+                    <span style={{ color: j === 5 ? ACCENT : T.muted, fontSize: 9, fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      S[{j}]={s.toFixed(1)} €{j === 5 ? ' ← S_j' : j === 5 ? '' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+              {/* Temps */}
+              <div style={{ background: T.panel2, border: `1px solid ${T.a5}44`, borderRadius: 6, padding: '10px 12px' }}>
+                <div style={{ color: T.a5, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Temps t — 13 pas (t=0…12)</div>
+                <div style={{ color: T.muted, fontSize: 10, marginBottom: 6 }}>
+                  Backward : calcul de <K>{"t=12"}</K> vers <K>{"t=0"}</K>
+                </div>
+                {[12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0].map((t) => (
+                  <div key={t} style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 2 }}>
+                    <div style={{ width: t === 12 ? 8 : `${(13 - t) / 13 * 60 + 4}%`, maxWidth: '65%', minWidth: 4, height: 7, background: t === 12 ? T.a5 : t === 0 ? T.a4 : t === 11 ? `${ACCENT}99` : `${T.a5}44`, borderRadius: 2, flexShrink: 0 }} />
+                    <span style={{ color: t === 12 ? T.a5 : t === 0 ? T.a4 : T.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: (t === 12 || t === 0) ? 700 : 400 }}>
+                      t={t}{t === 12 ? ' ← 𝒱=0 (init)' : t === 0 ? ' ← résultat final' : t === 11 ? ' ← dernier mois op.' : ''}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* 2. L'espace d'états 2D */}
+          <div>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>2. L'espace d'états (V, S) à un instant t — les 180 nœuds</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+              À chaque pas <K>{"t"}</K>, l'algorithme parcourt les <K>{"15 \\times 12 = 180"}</K> combinaisons (volume, prix).
+              Ci-dessous une version simplifiée <K>{"6 \\times 5"}</K> pour la lisibilité.
+              Le nœud <strong style={{ color: ACCENT }}>(i=2, j=2) = (V=40 GWh, S=40 €)</strong> est l'exemple traité ci-dessous.
+            </div>
+            <div style={{ display: 'flex', gap: 0, alignItems: 'flex-start' }}>
+              {/* Y-axis */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', paddingTop: 24 }}>
+                {[100, 80, 60, 40, 20, 0].map(v => (
+                  <div key={v} style={{ height: 34, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', paddingRight: 6, color: v === 40 ? T.a4 : T.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: v === 40 ? 700 : 400, width: 52 }}>
+                    V={v}
+                  </div>
+                ))}
+                <div style={{ color: T.a4, fontSize: 9, fontStyle: 'italic', marginTop: 4, paddingRight: 6 }}>Volume</div>
+              </div>
+              {/* Grid */}
+              <div>
+                <div style={{ display: 'flex', paddingLeft: 2, marginBottom: 4 }}>
+                  {[16, 28, 40, 52, 64].map(s => (
+                    <div key={s} style={{ width: 62, textAlign: 'center', color: s === 40 ? ACCENT : T.muted, fontSize: 9, fontFamily: 'monospace', fontWeight: s === 40 ? 700 : 400 }}>S={s}€</div>
+                  ))}
+                </div>
+                {[100, 80, 60, 40, 20, 0].map((v, ri) => {
+                  const i = [0, 20, 40, 60, 80, 100].indexOf(v)
+                  return (
+                    <div key={v} style={{ display: 'flex', gap: 4, marginBottom: 4 }}>
+                      {[16, 28, 40, 52, 64].map((s, j) => {
+                        const isCurrent = i === 2 && j === 2
+                        const sameV = i === 2
+                        const sameS = j === 2
+                        return (
+                          <div key={s} style={{
+                            width: 58, height: 30, borderRadius: 4,
+                            background: isCurrent ? ACCENT : sameV ? `${ACCENT}28` : sameS ? `${T.a4}22` : `${T.border}55`,
+                            border: `1px solid ${isCurrent ? ACCENT : sameV ? `${ACCENT}55` : T.border}`,
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                          }}>
+                            <span style={{ fontSize: 8, color: isCurrent ? '#000' : T.muted, fontFamily: 'monospace', fontWeight: isCurrent ? 700 : 400 }}>
+                              ({i},{j})
+                            </span>
+                            {isCurrent && <span style={{ fontSize: 7, color: '#000', fontWeight: 700 }}>← nœud</span>}
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )
+                })}
+                <div style={{ textAlign: 'center', color: ACCENT, fontSize: 9, fontStyle: 'italic', marginTop: 4 }}>Prix S →</div>
+              </div>
+            </div>
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+              Ligne surlignée = tous les états avec V=40 GWh (même volume, prix différents).
+              Colonne surlignée = tous les états avec S=40 € (même prix, volumes différents).
+              L'algorithme traite chaque cellule, dans n'importe quel ordre sur (i,j), pour un t donné.
+            </div>
+          </div>
+
+          {/* 3. Matrice Π */}
+          <div>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>3. La matrice de transition Π[j][k] — exemple 5×5 (réelle : 12×12)</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+              <K>{"\\Pi[j][k] = \\mathbb{P}(S_{t+1} = S_k \\mid S_t = S_j)"}</K> — chaque <strong>ligne</strong> est une loi de probabilité (somme = 1).
+              L'intensité de couleur reflète la probabilité : plus c'est rouge, plus c'est probable.
+              Avec κ=1.5 (mean-reversion forte), les probabilités sont concentrées autour de μ=40 €.
+            </div>
+            {(() => {
+              const sLabels = ['16€', '28€', '40€', '52€', '64€']
+              const Pi = [
+                [0.10, 0.30, 0.40, 0.15, 0.05],
+                [0.05, 0.25, 0.45, 0.20, 0.05],
+                [0.03, 0.15, 0.52, 0.25, 0.05],
+                [0.02, 0.10, 0.40, 0.35, 0.13],
+                [0.02, 0.08, 0.30, 0.35, 0.25],
+              ]
+              return (
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ borderCollapse: 'collapse', fontSize: 11, minWidth: 420 }}>
+                    <thead>
+                      <tr>
+                        <th style={{ padding: '6px 10px', color: T.muted, fontWeight: 600, fontSize: 10, textAlign: 'left', borderBottom: `2px solid ${T.border}`, background: T.panel2 }}>
+                          Π[Sⱼ → Sₖ]
+                        </th>
+                        {sLabels.map((s, k) => (
+                          <th key={k} style={{ padding: '6px 14px', color: k === 2 ? ACCENT : T.muted, fontWeight: k === 2 ? 700 : 600, fontSize: 10, borderBottom: `2px solid ${T.border}`, textAlign: 'center', background: k === 2 ? `${ACCENT}12` : T.panel2 }}>
+                            Sₖ={s}
+                          </th>
+                        ))}
+                        <th style={{ padding: '6px 10px', color: T.a4, fontSize: 10, borderBottom: `2px solid ${T.border}`, textAlign: 'center', background: T.panel2 }}>Σ</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Pi.map((row, j) => (
+                        <tr key={j} style={{ background: j === 2 ? `${ACCENT}10` : 'transparent' }}>
+                          <td style={{ padding: '7px 10px', color: j === 2 ? ACCENT : T.muted, fontWeight: j === 2 ? 700 : 400, fontSize: 10, borderRight: `1px solid ${T.border}`, whiteSpace: 'nowrap' }}>
+                            Sⱼ={sLabels[j]}{j === 2 ? ' ←' : ''}
+                          </td>
+                          {row.map((p, k) => (
+                            <td key={k} style={{
+                              padding: '7px 14px', textAlign: 'center', fontSize: 12,
+                              background: `rgba(248,113,113,${(p / 0.52) * 0.55})`,
+                              color: p >= 0.25 ? '#fff' : T.muted,
+                              fontWeight: j === 2 ? 700 : 400,
+                              border: j === 2 && k === 2 ? `2px solid ${ACCENT}` : `1px solid ${T.border}22`,
+                            }}>
+                              {p.toFixed(2)}
+                            </td>
+                          ))}
+                          <td style={{ padding: '7px 10px', color: T.a4, fontSize: 11, textAlign: 'center', fontFamily: 'monospace', fontWeight: 600 }}>
+                            {row.reduce((a, b) => a + b, 0).toFixed(2)}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )
+            })()}
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.6 }}>
+              Lecture de la <strong style={{ color: ACCENT }}>ligne j=2 (S=40€)</strong> : depuis le prix médian, 52% de rester à 40€, 25% de monter à 52€, 15% de descendre à 28€.
+              La mean-reversion (κ=1.5) tire les probabilités vers μ=40€ — les états extrêmes (16€, 64€) ont faible probabilité même depuis eux-mêmes.
+            </div>
+          </div>
+
+          {/* 4. Calcul de l'espérance pas à pas */}
+          <div>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>4. Calcul de l'espérance — le backward en 3 étapes concrètes</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginBottom: 12 }}>
+              On est au nœud <K>{"(t=10,\\; V_i=50\\,\\text{GWh},\\; S_j=40\\,\\text{€})"}</K>.
+              On teste l'action <K>{"u = -10"}</K> GWh/mois <K>{"\\Rightarrow V' = 50 + (-10)\\times 1 = 40"}</K> GWh.
+              Il faut calculer <K>{"\\mathbb{E}[\\mathcal{V}_{11}(V'{=}40,\\,S_{t+1})]"}</K> — la valeur attendue au pas suivant.
+            </div>
+
+            {/* Étape a: vecteur V_{11}[40] */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: T.a4, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>a</span>
+                <span style={{ color: T.text, fontSize: 12, fontWeight: 600 }}>Lire le vecteur <K>{"\\mathcal{V}_{11}[40\\,\\text{GWh}][\\cdot]"}</K> — déjà calculé au pas t=11</span>
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, marginBottom: 8 }}>
+                C'est une ligne du tableau 𝒱₁₁ pour V'=40 GWh : <em>combien vaudra le stockage le mois prochain à 40 GWh, pour chacun des 5 (ici 12 en réalité) prix possibles ?</em>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <td style={{ padding: '5px 10px', color: T.a4, fontWeight: 700, fontSize: 10, borderBottom: `1px solid ${T.border}` }}>V'=40 GWh →</td>
+                      {['S₀=16€', 'S₁=28€', 'S₂=40€', 'S₃=52€', 'S₄=64€'].map((h, k) => (
+                        <th key={k} style={{ padding: '5px 16px', color: ACCENT, fontWeight: 700, fontSize: 10, textAlign: 'center', borderBottom: `1px solid ${T.border}` }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '7px 10px', color: T.muted, fontSize: 10, fontStyle: 'italic', borderRight: `1px solid ${T.border}` }}>𝒱₁₁[40][k] =</td>
+                      {[180, 290, 380, 470, 550].map((v, k) => (
+                        <td key={k} style={{ padding: '7px 16px', textAlign: 'center', background: `rgba(248,113,113,${v / 550 * 0.55})`, color: v >= 380 ? '#fff' : T.text, fontSize: 13, fontWeight: 700, borderRight: `1px solid ${T.border}22` }}>
+                          {v} €
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
+                Interprétation : à prix bas (16€), le gaz en stock vaudra peu (180€) car personne ne soutire à perte.
+                À prix élevé (64€), 40 GWh vaut 550€ — le marché paie bien la livraison.
+              </div>
+            </div>
+
+            {/* Étape b: ligne Π[j=2] */}
+            <div style={{ marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: ACCENT, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>b</span>
+                <span style={{ color: T.text, fontSize: 12, fontWeight: 600 }}>Lire la ligne <K>{"\\Pi[j{=}2][\\cdot]"}</K> — probabilités depuis S=40€</span>
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      <td style={{ padding: '5px 10px', color: ACCENT, fontWeight: 700, fontSize: 10, borderBottom: `1px solid ${T.border}` }}>S_j=40€ →</td>
+                      {['S₀=16€', 'S₁=28€', 'S₂=40€', 'S₃=52€', 'S₄=64€'].map((h, k) => (
+                        <th key={k} style={{ padding: '5px 16px', color: ACCENT, fontWeight: 700, fontSize: 10, textAlign: 'center', borderBottom: `1px solid ${T.border}` }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ padding: '7px 10px', color: T.muted, fontSize: 10, fontStyle: 'italic', borderRight: `1px solid ${T.border}` }}>Π[2][k] =</td>
+                      {[0.03, 0.15, 0.52, 0.25, 0.05].map((p, k) => (
+                        <td key={k} style={{ padding: '7px 16px', textAlign: 'center', background: `rgba(248,113,113,${p / 0.52 * 0.55})`, color: p >= 0.3 ? '#fff' : T.muted, fontSize: 13, fontWeight: 700, borderRight: `1px solid ${T.border}22` }}>
+                          {p.toFixed(2)}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Étape c: produit scalaire */}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+                <span style={{ background: T.a5, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>c</span>
+                <span style={{ color: T.text, fontSize: 12, fontWeight: 600 }}>Produit scalaire : <K>{"\\mathbb{E}[\\mathcal{V}_{11}] = \\sum_k \\Pi[2][k] \\cdot \\mathcal{V}_{11}[40][k]"}</K></span>
+              </div>
+              {/* Tableau de multiplication term à term */}
+              <div style={{ overflowX: 'auto', marginBottom: 10 }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 11 }}>
+                  <thead>
+                    <tr>
+                      {['k', 'Sₖ', 'Π[2][k]', '×', '𝒱₁₁[40][k]', '=', 'terme'].map((h, i) => (
+                        <th key={i} style={{ padding: '5px 12px', color: T.muted, fontSize: 10, fontWeight: 600, borderBottom: `1px solid ${T.border}`, textAlign: 'center' }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {[
+                      { k: 0, s: '16€', pi: 0.03, v: 180, prod: 5.4 },
+                      { k: 1, s: '28€', pi: 0.15, v: 290, prod: 43.5 },
+                      { k: 2, s: '40€', pi: 0.52, v: 380, prod: 197.6 },
+                      { k: 3, s: '52€', pi: 0.25, v: 470, prod: 117.5 },
+                      { k: 4, s: '64€', pi: 0.05, v: 550, prod: 27.5 },
+                    ].map(({ k, s, pi, v, prod }) => (
+                      <tr key={k} style={{ background: k % 2 === 0 ? `${T.border}22` : 'transparent' }}>
+                        <td style={{ padding: '6px 12px', color: T.muted, fontSize: 10, textAlign: 'center', fontFamily: 'monospace' }}>{k}</td>
+                        <td style={{ padding: '6px 12px', color: T.muted, fontSize: 11, textAlign: 'center' }}>{s}</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'center', background: `rgba(248,113,113,${pi / 0.52 * 0.4})`, color: pi >= 0.3 ? '#fff' : T.text, fontWeight: 700, fontSize: 11 }}>{pi.toFixed(2)}</td>
+                        <td style={{ padding: '6px 8px', color: T.muted, textAlign: 'center', fontSize: 14 }}>×</td>
+                        <td style={{ padding: '6px 12px', textAlign: 'center', background: `rgba(248,113,113,${v / 550 * 0.4})`, color: v >= 380 ? '#fff' : T.text, fontWeight: 700, fontSize: 11 }}>{v} €</td>
+                        <td style={{ padding: '6px 8px', color: T.muted, textAlign: 'center', fontSize: 14 }}>=</td>
+                        <td style={{ padding: '6px 12px', color: ACCENT, fontWeight: 700, fontSize: 12, textAlign: 'center', fontFamily: 'monospace' }}>{prod.toFixed(1)} €</td>
+                      </tr>
+                    ))}
+                    <tr style={{ borderTop: `2px solid ${ACCENT}` }}>
+                      <td colSpan={6} style={{ padding: '7px 12px', color: ACCENT, fontWeight: 700, fontSize: 12, textAlign: 'right' }}>Total 𝔼[𝒱₁₁] =</td>
+                      <td style={{ padding: '7px 12px', color: ACCENT, fontWeight: 700, fontSize: 14, textAlign: 'center', fontFamily: 'monospace', background: `${ACCENT}18` }}>391.5 €</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`, borderRadius: 6, padding: '10px 14px' }}>
+                <K display>{"\\text{gain}(u{=}{-10}) = \\underbrace{10 \\times (40 - 0.5)}_{\\pi = 395\\,\\text{€}} + \\underbrace{e^{-0.05/12}}_{\\approx 0.9958} \\times \\underbrace{391.5}_{\\mathbb{E}[\\mathcal{V}_{11}]} \\approx 395 + 389.9 = \\mathbf{784.9\\,\\text{€}}"}</K>
+                <div style={{ color: T.muted, fontSize: 11, marginTop: 4, lineHeight: 1.6 }}>
+                  Ce calcul est répété pour les <strong>11 actions</strong> admissibles à ce nœud, puis <K>{"\\arg\\max"}</K> sélectionne
+                  la meilleure. Ensuite on passe au nœud suivant — 180 nœuds par pas, 12 pas = <strong>2 160 nœuds au total</strong>.
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </Accordion>
 
       {/* ── Simulation interactive ──────────────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Explorer l'effet de chaque paramètre</SectionTitle>
@@ -833,38 +1600,71 @@ export function BellmanTab() {
 
       {/* Clés de lecture des graphiques */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '14px 0' }}>
-        {[
-          {
-            title: 'Lire la fonction valeur (gauche)', color: ACCENT,
-            items: [
-              'Croissante : plus de stock = plus de flexibilité future = plus de valeur.',
-              'S\'aplatit à V_max : on ne peut plus injecter, la valeur marginale du GWh supplémentaire → 0.',
-              'S\'aplatit à V_min : plus rien à soutirer → même phénomène à l\'autre extrême.',
-              'Augmenter σ → courbe plus haute : le stockage est convexe, il profite de la volatilité (valeur d\'option).',
-              'Augmenter r → courbe plus basse : les gains futurs sont davantage dépréciés.',
-            ],
-          },
-          {
-            title: 'Lire la politique optimale (droite)', color: T.a4,
-            items: [
-              'u > 0 (zone haute) : stock bas → on injecte pour se reconstituer avant un pic de prix futur.',
-              'u < 0 (zone basse) : stock élevé → on soutire pour encaisser au prix actuel.',
-              'u ≈ 0 (zone médiane) : stock intermédiaire + prix médian → on attend un signal plus fort.',
-              'Augmenter q_wit ou q_inj → seuils élargis, politique plus agressive.',
-              'Augmenter σ → la zone d\'attente se rétrécit : agir tôt est plus rentable avec plus de volatilité.',
-            ],
-          },
-        ].map(({ title, color, items }) => (
-          <div key={title} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: '12px 16px' }}>
-            <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>{title}</div>
-            {items.map((p, i) => (
-              <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 5, alignItems: 'flex-start' }}>
-                <span style={{ color, flexShrink: 0, fontSize: 11, fontWeight: 700 }}>→</span>
-                <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>{p}</span>
-              </div>
-            ))}
-          </div>
-        ))}
+
+        {/* ── Fonction valeur ── */}
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: '12px 16px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la fonction valeur (gauche)</div>
+          {[
+            {
+              icon: '📈',
+              text: <><strong style={{ color: T.text }}>Croissante</strong> — plus de stock = plus de gaz à vendre quand les prix montent. Ex : à V = 100 GWh la valeur est environ 2× celle à V = 50 GWh.</>,
+            },
+            {
+              icon: '🔝',
+              text: <><strong style={{ color: T.text }}>S'aplatit à V<sub>max</sub></strong> — stock plein, impossible d'injecter davantage. Le GWh supplémentaire n'a nulle part où aller → valeur marginale nulle, la pente s'efface.</>,
+            },
+            {
+              icon: '🔻',
+              text: <><strong style={{ color: T.text }}>S'aplatit à V<sub>min</sub></strong> — stock vide, rien à soutirer. La flexibilité disparaît dans les deux sens.</>,
+            },
+            {
+              icon: '📊',
+              text: <><strong style={{ color: T.text }}>↑ σ → courbe plus haute</strong> — le stockage est une option réelle : on vend aux pics, on n'est pas obligé d'agir aux creux. Plus les prix bougent, plus ces occasions sont fréquentes. <K>{"\\mathcal{V}"}</K> est convexe en <K>{"\\sigma"}</K>.</>,
+            },
+            {
+              icon: '⏳',
+              text: <><strong style={{ color: T.text }}>↑ r → courbe plus basse</strong> — un gain de 100 € dans 6 mois ne vaut que <K>{"e^{-r \\cdot 0.5} \\times 100\\,\\text{€}"}</K> aujourd'hui. Plus r est élevé, plus les cashflows futurs se déprécient.</>,
+            },
+          ].map(({ icon, text }, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
+              <span style={{ flexShrink: 0, fontSize: 14 }}>{icon}</span>
+              <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.65 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+
+        {/* ── Politique optimale ── */}
+        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 8, padding: '12px 16px' }}>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la politique optimale (droite)</div>
+          {[
+            {
+              icon: '⬆️',
+              text: <><strong style={{ color: T.text }}>u &gt; 0 — stock bas → injecter</strong> : acheter maintenant pour avoir du gaz à vendre lors d'un futur pic. Comme remplir son garde-manger avant l'hiver.</>,
+            },
+            {
+              icon: '⬇️',
+              text: <><strong style={{ color: T.text }}>u &lt; 0 — stock élevé → soutirer</strong> : vendre au prix actuel. À stock plein et prix médian, garder du gaz supplémentaire ne rapporte rien de plus.</>,
+            },
+            {
+              icon: '⏸️',
+              text: <><strong style={{ color: T.text }}>u ≈ 0 — stock intermédiaire → attendre</strong> : ni injecter ni soutirer ne se justifie encore. L'algorithme préfère conserver la flexibilité. Une hausse de <K>{"S"}</K> déclenchera le soutirage, une baisse l'injection.</>,
+            },
+            {
+              icon: '🎛️',
+              text: <><strong style={{ color: T.text }}>↑ q<sub>wit</sub> ou q<sub>inj</sub> → politique plus agressive</strong> : les plafonds d'action s'élargissent, les seuils de déclenchement s'écartent, la courbe devient plus pentue.</>,
+            },
+            {
+              icon: '⚡',
+              text: <><strong style={{ color: T.text }}>↑ σ → zone d'attente rétrécie</strong> : avec une forte volatilité, les pics sont intenses mais courts. Agir vite quand l'occasion se présente devient plus rentable → la bande neutre (u ≈ 0) se réduit.</>,
+            },
+          ].map(({ icon, text }, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
+              <span style={{ flexShrink: 0, fontSize: 14 }}>{icon}</span>
+              <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.65 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+
       </div>
 
       {/* ── Exercice guidé ──────────────────────────────────────────────────── */}
@@ -968,17 +1768,21 @@ export function PrixTab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Processus Ornstein-Uhlenbeck (OU)">
-        <K display>{"dS_t = \\kappa(\\mu - S_t)\\,dt + \\sigma\\,dW_t"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          <K>{"\\kappa"}</K> : force de rappel — <K>{"\\mu"}</K> : niveau moyen long terme — <K>{"\\sigma"}</K> : volatilité instantanée
-        </div>
+        <K display>{"dS_t = \\underbrace{\\kappa(\\mu - S_t)}_{\\text{rappel vers }\\mu}\\,dt + \\underbrace{\\sigma\\,dW_t}_{\\text{chocs aléatoires}}"}</K>
       </FormulaBox>
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['S_t', 'Prix spot du gaz à l\'instant t (€/MWh)'],
+        ['κ', 'Vitesse de retour à la moyenne (an⁻¹) — plus κ est grand, plus vite le prix revient vers μ'],
+        ['μ', 'Prix d\'équilibre long terme (€/MWh) — le "coût fondamental" du gaz'],
+        ['σ', 'Volatilité instantanée (€/MWh/√an) — amplitude des chocs quotidiens'],
+        ['dWₜ', 'Incrément brownien — bruit aléatoire normalisé (moyenne 0, variance dt)'],
+      ]} />
 
       <Grid cols={4} gap="12px">
-        <Slider label="Vitesse κ" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="Moyenne μ (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="Volatilité σ" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="Prix initial S₀" value={s0} min={10} max={80} step={1} onChange={setS0} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="μ — prix moyen long terme (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="σ — volatilité instantanée" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="S₀ — prix initial du gaz (€/MWh)" value={s0} min={10} max={80} step={1} onChange={setS0} accent={ACCENT} format={v => `${v}`} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Demi-vie" value={halfLife} unit="jours" accent={ACCENT} />
@@ -1005,6 +1809,18 @@ export function PrixTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '🟢', text: <>La <strong>ligne verte pointillée μ</strong> = prix d'équilibre. Les trajectoires y reviennent toujours — c'est la mean-reversion.</> },
+          { icon: '📏', text: <>Les <strong>pointillés gris ±2σ</strong> = bande à 95%. Le prix oscille principalement dans cet intervalle.</> },
+          { icon: '⚡', text: <>La <strong>demi-vie</strong> (InfoChip) = temps pour que l'écart à μ soit divisé par 2. Plus κ est grand, plus la demi-vie est courte.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       <SectionTitle accent={ACCENT}>Discrétisation en chaîne de Markov</SectionTitle>
       <FormulaBox accent={ACCENT} label="Solution discrète du processus OU">
@@ -1012,7 +1828,8 @@ export function PrixTab() {
         <K display>{"\\sigma_{\\Delta t} = \\sigma\\sqrt{\\frac{1 - e^{-2\\kappa\\Delta t}}{2\\kappa}}"}</K>
       </FormulaBox>
       <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8, margin: '10px 0' }}>
-        Pour le backward DP, on discrétise les états de prix en une grille <K>{"\\{s_1, \\ldots, s_M\\}"}</K> et on calcule la matrice de transition :
+        Pour le backward DP (<em>Dynamic Programming</em> — programmation dynamique, résolution par récurrence arrière),
+        on discrétise les états de prix en une grille <K>{"\\{s_1, \\ldots, s_M\\}"}</K> et on calcule la matrice de transition :
       </div>
       <FormulaBox accent={ACCENT} label="Matrice de transition">
         <K display>{"\\Pi_{jk} = \\mathbb{P}(S_{t+1} = s_k \\mid S_t = s_j) \\propto \\exp\\!\\left(-\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}\\right)"}</K>
@@ -1026,7 +1843,7 @@ export function PrixTab() {
         <table style={{ ...tableStyle, tableLayout: 'fixed' }}>
           <thead>
             <tr>
-              <Th>S_t \ S_{t+1}</Th>
+              <Th>{"S_t \\ S_{t+1}"}</Th>
               {sGridD.map((s, k) => <Th key={k}>{s.toFixed(0)} €</Th>)}
             </tr>
           </thead>
@@ -1046,8 +1863,9 @@ export function PrixTab() {
 
       <Accordion title="Exercice — Calibrer κ par la méthode des moments" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.muted, fontSize: 13 }}>
-          On observe 24 prix mensuels du gaz TTF. La corrélation entre S_t et S_{'{'}t+1{'}'} vaut 0.72.
-          Estimer κ et la demi-vie du processus.
+          On observe 24 prix mensuels du gaz TTF (<em>Title Transfer Facility</em>, hub de référence européen).
+          La corrélation entre <K>{"S_t"}</K> et <K>{"S_{t+1}"}</K> vaut 0.72.
+          Estimer <K>{"\\kappa"}</K> et la demi-vie du processus.
         </p>
         <Demonstration accent={ACCENT}>
           <DemoStep num={1} rule="Corrélation OU" ruleDetail="corr = e^{-κΔt}" accent={ACCENT}>
@@ -1142,7 +1960,7 @@ export function ValeurTab() {
         </div>
       </FormulaBox>
 
-      <Slider label="Spread été/hiver (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v} €`} />
+      <Slider label="Spread été/hiver — écart saisonnier de prix (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v} €`} />
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Valeur Intrinsèque VI" value={viVal.toFixed(2)} unit="€" accent={ACCENT} />
         <InfoChip label="Spread été/hiver" value={`${spread} €/MWh`} accent={T.a5} />
@@ -1187,8 +2005,8 @@ export function ValeurTab() {
       </IntuitionBlock>
 
       <Grid cols={3} gap="12px">
-        <Slider label="Volatilité σ (€/MWh)" value={sigma} min={1} max={22} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="Vitesse retour κ" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="σ — volatilité du spot (€/MWh)" value={sigma} min={1} max={22} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.3} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="Valeur totale V₀" value={vstochVal.toFixed(2)} unit="€" accent={T.a4} />
@@ -1208,6 +2026,17 @@ export function ValeurTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '📈', text: <>La courbe est <strong>croissante et convexe</strong> : doubler σ fait plus que doubler la VE — le stockage bénéficie des mouvements de prix dans les deux sens.</> },
+          { icon: '📍', text: <>Si <K>{"\\sigma = 0"}</K>, la VE est nulle — sans incertitude, la valeur se réduit à la VI déterministe. L'optionalité ne vaut rien quand l'avenir est certain.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 220 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Rolling Intrinsic */}
       <SectionTitle accent={ACCENT}>Stratégie Rolling Intrinsic — La pratique industrielle</SectionTitle>
@@ -1215,6 +2044,9 @@ export function ValeurTab() {
         La stratégie <strong>Rolling Intrinsic</strong> est la référence industrielle.
         Elle sépare proprement la valeur certaine (VI, couverte dès le départ) de la valeur optionnelle (VE, capturée progressivement).
         C'est le standard des trading desks gaz en Europe.
+        <br /><br />
+        <em>Delta-neutre</em> = position dont la valeur ne change pas quand le prix spot bouge de 1€ (on l'obtient en vendant des forwards en quantité = Δ).
+        <br /><em>P&L</em> = Profit & Loss (gains et pertes réalisés).
       </IntuitionBlock>
 
       <div style={panelStyle}>
@@ -1223,7 +2055,7 @@ export function ValeurTab() {
           { jour: 'J = 0 (début campagne)', action: 'Calculer la VI sur la courbe forward du jour', resultat: 'Vendre en forward pour "locker" VI = 2 M€. Position : delta-neutre sur VI.' },
           { jour: 'J = 15', action: 'La courbe forward se tend (hiver anticipé plus froid)', resultat: 'Reoptimiser → nouvelle VI = 2.4 M€. Ajuster la position forward. VE capturée = +0.4 M€.' },
           { jour: 'J = 45', action: 'Baisse de température → prix hivernal encore plus haut', resultat: 'Reoptimiser → VI = 2.7 M€. Ajuster. VE totale capturée jusqu\'ici = 0.7 M€.' },
-          { jour: 'Échéance', action: 'Exécution physique des injections/soutiages selon le plan final', resultat: 'P&L total = VI initiale + VE capturée - coûts opérationnels.' },
+          { jour: 'Échéance', action: 'Exécution physique des injections/soutiages selon le plan final', resultat: 'P&L (Profit & Loss) total = VI initiale + VE capturée - coûts opérationnels.' },
         ].map(({ jour, action, resultat }) => (
           <div key={jour} style={{ borderLeft: `3px solid ${ACCENT}44`, paddingLeft: 12, marginBottom: 12 }}>
             <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12 }}>{jour}</div>
@@ -1272,7 +2104,7 @@ export function ValeurTab() {
           {[
             ['Résidentiel/collectivités', 'Prévisible, très saisonnière', 'VI dominante (plan fixe)', 'Couvrir le pic hivernal, peu de reoptimisation'],
             ['Industriels', 'Variable, sensible à la production', 'VI + VE équilibrées', 'Rolling intrinsic actif, ajustements fréquents'],
-            ['Trader pur', 'Aucune (position nette)', 'VE maximale', 'Maximiser la vol capturée, gamma long'],
+            ['Trader pur', 'Aucune (position nette)', 'VE maximale', 'Maximiser la vol capturée, position gamma long (c.-à-d. la convexité de la valeur bénéficie de tout mouvement de prix)'],
           ].map(([profil, demande, priorite, strategie]) => (
             <tr key={profil}>
               <Td accent={ACCENT}>{profil}</Td>
@@ -1369,9 +2201,10 @@ export function DeltaTab() {
       </IntuitionBlock>
 
       <FormulaBox accent={ACCENT} label="Delta par différences finies">
-        <K display>{"\\Delta_t(V, S) \\approx \\frac{\\mathcal{V}_t(V,\\ S+\\varepsilon) - \\mathcal{V}_t(V,\\ S-\\varepsilon)}{2\\varepsilon}"}</K>
+        <K display>{"\\Delta_t(V, S) \\approx \\frac{\\overbrace{\\mathcal{V}_t(V,\\, S+\\varepsilon)}^{\\text{valeur si prix monte}} - \\overbrace{\\mathcal{V}_t(V,\\, S-\\varepsilon)}^{\\text{valeur si prix baisse}}}{\\underbrace{2\\varepsilon}_{\\text{écart de prix testé}}}"}</K>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Directement calculable depuis la grille Bellman déjà connue — pas de calcul supplémentaire.
+          Directement calculable depuis la grille Bellman déjà connue — on lit deux valeurs voisines dans la grille et on divise par l'écart.
+          <br />Ex : <K>{"\\mathcal{V}(50,\\,42) = 380"}</K>, <K>{"\\mathcal{V}(50,\\,38) = 355"}</K>, <K>{"\\varepsilon = 2"}</K> → <K>{"\\Delta \\approx \\frac{380-355}{4} = 6.25"}</K> € par €/MWh.
         </div>
       </FormulaBox>
 
@@ -1383,11 +2216,11 @@ export function DeltaTab() {
       </FormulaBox>
 
       <Grid cols={3} gap="12px">
-        <Slider label="κ" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="μ (€/MWh)" value={mu} min={20} max={70} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="σ (€/MWh)" value={sigma} min={1} max={20} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="Volume actuel V (GWh)" value={v0} min={0} max={100} step={5} onChange={setV0} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="Prix actuel S (€/MWh)" value={s0} min={15} max={65} step={1} onChange={setS0} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="κ — vitesse de retour à la moyenne" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="μ — prix moyen long terme (€/MWh)" value={mu} min={20} max={70} step={1} onChange={setMu} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="σ — volatilité du spot (€/MWh)" value={sigma} min={1} max={20} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="V — volume actuel dans le tank (GWh)" value={v0} min={0} max={100} step={5} onChange={setV0} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="S — prix spot actuel (€/MWh)" value={s0} min={15} max={65} step={1} onChange={setS0} accent={ACCENT} format={v => `${v}`} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '12px 0' }}>
         <InfoChip label="Δ(V, S) courant" value={currentDelta.toFixed(3)} accent={ACCENT} />
@@ -1421,6 +2254,18 @@ export function DeltaTab() {
           </ResponsiveContainer>
         </ChartWrapper>
       </Grid>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '🟥', text: <><strong>Graphe gauche Δ(V)</strong> : le delta décroît quand le tank se remplit — un stock plein est moins sensible au prix (il va soutirer quoi qu'il arrive).</> },
+          { icon: '🟨', text: <><strong>Graphe droite Δ(S)</strong> : le delta augmente avec le prix — plus le prix est élevé, plus le stockage "veut" soutirer, donc plus il est exposé au marché.</> },
+          { icon: '📊', text: <><strong>Forwards à vendre</strong> (InfoChip vert) = <K>{"\\Delta \\times 100"}</K> GWh — c'est la couverture instantanée pour neutraliser le risque prix.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       <SectionTitle accent={ACCENT}>Cas particuliers du delta</SectionTitle>
       <table style={tableStyle}>
@@ -1534,9 +2379,9 @@ export function ForwardRiskTab() {
       </IntuitionBlock>
 
       <Grid cols={3} gap="12px">
-        <Slider label="Niveau moyen μ (€/MWh)" value={level} min={20} max={70} step={1} onChange={setLevel} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="Spread été/hiver (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="Tilt long terme (€/MWh)" value={tilt} min={-10} max={10} step={0.5} onChange={setTilt} accent={ACCENT} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
+        <Slider label="μ — niveau moyen de la courbe (€/MWh)" value={level} min={20} max={70} step={1} onChange={setLevel} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="Spread — écart été/hiver (€/MWh)" value={spread} min={0} max={40} step={1} onChange={setSpread} accent={ACCENT} format={v => `${v}`} />
+        <Slider label="Tilt — pente additionnelle (contango/backwardation)" value={tilt} min={-10} max={10} step={0.5} onChange={setTilt} accent={ACCENT} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
       </Grid>
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
         <InfoChip label="VI calculée (V=50 GWh)" value={`${intrinsicFromSpread} €`} accent={ACCENT} />
@@ -1557,6 +2402,18 @@ export function ForwardRiskTab() {
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+        {[
+          { icon: '❄️', text: <><strong>Creux = été</strong> (injection) : le gaz coûte moins cher, on remplit le tank. <strong>Pic = hiver</strong> (soutirage) : forte demande de chauffage, prix élevés.</> },
+          { icon: '💰', text: <>La <strong>VI du stockage</strong> (InfoChip rouge) augmente avec le spread : c'est la différence de prix entre l'achat estival et la vente hivernale, diminuée des coûts opérationnels.</> },
+          { icon: '📀', text: <>Le <strong>Tilt</strong> incline toute la courbe : tilt positif = contango (prix futurs &gt; prix proches), tilt négatif = backwardation (prix proches &gt; prix futurs).</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       <SectionTitle accent={ACCENT}>Vecteur de deltas par maturité</SectionTitle>
       <IntuitionBlock emoji="🎯" title="Un delta par point de la courbe, pas un seul delta global" accent={ACCENT}>
@@ -1573,7 +2430,7 @@ export function ForwardRiskTab() {
         </div>
       </FormulaBox>
 
-      <SectionTitle accent={ACCENT}>Les 3 facteurs PCA de la courbe forward</SectionTitle>
+      <SectionTitle accent={ACCENT}>Les 3 facteurs PCA (<em>Principal Component Analysis</em>) de la courbe forward</SectionTitle>
       <div style={{ ...panelStyle }}>
         <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
           Décomposition en Composantes Principales — Pourquoi on réduit la dimension
@@ -1599,7 +2456,7 @@ export function ForwardRiskTab() {
         Si on modélise 12 maturités forward comme 12 variables d'état de Bellman,
         la grille aurait <K>{"N_V \\times N_{S_1} \\times \\cdots \\times N_{S_{12}}"}</K> nœuds.
         Avec 10 points par dimension : <K>{"10^{13}"}</K> nœuds — impossible à calculer.
-        La PCA réduit à 2-3 facteurs → <K>{"10^3"}</K> à <K>{"10^4"}</K> nœuds → tractable.
+        La PCA (<em>Principal Component Analysis</em> — Analyse en Composantes Principales) réduit à 2-3 facteurs → <K>{"10^3"}</K> à <K>{"10^4"}</K> nœuds → tractable.
         On perd un peu de précision sur les termes résiduels, mais on capture l'essentiel.
       </IntuitionBlock>
 
@@ -1611,9 +2468,9 @@ export function ForwardRiskTab() {
         <tbody>
           {[
             ['Bellman (DP)', 'Optimal global + politique + delta', 'Malédiction de la dimension (≤3 facteurs)', 'Standard industrie (stockage simple)'],
-            ['Least-Squares MC (LSMC)', 'Gère haute dimension, Monte Carlo', 'Approximation, bruit, pas de politique exacte', 'Actifs multi-sous-jacents, options complexes'],
-            ['PDE (Hamilton-Jacobi-Bellman)', 'Continu, élégant, grande précision', 'Complexe à implémenter, 2D max', 'Recherche académique'],
-            ['Optimisation LP (déterministe)', 'Très rapide si prix connus', 'Ignore la stochasticité → sous-optimal', 'Valeur intrinsèque uniquement'],
+            ['LSMC (Least-Squares Monte Carlo)', 'Gère haute dimension, Monte Carlo', 'Approximation, bruit, pas de politique exacte', 'Actifs multi-sous-jacents, options complexes'],
+            ['PDE (Partial Diff. Equation — Hamilton-Jacobi-Bellman)', 'Continu, élégant, grande précision', 'Complexe à implémenter, 2D max', 'Recherche académique'],
+            ['LP (Linear Programming — programmation linéaire)', 'Très rapide si prix connus', 'Ignore la stochasticité → sous-optimal', 'Valeur intrinsèque uniquement'],
           ].map(([methode, avantage, limite, usage]) => (
             <tr key={methode}>
               <Td accent={ACCENT}>{methode}</Td>
@@ -1639,9 +2496,9 @@ export function ForwardRiskTab() {
         </thead>
         <tbody>
           {[
-            ['Stockage souterrain', 'Très haute (inject/soutire librement)', 'Élevé (enchères)', 'Faible (OTC)', 'Tampon saisonnier + trading spread'],
+            ['Stockage souterrain', 'Très haute (inject/soutire librement)', 'Élevé (enchères)', 'Faible (OTC — gré à gré)', 'Tampon saisonnier + trading spread'],
             ['Contrat Swing', 'Modérée (volume min/max quotidien)', 'Moyen (prime swing)', 'Moyenne', 'Flexibilité court-terme, complément stockage'],
-            ['Capacité LNG', 'Bonne (livraisons par cargaisons)', 'Variable (spot ou term)', 'Bonne (marché global)', 'Approvisionnement alternatif en pointe'],
+            ['Capacité LNG (Gaz Naturel Liquéfié)', 'Bonne (livraisons par cargaisons)', 'Variable (spot ou term)', 'Bonne (marché global)', 'Approvisionnement alternatif en pointe'],
             ['Interruptibilité clients industriels', 'Haute (réduire livraison clients)', 'Bas (tarif préférentiel client)', 'Nulle (bilatéral)', 'Dernier recours, éviter pénalités déséquilibre'],
           ].map(([actif, flex, cout, liq, role]) => (
             <tr key={actif}>
@@ -1663,9 +2520,32 @@ export function ForwardRiskTab() {
           L'état devient <K>{"(V_{\\text{stock}},\\ V_{\\text{LNG}},\\ Q_{\\text{swing}},\\ S)"}</K> et le contrôle devient vectoriel :
           <K display>{"\\mathbf{u}_t = (u_{\\text{stock}},\\ u_{\\text{LNG}},\\ u_{\\text{swing}},\\ u_{\\text{interr}})"}</K>
           La même équation de Bellman s'applique — le max est pris sur tous les contrôles simultanément.
-          La malédiction de la dimension impose ici d'utiliser LSMC ou une approximation par fonctions de base.
+          La malédiction de la dimension impose ici d'utiliser LSMC (<em>Least-Squares Monte Carlo</em>) ou une approximation par fonctions de base.
         </div>
       </div>
+
+      <Accordion title="Exercice — Impact d'un élargissement du spread sur la VI" accent={ACCENT} badge="Moyen">
+        <p style={{ color: T.muted, fontSize: 13 }}>
+          Un fournisseur possède un stockage de 100 GWh (50 GWh déjà injectés).
+          La courbe forward actuelle a un spread été/hiver de 12 €/MWh avec <K>{"\\mu = 40"}</K> €.
+          Suite à des prévisions météo froides, le spread élargit à 20 €/MWh. Estimer l'impact sur la VI.
+        </p>
+        <Demonstration accent={ACCENT}>
+          <DemoStep num={1} rule="Courbe forward initiale" ruleDetail="spread = 12 €" accent={ACCENT}>
+            Prix été = <K>{"40 - 6 = 34"}</K> €/MWh, prix hiver = <K>{"40 + 6 = 46"}</K> €/MWh.
+            En injectant l'été et soutirant l'hiver : recette brute <K>{"\\approx 50 \\times (46 - 34) = 600"}</K> € (hors coûts op.).
+          </DemoStep>
+          <DemoStep num={2} rule="Courbe forward après choc" ruleDetail="spread = 20 €" accent={ACCENT}>
+            Prix été = <K>{"40 - 10 = 30"}</K> €/MWh, prix hiver = <K>{"40 + 10 = 50"}</K> €/MWh.
+            Recette brute <K>{"\\approx 50 \\times (50 - 30) = 1\\,000"}</K> €.
+          </DemoStep>
+          <DemoStep num={3} rule="Variation de VI" ruleDetail="ΔVI = VI_new - VI_old" accent={ACCENT}>
+            <K>{"\\Delta VI \\approx 1\\,000 - 600 = +400"}</K> €. Le fournisseur a gagné 400€ de valeur sans rien faire —
+            c'est la revalorisation de son stockage. En rolling intrinsic, il ajusterait sa position forward pour
+            "locker" ce gain supplémentaire.
+          </DemoStep>
+        </Demonstration>
+      </Accordion>
 
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 16 }}>
         {[
