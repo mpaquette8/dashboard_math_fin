@@ -613,16 +613,23 @@ export function BellmanTab() {
       {/* ── Exemple chiffré minimal ─────────────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Un calcul à la main pour ancrer l'intuition</SectionTitle>
 
+      {/* Convention / contexte */}
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px', padding: '8px 12px', background: `${T.a5}10`, border: `1px solid ${T.a5}30`, borderRadius: 6 }}>
+        <strong style={{ color: T.a5 }}>Convention de cet exemple :</strong> u est exprimé en <strong>GWh/mois</strong>, Δt = 1 mois (une période).
+        La dynamique d'état est donc simplement <K>{"V' = V + u \\cdot 1 = V + u"}</K>.
+        On choisit V₀ = q_wit = 10 GWh pour que l'action "soutirer au maximum" vide exactement le stock en un seul mois.
+      </div>
+
       {/* Bandeau paramètres */}
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '12px 0 10px', alignItems: 'center' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '0 0 10px', alignItems: 'center' }}>
         <span style={{ color: T.muted, fontSize: 12, marginRight: 4 }}>Données :</span>
         {[
-          ['V', '50 GWh', ACCENT],
-          ['S₀', '45 €/MWh', T.a5],
+          ['V₀', '10 GWh', ACCENT],
+          ['S', '45 €/GWh', T.a5],
           ['q_wit', '10 GWh/mois', T.a4],
           ['c_op', '0.5 €/GWh', T.a4],
           ['r', '0', T.muted],
-          ['Δt', '1/12 an', T.muted],
+          ['Δt', '1 mois', T.muted],
           ['𝒱₁', '0 (fin de contrat)', T.a2],
         ].map(([k, v, c]) => (
           <span key={k} style={{ background: `${c}18`, border: `1px solid ${c}44`, borderRadius: 5, padding: '3px 10px', fontSize: 12 }}>
@@ -638,16 +645,22 @@ export function BellmanTab() {
         {/* Carte u = 0 */}
         <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ background: `${T.muted}18`, padding: '10px 16px', borderBottom: `1px solid ${T.border}` }}>
-            <span style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>⏸ u = 0 — Attendre</span>
+            <span style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>⏸ u = 0 GWh/mois — Attendre</span>
           </div>
           <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Cashflow π</div>
-              <div style={{ color: T.text, fontSize: 13 }}>Aucun mouvement de gaz → π = 0 €</div>
+              <div style={{ color: T.text, fontSize: 13 }}>Aucun mouvement de gaz → <strong>π = 0 €</strong></div>
+            </div>
+            <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Nouveau stock V'</div>
+              <div style={{ color: T.text, fontSize: 13 }}><K>{"V' = 10 + 0 \\times 1 ="}</K> <strong>10 GWh</strong> (inchangé)</div>
             </div>
             <div>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Valeur future 𝔼[𝒱₁]</div>
-              <div style={{ color: T.text, fontSize: 13 }}>𝒱₁ = 0 partout → 𝔼[𝒱₁] = 0 €</div>
+              <div style={{ color: T.text, fontSize: 13 }}>Contrat terminé à t=1 → 𝒱₁ = 0 pour tous les états.</div>
+              <div style={{ color: T.text, fontSize: 13, marginTop: 3 }}><K>{"\\mathbb{E}[\\mathcal{V}_1] = \\textstyle\\sum_k \\Pi[j][k] \\cdot 0 = \\mathbf{0}\\text{ €}"}</K></div>
+              <div style={{ color: T.muted, fontSize: 12, fontStyle: 'italic', marginTop: 4 }}>Les 10 GWh restent en stock mais ne valent rien : le contrat se termine.</div>
             </div>
             <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Gain total = π + e⁻ʳᐩᵗ · 𝔼[𝒱₁]</div>
@@ -659,24 +672,35 @@ export function BellmanTab() {
         {/* Carte u = −10 */}
         <div style={{ border: `2px solid ${ACCENT}55`, borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ background: `${ACCENT}22`, padding: '10px 16px', borderBottom: `1px solid ${ACCENT}44`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ color: ACCENT, fontWeight: 700, fontSize: 13 }}>📤 u = −10 — Soutirer 10 GWh</span>
+            <span style={{ color: ACCENT, fontWeight: 700, fontSize: 13 }}>📤 u = −10 GWh/mois — Soutirer tout le stock</span>
             <span style={{ background: ACCENT, color: '#000', fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '2px 7px' }}>✓ OPTIMAL</span>
           </div>
           <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
             <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Nouveau stock V'</div>
+              <div style={{ color: T.text, fontSize: 13 }}>
+                <K>{"V' = V_0 + u \\cdot \\Delta t = 10 + (-10) \\times 1 ="}</K>{' '}
+                <strong style={{ color: ACCENT }}>0 GWh</strong> — stock vide ✓
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, marginTop: 3 }}>
+                u = −q_wit = −10 GWh/mois : on soutire au rythme maximal pendant 1 mois entier → stock épuisé exactement.
+              </div>
+            </div>
+            <div>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Cashflow π</div>
               <div style={{ fontSize: 13 }}>
-                <K>{"\\pi = \\underbrace{10 \\times 45 \\times \\tfrac{1}{12}}_{\\text{vente}} \\;-\\; \\underbrace{0.5 \\times 10 \\times \\tfrac{1}{12}}_{\\text{coût op.}} = 37.50 - 0.42"}</K>
-                <div style={{ color: T.a4, fontWeight: 700, fontSize: 14, marginTop: 4 }}>= +37.1 €</div>
+                <K>{"\\pi = \\underbrace{|u| \\times S}_{\\text{vente}} \\;-\\; \\underbrace{c_{\\text{op}} \\times |u|}_{\\text{coût op.}} = \\underbrace{10 \\times 45}_{450} - \\underbrace{0.5 \\times 10}_{5}"}</K>
+                <div style={{ color: T.a4, fontWeight: 700, fontSize: 15, marginTop: 6 }}>= <strong>+445 €</strong></div>
               </div>
             </div>
             <div>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Valeur future 𝔼[𝒱₁]</div>
-              <div style={{ color: T.text, fontSize: 13 }}>𝒱₁ = 0 partout → 𝔼[𝒱₁] = 0 €</div>
+              <div style={{ color: T.text, fontSize: 13 }}>V' = 0, et contrat terminé à t=1 → 𝒱₁(0, S) = 0.</div>
+              <div style={{ color: T.text, fontSize: 13, marginTop: 3 }}><K>{"\\mathbb{E}[\\mathcal{V}_1] = \\textstyle\\sum_k \\Pi[j][k] \\cdot 0 = \\mathbf{0}\\text{ €}"}</K></div>
             </div>
             <div style={{ borderTop: `1px solid ${ACCENT}33`, paddingTop: 10 }}>
               <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Gain total = π + e⁻ʳᐩᵗ · 𝔼[𝒱₁]</div>
-              <div style={{ color: ACCENT, fontSize: 22, fontWeight: 700 }}>+37.1 €</div>
+              <div style={{ color: ACCENT, fontSize: 22, fontWeight: 700 }}>+445 €</div>
             </div>
           </div>
         </div>
@@ -688,21 +712,27 @@ export function BellmanTab() {
         <div>
           <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Décision optimale</div>
           <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>
-            𝒱₀(50, 45) = max(0, 37.1) = <strong>37.1 €</strong>
+            𝒱₀(10, 45) = max(0, 445) = <strong>445 €</strong>
           </div>
         </div>
         <div style={{ width: 1, background: `${ACCENT}44`, alignSelf: 'stretch' }} />
         <div>
           <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Action u*</div>
-          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>Soutirer immédiatement (u = −10)</div>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>Soutirer tout le stock ce mois (u = −q_wit)</div>
+        </div>
+        <div style={{ width: 1, background: `${ACCENT}44`, alignSelf: 'stretch' }} />
+        <div>
+          <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>stock final</div>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>V₁ = 0 GWh</div>
         </div>
       </div>
 
       {/* Note sur 12 mois réels */}
       <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '6px 0 12px', padding: '0 4px' }}>
-        Sur 12 mois réels, 𝒱₁ ≠ 0 — garder du gaz en stock vaut quelque chose (espoir de le vendre plus cher
-        le mois suivant). L'arbitrage "encaisser maintenant vs attendre un pic" devient non-trivial, et c'est
-        précisément ce que Bellman résout.
+        Ici la réponse est triviale : vendre maintenant est toujours optimal quand 𝒱₁ = 0 et S &gt; c_op.
+        Sur 12 mois réels, 𝒱₁ ≠ 0 — le gaz restant garde une valeur d'option (le vendre plus cher le mois
+        suivant si les prix montent). L'algorithme compare alors "encaisser 445 € maintenant" contre "garder
+        du gaz et espérer S plus élevé". C'est là que Bellman devient non-trivial.
       </div>
 
       {/* ── Algorithme DP ───────────────────────────────────────────────────── */}
