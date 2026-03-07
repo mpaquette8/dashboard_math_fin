@@ -459,21 +459,32 @@ export function BellmanTab() {
 
       {/* ── Intuition ────────────────────────────────────────────────────────── */}
       <IntuitionBlock emoji="♟️" title="L'idée de Bellman — raisonner à rebours" accent={ACCENT}>
-        Un gestionnaire d'entrepôt de gaz doit décider chaque mois : injecter, soutirer, ou attendre.
-        Le problème est que la bonne décision en janvier dépend de ce qui se passera en février,
-        mars… jusqu'en décembre. Pour décider aujourd'hui, il faut connaître la valeur de demain —
-        mais pour connaître demain, il faut connaître après-demain. <em>On tourne en rond.</em>
+        Tu gères un stockage souterrain de gaz naturel. Chaque mois, tu dois décider :{' '}
+        <strong>injecter du gaz ?</strong> <strong>le retirer ?</strong> <strong>ne rien faire ?</strong>
+        <br /><br />
+        À tout instant, deux informations suffisent pour prendre ta décision :
+        <div style={{ display: 'flex', gap: 12, margin: '10px 0', flexWrap: 'wrap' }}>
+          <div style={{ background: `${ACCENT}18`, border: `1px solid ${ACCENT}44`, borderRadius: 6, padding: '8px 14px', fontSize: 13 }}>
+            <strong style={{ color: ACCENT }}>V</strong>
+            <span style={{ color: T.muted }}> — le volume actuellement en stock (GWh)</span>
+          </div>
+          <div style={{ background: `${T.a5}18`, border: `1px solid ${T.a5}44`, borderRadius: 6, padding: '8px 14px', fontSize: 13 }}>
+            <strong style={{ color: T.a5 }}>S</strong>
+            <span style={{ color: T.muted }}> — le prix du gaz sur le marché en ce moment (€/MWh)</span>
+          </div>
+        </div>
+        Le problème : la bonne décision en janvier dépend du futur (février, mars…). Pour décider
+        aujourd'hui il faut connaître la valeur de demain — mais pour connaître demain il faut
+        connaître après-demain. <em>On tourne en rond.</em>
         <br /><br />
         <strong>Le coup de génie de Bellman (1957) : résoudre à l'envers.</strong>{' '}
-        À l'échéance (décembre), la réponse est triviale — plus aucune décision possible, valeur = 0.
-        On remonte ensuite mois par mois :{' '}
-        <em>"En novembre, avec ce volume et ce prix, quelle action maximise le gain immédiat
-        + ce que j'ai déjà calculé pour décembre ?"</em>
+        À l'échéance (fin de contrat), la réponse est triviale — plus aucune décision possible, valeur = 0.
+        On remonte mois par mois :{' '}
+        <em>"Avec ce volume et ce prix, quelle action maximise le gain immédiat + ce que j'ai déjà
+        calculé pour le mois suivant ?"</em>
         <br /><br />
-        À chaque étape, la table du mois suivant est <strong>entièrement connue</strong>.
-        On choisit l'action qui maximise gain immédiat + valeur future actualisée.
         C'est le <strong>Principe d'Optimalité</strong> : la décision optimale ne dépend que de
-        l'état actuel (volume + prix), jamais de l'historique qui y a conduit — propriété dite de <strong>Markov</strong>.
+        l'état actuel (V, S), jamais de l'historique qui y a conduit — propriété dite de <strong>Markov</strong>.
       </IntuitionBlock>
 
       {/* ── Formule annotée ─────────────────────────────────────────────────── */}
@@ -483,26 +494,105 @@ export function BellmanTab() {
         <K display>{"\\mathcal{V}_t(V,\\, S) = \\max_{u \\,\\in\\, \\mathcal{U}(V)} \\Bigl[\\; \\underbrace{\\pi(u, S)}_{\\text{gain immédiat}} \\;+\\; \\underbrace{e^{-r\\Delta t}}_{\\text{actualisation}} \\cdot \\underbrace{\\mathbb{E}_t\\!\\left[\\mathcal{V}_{t+1}(V + u\\Delta t,\\; S_{t+1})\\right]}_{\\text{valeur future espérée}} \\;\\Bigr]"}</K>
       </FormulaBox>
 
-      <SymbolLegend accent={ACCENT} symbols={[
-        ['𝒱ₜ(V, S)', '"Combien vaut mon stockage ?" — valeur totale optimale espérée depuis l\'état (V, S) au temps t'],
-        ['V', 'Volume en stock (GWh) — état physique, entre V_min et V_max'],
-        ['S', 'Prix spot du gaz (€/MWh) — état de marché, aléatoire (processus Ornstein-Uhlenbeck, voir onglet suivant)'],
-        ['u', 'Contrôle (GWh/mois) — u > 0 : injection (achat), u < 0 : soutirage (vente), u = 0 : attente'],
-        ['𝒰(V)', 'Ensemble des contrôles physiquement faisables — limités par V_min, V_max, q_inj, q_wit'],
-        ['π(u, S)', 'Cashflow immédiat = −u·S·Δt − c_op·|u|·Δt  (positif si soutirage, négatif si injection)'],
-        ['c_op', 'Coût opérationnel (€/GWh) — compression, usure, frais TSO (Gestionnaire de Réseau de Transport)'],
-        ['e^{−rΔt}', 'Facteur d\'actualisation sur un mois — r = taux d\'actualisation annuel, Δt = 1/12 an'],
-        ['𝔼ₜ[…]', 'Espérance conditionnelle sur S_{t+1} — moyenne pondérée sur la matrice de transition Markovienne'],
-      ]} />
+      {/* ── Terme à terme ──────────────────────────────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, margin: '16px 0' }}>
 
-      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: '14px 18px', margin: '12px 0' }}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Décoder π(u, S) — le cashflow immédiat selon le signe de u</div>
-        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
-          • <strong style={{ color: T.a4 }}>Soutirage (u &lt; 0)</strong> : on vend |u|·Δt GWh au prix S
-          → recette = |u|·S·Δt &gt; 0, moins le coût opérationnel c_op·|u|·Δt.<br />
-          • <strong style={{ color: T.a5 }}>Injection (u &gt; 0)</strong> : on achète u·Δt GWh au prix S
-          → dépense = u·S·Δt, π est négatif — on investit aujourd'hui pour vendre plus cher plus tard.<br />
-          • <strong style={{ color: T.muted }}>Attente (u = 0)</strong> : aucun mouvement de gaz, π = 0 — on conserve l'optionalité.
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>🎯 𝒱ₜ(V, S) — La valeur du stockage</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            C'est la valeur totale du stockage à l'instant t, quand il contient un volume V et que
+            le prix est S.
+            <br />
+            <em style={{ color: T.text }}>
+              "Si je gère ce stockage de façon optimale jusqu'à la fin, combien vaut-il aujourd'hui ?"
+            </em>
+            <br /><br />
+            Ce n'est pas un nombre fixe — c'est une <strong>surface en 3D</strong> : pour chaque
+            combinaison (volume, prix, date), elle donne la meilleure valeur atteignable.
+            C'est précisément ce que l'algorithme calcule et stocke à chaque nœud de la grille.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>⚙️ max u ∈ 𝒰(V) — La décision optimale</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            <strong style={{ color: T.a4 }}>u &gt; 0</strong> → tu injectes du gaz (tu achètes sur le marché et tu stockes)<br />
+            <strong style={{ color: ACCENT }}>u &lt; 0</strong> → tu retires du gaz (tu vends sur le marché)<br />
+            <strong style={{ color: T.muted }}>u = 0</strong> → tu ne fais rien (tu conserves l'optionalité)
+            <br /><br />
+            <strong>𝒰(V)</strong> est l'ensemble des décisions <em>physiquement possibles</em> : tu ne peux
+            pas retirer plus que ce qu'il y a en stock, ni injecter au-delà de la capacité maximale.
+            <br /><br />
+            Le <strong>max</strong> signifie : parmi toutes les décisions autorisées, tu choisis celle
+            qui maximise la valeur totale. C'est le cœur de l'optimisation.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>💰 π(u, S) — Le gain immédiat</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            C'est ce que tu gagnes (ou paies) <em>maintenant</em> avec ta décision :{' '}
+            <K>{"\\pi(u, S) = -u \\cdot S \\cdot \\Delta t \\;-\\; c_{\\mathrm{op}} \\cdot |u| \\cdot \\Delta t"}</K>
+            <br /><br />
+            • <strong style={{ color: T.a4 }}>Soutirage (u &lt; 0)</strong> : tu vends au prix S → recette = |u|·S·Δt. Gain positif.<br />
+            • <strong style={{ color: T.a5 }}>Injection (u &gt; 0)</strong> : tu achètes au prix S → dépense = u·S·Δt.
+            Tu investis aujourd'hui pour vendre plus cher plus tard.<br />
+            • <strong>c_op</strong> : coût opérationnel (compression, usure, frais TSO — Gestionnaire de Réseau de Transport)
+            dans les deux sens.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a2}0d`, border: `1px solid ${T.a2}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a2, fontWeight: 700, fontSize: 14, marginBottom: 8 }}>{'⏳ e^{−rΔt} — L\'actualisation'}</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.8 }}>
+            100 € dans un an ne valent pas 100 € aujourd'hui — l'argent futur vaut moins que l'argent
+            présent (tu pourrais placer cet argent et gagner des intérêts entre-temps).
+            <br /><br />
+            Ce coefficient ramène la valeur future à une valeur d'aujourd'hui. À r = 5 %/an et
+            Δt = 1 mois : e^(−0.05/12) ≈ 0.9958 — chaque mois, la valeur future est réduite de ~0.4 %.
+            <br /><br />
+            Plus <strong>r</strong> est élevé, plus le futur est "déprécié" — et plus l'algorithme
+            préfère encaisser tôt plutôt qu'attendre.
+          </div>
+        </div>
+
+        <div style={{ background: `${T.a7}0d`, border: `1px solid ${T.a7}44`, borderRadius: 8, padding: '16px 18px' }}>
+          <div style={{ color: T.a7, fontWeight: 700, fontSize: 14, marginBottom: 10 }}>🔮 𝔼ₜ[ 𝒱ₜ₊₁(V + uΔt, Sₜ₊₁) ] — La valeur future espérée</div>
+          <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.9 }}>
+            C'est la partie la plus riche de la formule. Décomposons-la morceau par morceau :
+            <br /><br />
+            • <strong style={{ color: ACCENT }}>V + uΔt</strong> : si tu injectes ou retires u, le volume dans le stockage
+            change de façon <em>certaine</em> — c'est toi qui le contrôles.
+            <br />
+            • <strong style={{ color: T.a5 }}>Sₜ₊₁</strong> : le prix du gaz le mois prochain est <em>incertain</em> —
+            il peut monter, descendre, stagner, selon un modèle probabiliste (processus Ornstein-Uhlenbeck).
+            <br />
+            • <strong style={{ color: T.a7 }}>𝒱ₜ₊₁(…)</strong> : dans <em>chaque scénario</em> de prix futur,
+            le stockage a une certaine valeur optimale — déjà entièrement calculée par le backward.
+            <br />
+            • <strong style={{ color: T.a7 }}>𝔼ₜ[…]</strong> : on prend la <em>moyenne pondérée</em> de
+            toutes ces valeurs, pondérée par leurs probabilités.
+            <br /><br />
+            <em style={{ color: T.text }}>
+              "En moyenne, selon tous les futurs possibles des prix du gaz, combien vaudra mon stockage
+              le mois prochain si je prends la décision u aujourd'hui ?"
+            </em>
+            <br /><br />
+            En pratique : le prix est discrétisé en NS valeurs sur une grille. La matrice de transition
+            Π[j][k] (voir onglet suivant) donne la probabilité de passer du prix Sⱼ au prix S_k en un
+            mois. L'espérance devient une simple somme pondérée :{' '}
+            <K>{"\\mathbb{E}_t[\\mathcal{V}_{t+1}] = \\sum_k \\Pi_{jk} \\cdot \\mathcal{V}_{t+1}(V', S_k)"}</K>
+          </div>
+        </div>
+
+      </div>
+
+      {/* ── Synthèse ────────────────────────────────────────────────────────── */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '16px 20px', margin: '4px 0 16px' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>L'intuition globale en une phrase</div>
+        <div style={{ color: T.text, fontSize: 14, lineHeight: 1.7, fontStyle: 'italic' }}>
+          La valeur du stockage aujourd'hui = le meilleur compromis entre ce que je gagne immédiatement
+          et ce que je m'attends à gagner demain, en gérant de façon optimale.
         </div>
       </div>
 
