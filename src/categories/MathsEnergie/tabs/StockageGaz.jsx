@@ -146,63 +146,107 @@ function Td({ children, accent }) {
 
 const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
 const DEMAND_PROFILE = [90, 85, 70, 50, 35, 25, 20, 22, 38, 55, 78, 92]
-const SUPPLY_CAP = 55
+// Profil attendu saisonnier couvert par les forwards (consommation moyenne par mois)
+const EXPECTED_DEMAND = [77, 72, 59, 43, 29, 21, 17, 19, 31, 47, 67, 79]
+// Scénarios de stress thermique pour dimensionner la puissance de soutirage
+const STRESS_SCENARIOS = [
+  { label: 'Hiver doux', dT: 3, days: 2 },
+  { label: 'Hiver normal', dT: 6, days: 4 },
+  { label: 'Vague de froid', dT: 10, days: 7 },
+  { label: 'Grand froid (1/20 ans)', dT: 15, days: 10 },
+]
 
 export function ActeurTab() {
   const [spotPrice, setSpotPrice] = useState(40)
   const [control, setControl] = useState(-5)
+  const [deltaT, setDeltaT] = useState(10)
+  const [thermSens, setThermSens] = useState(1.8)
+  const [nJours, setNJours] = useState(5)
+  const [qContr, setQContr] = useState(20)
+
   const cOp = 0.5
   const cashflow = -control * spotPrice * (1 / 12) - cOp * Math.abs(control) * (1 / 12)
+
+  const qRequired = +(thermSens * deltaT).toFixed(1)
+  const eRequired = +(thermSens * deltaT * nJours).toFixed(1)
+  const coverageOk = qContr >= qRequired
+
   const loadData = MONTHS.map((m, i) => ({
     mois: m,
     demande: DEMAND_PROFILE[i],
-    fourniture: SUPPLY_CAP,
-    excès: Math.max(0, DEMAND_PROFILE[i] - SUPPLY_CAP),
+    couvertureForward: EXPECTED_DEMAND[i],
+    excèsAléatoire: Math.max(0, DEMAND_PROFILE[i] - EXPECTED_DEMAND[i]),
   }))
+
+  const scenarioData = STRESS_SCENARIOS.map(s => ({
+    ...s,
+    qRequis: +(thermSens * s.dT).toFixed(1),
+    eRequis: +(thermSens * s.dT * s.days).toFixed(1),
+    covered: qContr >= thermSens * s.dT,
+  }))
+
   return (
     <div>
-      {/* Bloc 1 — Le fournisseur */}
-      <IntuitionBlock emoji="🏢" title="Le fournisseur d'énergie et son portefeuille" accent={ACCENT}>
-        Un <strong>fournisseur de gaz</strong> a des <strong>clients avec des engagements fermes de livraison</strong> — des mairies, des industriels, des résidences —
-        qui ont besoin de gaz quoi qu'il arrive. Il doit s'approvisionner sur les marchés (spot et forward) pour honorer ces engagements.
-        Sa marge dépend entièrement de sa capacité à <strong>acheter bon marché et revendre au bon prix</strong>.
-        Le stockage est son principal outil pour y parvenir.
+      {/* Bloc 1 — Positionnement fournisseur déjà hedgé */}
+      <IntuitionBlock emoji="🏢" title="Le fournisseur déjà hedgé en saisonnalité" accent={ACCENT}>
+        Un <strong>fournisseur de gaz</strong> couvre sa saisonnalité via des <strong>contrats forward</strong> — achats sur la courbe à terme qui sécurisent la consommation
+        <em> moyenne</em> attendue de chaque mois hivernal. Ce hedge saisonnier est géré séparément (produits Cal, Q+1, M+1…).
+        Le stockage intervient alors pour un rôle différent : gérer les <strong>aléas climatiques infra-saisonniers</strong> — vagues de froid, pics de consommation journaliers —
+        qui dévient de cette moyenne. La question clé n'est plus <em>"combien de GWh stocker ?"</em> mais{' '}
+        <em>"quelle <strong>puissance de soutirage</strong> (GWh/j) souscrire pour couvrir un scénario de grand froid ?"</em>
       </IntuitionBlock>
 
       <div style={panelStyle}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Schéma du portefeuille fournisseur</div>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>Architecture de couverture — Fournisseur type</div>
         <pre style={{ color: T.text, fontSize: 12, lineHeight: 1.8, margin: 0, fontFamily: 'monospace' }}>
 {`  Clients résidentiels  ─┐
-  Clients industriels   ─┤→  FOURNISSEUR  ←→  Marché spot / Forward
+  Clients industriels   ─┤→  FOURNISSEUR  ←→  Marché Forward  (saisonnalité ✓)
   Clients collectivités ─┘         ↕
-                                 STOCKAGE
-                          (cave saline / aquifère)`}
+                               STOCKAGE          ← gestion des ALÉAS
+                          (cave saline : haute         (vagues de froid,
+                           puissance, modulation        imbalances J-1)
+                           infra-saisonnière)`}
         </pre>
       </div>
 
-      <SectionTitle accent={ACCENT}>Les 3 rôles du stockage pour un fournisseur</SectionTitle>
+      <SectionTitle accent={ACCENT}>Les rôles du stockage pour un fournisseur hedgé en saisonnalité</SectionTitle>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10, margin: '14px 0' }}>
         {[
-          { num: '1', title: 'Tampon saisonnier', desc: "Couvrir l'excès de demande hivernal. Les clients chauffent plus en hiver — le stockage comble l'écart entre la fourniture contractuelle (fixe) et la demande (variable).", color: ACCENT },
-          { num: '2', title: 'Flexibilité opérationnelle', desc: "Absorber les aléas journaliers. Les écarts entre les nominations J-1 et la consommation réelle sont couverts par des injections/soutirage de court terme.", color: T.a5 },
-          { num: '3', title: 'Actif de trading', desc: "Capturer le spread été/hiver. Acheter en été quand le prix est bas (injection), revendre en hiver quand il est haut (soutirage) — c'est l'arbitrage temporel.", color: T.a4 },
+          {
+            num: '1', color: ACCENT,
+            title: 'Puissance de pointe — couverture des vagues de froid',
+            desc: "La couverture forward assure le volume mensuel moyen. Mais une vague de froid (−10 °C vs normale) peut doubler la consommation journalière pendant 5–7 jours. Le stockage doit fournir cette puissance de soutirage additionnelle : Q_sout ≥ α × ΔT (GWh/j). C'est la contrainte de dimensionnement principale pour un fournisseur déjà hedgé.",
+          },
+          {
+            num: '2', color: T.a5,
+            title: 'Gestion des imbalances J-1',
+            desc: "Les nominations J-1 au gestionnaire réseau (GRTgaz/Teréga) imposent de déclarer le programme la veille. Les écarts entre nomination et consommation réalisée — liés aux températures intra-journalières et aux comportements clients — sont absorbés par des ajustements de soutirage ou d'injection de court terme.",
+          },
+          {
+            num: '3', color: T.a4,
+            title: 'Optionalité résiduelle sur la courbe forward',
+            desc: "La partie non couverte par les forwards (extrêmes de température, profils clients atypiques) génère une valeur d'option résiduelle sur l'écart été/hiver. Ce n'est plus l'objectif principal du stockage pour un fournisseur hedgé, mais une source de P&L additionnelle — c'est cette valeur extrinsèque qu'optimise l'équation de Bellman.",
+          },
         ].map(({ num, title, desc, color }) => (
           <div key={num} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: '12px 16px', display: 'flex', gap: 12 }}>
             <div style={{ width: 28, height: 28, borderRadius: 6, background: `${color}22`, border: `1px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{num}</div>
-            <div><div style={{ color, fontWeight: 700, fontSize: 13 }}>{title}</div><div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginTop: 3 }}>{desc}</div></div>
+            <div>
+              <div style={{ color, fontWeight: 700, fontSize: 13 }}>{title}</div>
+              <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginTop: 3 }}>{desc}</div>
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Bloc 2 — Profil de consommation */}
-      <SectionTitle accent={ACCENT}>Le profil de consommation saisonnier</SectionTitle>
-      <IntuitionBlock emoji="📊" title="La demande de gaz est saisonnière" accent={ACCENT}>
-        La consommation des clients monte fortement en hiver (chauffage). La fourniture contractuelle est souvent fixe (contrat d'approvisionnement annuel).
-        L'<strong>excès de demande hivernale</strong> que la fourniture ne peut pas couvrir doit venir du stockage.
-        La <strong>zone colorée</strong> ci-dessous représente le volume que le stockage doit fournir.
+      {/* Bloc 2 — Profil avec décomposition forward / aléas */}
+      <SectionTitle accent={ACCENT}>Décomposition de la demande : forward vs aléas météo</SectionTitle>
+      <IntuitionBlock emoji="📊" title="Ce que le forward couvre — ce que le stockage couvre" accent={ACCENT}>
+        La couverture forward absorbe la consommation <strong>attendue</strong> de chaque mois (profil saisonnier modélisé par régression sur la température historique).
+        Le stockage n'intervient que sur l'<strong>excès aléatoire</strong> : la déviation entre la consommation réalisée et ce profil attendu.
+        Cet excès est modeste en énergie (~10–13 GWh/mois) mais très concentré dans le temps — quelques jours critiques de grand froid.
       </IntuitionBlock>
 
-      <ChartWrapper title="Profil de charge annuel — Fournisseur type (GWh/mois)" accent={ACCENT} height={240}>
+      <ChartWrapper title="Profil annuel (GWh/mois) — Décomposition couverture forward / aléas stockage" accent={ACCENT} height={240}>
         <ResponsiveContainer width="100%" height="100%">
           <LineChart data={loadData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
@@ -210,21 +254,108 @@ export function ActeurTab() {
             <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={[0, 100]} />
             <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 12 }} />
             <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
-            <ReferenceLine y={SUPPLY_CAP} stroke={T.a4} strokeDasharray="6 3" label={{ value: 'Fourniture contractuelle', fill: T.a4, fontSize: 10, position: 'insideBottomRight' }} />
-            <Line type="monotone" dataKey="demande" stroke={ACCENT} strokeWidth={2.5} dot={false} name="Demande clients" />
-            <Line type="monotone" dataKey="excès" stroke={T.a5} strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Volume stockage requis" />
+            <Line type="monotone" dataKey="demande" stroke={ACCENT} strokeWidth={2.5} dot={false} name="Demande clients (réalisé)" />
+            <Line type="monotone" dataKey="couvertureForward" stroke={T.a4} strokeWidth={2} dot={false} strokeDasharray="6 3" name="Couverture forward (profil attendu)" />
+            <Line type="monotone" dataKey="excèsAléatoire" stroke={T.a5} strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Excès aléatoire → stockage" />
           </LineChart>
         </ResponsiveContainer>
       </ChartWrapper>
 
-      {/* Bloc 3 — Contraintes opérationnelles */}
-      <SectionTitle accent={ACCENT}>Contraintes opérationnelles spécifiques</SectionTitle>
+      {/* Bloc 3 — Dimensionnement par puissance */}
+      <SectionTitle accent={ACCENT}>Dimensionnement de la puissance de soutirage</SectionTitle>
+      <IntuitionBlock emoji="🌡️" title="La puissance, pas le volume, est le facteur limitant" accent={ACCENT}>
+        Pour un fournisseur hedgé, la contrainte critique du stockage est la <strong>puissance de soutirage</strong> (GWh/j),
+        pas le volume total (GWh). Une vague de froid crée un besoin instantané de gaz qu'il faut pouvoir servir en quelques heures.
+        Le dimensionnement se fait par scénarios de stress thermique :
+        <K display>{"Q_{\\text{sout}}^{\\text{requis}} = \\alpha \\times |\\Delta T| \\quad \\text{(GWh/j)}"}</K>
+        où <K>{"\\alpha"}</K> est la <strong>sensibilité thermique</strong> du portefeuille (GWh/j par °C d'écart vs normale saisonnière).
+      </IntuitionBlock>
+
+      <div style={{ margin: '14px 0' }}>
+        <Grid cols={3} gap="12px">
+          <Slider label="Écart température ΔT (°C vs normale)" value={deltaT} min={1} max={20} step={1} onChange={setDeltaT} accent={ACCENT} format={v => `−${v} °C`} />
+          <Slider label="Sensibilité thermique α (GWh/j/°C)" value={thermSens} min={0.5} max={5} step={0.1} onChange={setThermSens} accent={ACCENT} format={v => v.toFixed(1)} />
+          <Slider label="Durée vague de froid (jours)" value={nJours} min={1} max={14} step={1} onChange={setNJours} accent={ACCENT} format={v => `${v} j`} />
+        </Grid>
+        <Slider label="Puissance de soutirage contractée Q_contr (GWh/j)" value={qContr} min={5} max={50} step={1} onChange={setQContr} accent={ACCENT} format={v => `${v} GWh/j`} />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+          <InfoChip label="Q requis (pic)" value={qRequired} unit="GWh/j" accent={coverageOk ? T.a4 : ACCENT} />
+          <InfoChip label="Énergie à mobiliser" value={eRequired} unit="GWh" accent={T.a5} />
+          <InfoChip label="Q contracté" value={qContr} unit="GWh/j" accent={coverageOk ? T.a4 : T.muted} />
+          <InfoChip label="Couverture" value={coverageOk ? '✓ OK' : `Déficit ${(qRequired - qContr).toFixed(1)} GWh/j`} accent={coverageOk ? T.a4 : ACCENT} />
+        </div>
+      </div>
+
+      <div style={{ margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Matrice de couverture par scénario de stress thermique</div>
+        <table style={tableStyle}>
+          <thead>
+            <tr>
+              <Th>Scénario</Th>
+              <Th>ΔT (°C)</Th>
+              <Th>Durée</Th>
+              <Th>Q requis (GWh/j)</Th>
+              <Th>E requise (GWh)</Th>
+              <Th>Couverture</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {scenarioData.map(s => (
+              <tr key={s.label}>
+                <Td><span style={{ fontWeight: 600 }}>{s.label}</span></Td>
+                <Td>−{s.dT}</Td>
+                <Td>{s.days} j</Td>
+                <Td accent={s.covered ? T.a4 : ACCENT}>{s.qRequis}</Td>
+                <Td>{s.eRequis}</Td>
+                <Td accent={s.covered ? T.a4 : ACCENT}>{s.covered ? '✓ Couvert' : '✗ Déficit'}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>
+          α = {thermSens.toFixed(1)} GWh/j/°C · Q contracté = {qContr} GWh/j — ajustez les sliders ci-dessus pour recalculer.
+        </div>
+      </div>
+
+      <div style={{ ...panelStyle, margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>📋 Quel type de stockage pour un fournisseur hedgé ?</div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {[
+            {
+              type: 'Caverne saline', icon: '⚡',
+              power: 'Très haute (40–100 % working gas/j)',
+              volume: 'Limitée (100–500 GWh typique)',
+              usage: 'Idéal : cycles courts, haute puissance de pointe — répond aux vagues de froid et imbalances J-1.',
+              color: ACCENT,
+            },
+            {
+              type: 'Aquifère / Gisement', icon: '📦',
+              power: 'Modérée (5–15 % working gas/j)',
+              volume: 'Très haute (1–10 TWh)',
+              usage: 'Adapté à la saisonnalité — mais déjà couverte par les forwards → intérêt moindre pour un fournisseur hedgé.',
+              color: T.muted,
+            },
+          ].map(({ type, icon, power, volume, usage, color }) => (
+            <div key={type} style={{ background: T.panel2, border: `1px solid ${color}44`, borderRadius: 8, padding: 12 }}>
+              <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{icon} {type}</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>
+                <div><strong style={{ color: T.text }}>Puissance :</strong> {power}</div>
+                <div><strong style={{ color: T.text }}>Volume :</strong> {volume}</div>
+                <div style={{ marginTop: 4 }}>{usage}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Bloc 4 — Contraintes opérationnelles */}
+      <SectionTitle accent={ACCENT}>Contraintes opérationnelles</SectionTitle>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '14px 0' }}>
         {[
-          { title: 'Working Gas vs Cushion Gas', icon: '⛽', desc: "Le cushion gas est le gaz permanent qui maintient la pression structurelle de la caverne (non disponible pour le trading). Seul le working gas est vraiment utilisable — c'est la capacité utile réelle." },
-          { title: 'Droits de capacité', icon: '📋', desc: "L'injection et le soutirage sont soumis à des capacités maximales allouées par le gestionnaire du stockage, souvent via des enchères annuelles (TSO). Ces capacités s'expriment en GWh/jour." },
-          { title: 'Nominations J-1', icon: '📅', desc: "Chaque veille, le fournisseur doit déclarer son programme d'injection/soutirage pour le lendemain. Cette contrainte rend impossible les ajustements infra-journaliers non planifiés." },
-          { title: 'Coûts opérationnels C(u)', icon: '💶', desc: "Injecter ou soutirer n'est pas gratuit : énergie des compresseurs, usure, frais de gestionnaire. Modélisé par C(u) = c_op × |u|, ce coût réduit la marge sur chaque opération." },
+          { title: 'Working Gas vs Cushion Gas', icon: '⛽', desc: "Le cushion gas maintient la pression structurelle de la caverne (indisponible). Seul le working gas est mobilisable — c'est la capacité effective pour la gestion des aléas." },
+          { title: 'Droits de capacité (TSO)', icon: '📋', desc: "Injection et soutirage sont soumis à des capacités allouées par GRTgaz/Teréga via enchères annuelles (€/GWh/j). La puissance de soutirage est souvent la ressource rare et la plus coûteuse à souscrire." },
+          { title: 'Nominations J-1', icon: '📅', desc: "Le programme d'injection/soutirage doit être déclaré la veille. Cette contrainte rend impossible les ajustements infra-journaliers — d'où l'importance d'une prévision météo J+1 précise pour estimer la consommation du lendemain." },
+          { title: 'Coût opérationnel C(u)', icon: '💶', desc: "Injecter ou soutirer coûte : compression, usure, frais TSO. C(u) = c_op × |u|. Pour la gestion des aléas, ces coûts sont significatifs car les cycles sont courts et fréquents (vs une campagne saisonnière annuelle)." },
         ].map(({ title, icon, desc }) => (
           <div key={title} style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 8, padding: 14 }}>
             <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{icon} {title}</div>
@@ -234,24 +365,27 @@ export function ActeurTab() {
       </div>
 
       <SymbolLegend accent={ACCENT} symbols={[
-        ['V_t', 'Volume stocké à la date t (GWh) — l\'état principal'],
-        ['S_t', 'Prix spot du gaz observé à t (€/MWh)'],
-        ['u_t', 'Contrôle : débit d\'injection (u>0) ou soutirage (u<0) en GWh/mois'],
-        ['V_min, V_max', 'Bornes de volume physique (working gas)'],
-        ['q_inj, q_wit', 'Débits maximaux d\'injection et de soutirage'],
-        ['Δt', 'Pas de temps (1 mois = 1/12 an dans notre modèle)'],
+        ['V_t', 'Volume stocké à la date t (GWh) — état du stock'],
+        ['S_t', 'Prix spot du gaz à t (€/MWh)'],
+        ['u_t', 'Contrôle : débit injection (u>0) / soutirage (u<0) en GWh/j'],
+        ['q_wit', 'Puissance de soutirage contractée (GWh/j) — contrainte de dimensionnement principale'],
+        ['α', 'Sensibilité thermique du portefeuille (GWh/j par °C d\'écart vs normale)'],
+        ['ΔT', 'Écart de température vs normale saisonnière (°C) — scénario de stress'],
         ['C(u)', 'Coût opérationnel : C(u) = c_op × |u|'],
       ]} />
 
-      {/* Bloc 4 — Modèle mathématique */}
+      {/* Bloc 5 — Modèle mathématique */}
       <SectionTitle accent={ACCENT}>Modèle mathématique du problème</SectionTitle>
-      <FormulaBox accent={ACCENT} label="Dynamique d'état">
-        <K display>{"V_{t+1} = V_t + u_t \\cdot \\Delta t \\qquad \\text{avec } V_{\\min} \\leq V_{t+1} \\leq V_{\\max}"}</K>
+      <FormulaBox accent={ACCENT} label="Dynamique d'état — contrainte de puissance explicite">
+        <K display>{"V_{t+1} = V_t + u_t \\cdot \\Delta t \\qquad V_{\\min} \\leq V_{t+1} \\leq V_{\\max}, \\quad |u_t| \\leq q_{\\text{wit}}"}</K>
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
+          La contrainte <K>{"q_{\\text{wit}}"}</K> (puissance maximale de soutirage en GWh/j) est le paramètre de dimensionnement clé pour le fournisseur hedgé — elle doit couvrir le scénario de stress thermique retenu.
+        </div>
       </FormulaBox>
       <FormulaBox accent={ACCENT} label="Cashflow instantané">
-        <K display>{"\\pi(u_t, S_t) = -u_t \\cdot S_t \\cdot \\Delta t - C(u_t)"}</K>
+        <K display>{"\\pi(u_t, S_t) = -u_t \\cdot S_t \\cdot \\Delta t - C(u_t) \\qquad C(u) = c_{\\text{op}} \\cdot |u|"}</K>
         <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Si <K>{"u_t > 0"}</K> (injection) : on <strong>paie</strong> le gaz acheté. Si <K>{"u_t < 0"}</K> (soutirage) : on <strong>reçoit</strong> le produit de la vente.
+          Si <K>{"u_t > 0"}</K> (injection) : on <strong>paie</strong> le gaz acheté. Si <K>{"u_t < 0"}</K> (soutirage) : on <strong>encaisse</strong> la vente sur le spot.
         </div>
       </FormulaBox>
 
@@ -268,21 +402,21 @@ export function ActeurTab() {
         </div>
       </div>
 
-      <Accordion title="Exercice — Calculer le P&L d'une campagne injection/soutirage" accent={ACCENT} badge="Facile">
+      <Accordion title="Exercice — Dimensionner la puissance de stockage pour un portefeuille résidentiel" accent={ACCENT} badge="Moyen">
         <p style={{ color: T.muted, fontSize: 13 }}>
-          Un fournisseur injecte 8 GWh/mois pendant 4 mois d'été (prix moyen : 32 €/MWh),
-          puis soutire 8 GWh/mois pendant 4 mois d'hiver (prix moyen : 58 €/MWh).
-          Coûts opérationnels : 0.5 €/MWh par GWh injecté/soutiré. Calculer le gain net.
+          Un fournisseur gère 80 000 clients résidentiels. Sensibilité thermique unitaire : 0,3 kWh/client/°C/j.
+          Scénario de dimensionnement retenu : vague de froid à −10 °C vs normale pendant 5 jours.
+          Calculer la puissance de soutirage requise et l'énergie minimale à avoir en stock au début de l'épisode.
         </p>
         <Demonstration accent={ACCENT}>
-          <DemoStep num={1} rule="Coût injection" ruleDetail="π = -u·S·Δt - C(u)" accent={ACCENT}>
-            Injection : <K>{"\\pi_{inj} = -8 \\times 32 \\times \\frac{4}{12} - 0.5 \\times 8 \\times \\frac{4}{12} = -85.3 - 1.3 = -86.7 \\text{ €}"}</K>
+          <DemoStep num={1} rule="Sensibilité portefeuille" ruleDetail="α = n_clients × α_unitaire" accent={ACCENT}>
+            <K>{"\\alpha = 80\\,000 \\times 0.3 \\text{ kWh/°C/j} = 24\\,000 \\text{ kWh/°C/j} = 0.024 \\text{ GWh/°C/j}"}</K>
           </DemoStep>
-          <DemoStep num={2} rule="Revenu soutirage" ruleDetail="u<0 → gain" accent={ACCENT}>
-            Soutirage : <K>{"\\pi_{sout} = -(-8) \\times 58 \\times \\frac{4}{12} - 0.5 \\times 8 \\times \\frac{4}{12} = +154.7 - 1.3 = +153.3 \\text{ €}"}</K>
+          <DemoStep num={2} rule="Puissance requise" ruleDetail="Q = α × ΔT" accent={ACCENT}>
+            <K>{"Q_{\\text{sout}} = 0.024 \\times 10 = 0.24 \\text{ GWh/j}"}</K> — à comparer aux droits de soutirage souscrits auprès du TSO.
           </DemoStep>
-          <DemoStep num={3} rule="Gain net" ruleDetail="spread - coûts" accent={ACCENT}>
-            <K>{"\\text{P\\&L} = 153.3 - 86.7 = +66.6 \\text{ €} \\approx (58-32) \\times \\frac{8 \\times 4}{12} - \\text{coûts}"}</K>
+          <DemoStep num={3} rule="Énergie à mobiliser" ruleDetail="E = Q × durée" accent={ACCENT}>
+            <K>{"E = 0.24 \\times 5 = 1.2 \\text{ GWh}"}</K> — volume minimum en working gas au début de l'épisode, au-delà de la fourniture forward déjà contractée.
           </DemoStep>
         </Demonstration>
       </Accordion>
