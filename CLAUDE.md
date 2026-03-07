@@ -52,42 +52,32 @@ src/
 
 L'objectif du dashboard est d'être **compréhensible par quelqu'un qui voit le concept pour la première fois**, tout en étant **rigoureux pour un praticien**.
 
-Chaque onglet doit respecter ce plan en 5 blocs dans l'ordre suivant :
+Il n'y a pas de schéma bloc imposé — l'organisation dépend du sujet. Ce qui est obligatoire, c'est de respecter ces **principes** :
 
-### Bloc 1 — Intuition vulgarisée (`<IntuitionBlock>`)
-- Commencer par une **analogie concrète du monde réel** (pas de maths, pas de symboles)
-- Répondre à la question : *"à quoi ça sert ?"* et *"comment ça fonctionne ?"* en langage courant
-- Une métaphore forte vaut mieux qu'une définition formelle
-- Exemples de bons points d'entrée : un joueur d'échecs, un gestionnaire de stock, un trader sur un marché de fruits
+### Partir de l'intuition, pas de la formule
+- Avant toute notation, expliquer **à quoi ça sert** et **comment ça fonctionne** en langage courant
+- Une analogie concrète (un gestionnaire de stock, un joueur d'échecs, un marché de fruits) vaut mieux qu'une définition formelle
+- Utiliser `<IntuitionBlock>` pour ce point d'entrée
 
-### Bloc 2 — Décryptage terme à terme de la formule
-- **Ne jamais lâcher une formule sans expliquer CHAQUE symbole/terme individuellement**
-- Pattern obligatoire : formule → liste de chaque terme avec sa signification en français clair + son rôle dans le calcul
-- Utiliser `<SymbolLegend>` pour le tableau de définitions
-- Pour les formules complexes : utiliser les `\underbrace{}` LaTeX pour annoter directement dans la formule
-- Chaque symbole doit avoir : (1) sa définition littérale, (2) son unité, (3) son interprétation intuitive
+### Ne jamais lâcher une formule sans l'expliquer
+- Chaque symbole doit être défini : (1) ce que c'est littéralement, (2) son unité ou ses valeurs possibles, (3) son rôle intuitif dans le calcul
+- Pour les formules denses, utiliser `\underbrace{}` LaTeX pour annoter directement dans la formule
+- `<SymbolLegend>` ou des encadrés inline selon la densité du contenu
 
-### Bloc 3 — Construction pas à pas (`<Step>` ou `<DemoStep>`)
-- Dérouler l'algorithme ou le raisonnement **étape par étape numérotée**
-- Chaque étape = une seule idée, formulée d'abord en **français simple**, puis en notation technique
-- Ne pas sauter d'étapes — même les étapes "évidentes" doivent être explicitées
+### Toujours avoir un exemple chiffré
+- Un calcul numérique concret, idéalement fait à la main, ancre le concept bien mieux qu'une généralité
+- Utiliser `<Accordion>` + `<Demonstration>` + `<DemoStep>` pour les exercices guidés
+- Chaque étape de démonstration = une seule règle appliquée, expliquée en français d'abord
 
-### Bloc 4 — Simulation interactive (sliders + graphiques)
-- Permettre à l'utilisateur de **sentir** l'effet de chaque paramètre
-- Chaque slider doit avoir un label qui explique ce qu'il contrôle
-- Les `<InfoChip>` affichent les résultats clés recalculés en temps réel
-- Les graphiques doivent avoir un titre descriptif et des annotations si nécessaire
-
-### Bloc 5 — Exercice guidé (`<Accordion>` + `<Demonstration>`)
-- Un exercice concret avec des chiffres réels
-- La démonstration est **step by step**, chaque étape avec la règle appliquée (`<DemoStep>`)
-- Clore par une interprétation du résultat en langage métier
+### La simulation doit s'expliquer d'elle-même
+- Les labels de sliders doivent dire ce que contrôle le paramètre, pas juste son nom (ex : "κ — vitesse de retour à la moyenne" plutôt que "κ")
+- Ajouter des clés de lecture des graphiques quand ce n'est pas immédiatement évident
+- `<InfoChip>` pour les métriques clés recalculées en temps réel
 
 ### Règles transversales
-- **Jamais de formule seule** : toute expression mathématique est accompagnée d'une phrase en français
-- **Jamais d'acronyme sans définition** au premier usage (DP, OU, TSO…)
-- Alterner systématiquement : concept vulgarisé → formulation technique → exemple chiffré
-- Chaque section doit pouvoir se lire indépendamment (titres explicites, rappels des notations)
+- **Jamais d'acronyme sans définition** au premier usage (DP, OU, TSO, GWh…)
+- Alterner : concept vulgarisé → formulation technique → exemple chiffré
+- Chaque section doit avoir un titre explicite — l'utilisateur doit pouvoir naviguer sans tout lire dans l'ordre
 
 ---
 
