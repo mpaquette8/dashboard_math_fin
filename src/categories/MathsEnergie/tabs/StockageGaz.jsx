@@ -613,38 +613,96 @@ export function BellmanTab() {
       {/* ── Exemple chiffré minimal ─────────────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Un calcul à la main pour ancrer l'intuition</SectionTitle>
 
-      <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}44`, borderRadius: 8, padding: '16px 18px', margin: '12px 0' }}>
-        <div style={{ color: T.a4, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
-          Situation : 1 mois restant, V = 50 GWh, S₀ = 45 €/MWh, q_wit = 10 GWh/mois, c_op = 0.5 €/GWh, r = 0, Δt = 1/12 an
+      {/* Bandeau paramètres */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, margin: '12px 0 10px', alignItems: 'center' }}>
+        <span style={{ color: T.muted, fontSize: 12, marginRight: 4 }}>Données :</span>
+        {[
+          ['V', '50 GWh', ACCENT],
+          ['S₀', '45 €/MWh', T.a5],
+          ['q_wit', '10 GWh/mois', T.a4],
+          ['c_op', '0.5 €/GWh', T.a4],
+          ['r', '0', T.muted],
+          ['Δt', '1/12 an', T.muted],
+          ['𝒱₁', '0 (fin de contrat)', T.a2],
+        ].map(([k, v, c]) => (
+          <span key={k} style={{ background: `${c}18`, border: `1px solid ${c}44`, borderRadius: 5, padding: '3px 10px', fontSize: 12 }}>
+            <strong style={{ color: c }}>{k}</strong>
+            <span style={{ color: T.muted }}> = {v}</span>
+          </span>
+        ))}
+      </div>
+
+      {/* Deux cartes côte à côte */}
+      <Grid cols={2} gap="12px">
+
+        {/* Carte u = 0 */}
+        <div style={{ border: `1px solid ${T.border}`, borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ background: `${T.muted}18`, padding: '10px 16px', borderBottom: `1px solid ${T.border}` }}>
+            <span style={{ color: T.text, fontWeight: 700, fontSize: 13 }}>⏸ u = 0 — Attendre</span>
+          </div>
+          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Cashflow π</div>
+              <div style={{ color: T.text, fontSize: 13 }}>Aucun mouvement de gaz → π = 0 €</div>
+            </div>
+            <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Valeur future 𝔼[𝒱₁]</div>
+              <div style={{ color: T.text, fontSize: 13 }}>𝒱₁ = 0 partout → 𝔼[𝒱₁] = 0 €</div>
+            </div>
+            <div style={{ borderTop: `1px solid ${T.border}`, paddingTop: 10 }}>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Gain total = π + e⁻ʳᐩᵗ · 𝔼[𝒱₁]</div>
+              <div style={{ color: T.muted, fontSize: 22, fontWeight: 700 }}>0 €</div>
+            </div>
+          </div>
         </div>
-        <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.85 }}>
-          Deux actions possibles : <strong style={{ color: T.a4 }}>soutirer 10 GWh (u = −10)</strong> ou{' '}
-          <strong style={{ color: T.muted }}>attendre (u = 0)</strong>.
-          La valeur terminale dans 1 mois est 𝒱₁ = 0 (fin de contrat → plus rien à optimiser).
-          <br /><br />
-          <strong>u = 0 (attendre) :</strong>
-          <br />
-          <span style={{ marginLeft: 16 }}>
-            π(0, 45) = 0. Espérance future : 𝔼[𝒱₁] = 0.
-            <strong style={{ color: T.muted }}> → Gain total = 0 €</strong>
-          </span>
-          <br /><br />
-          <strong>u = −10 (soutirer 10 GWh/mois) :</strong>
-          <br />
-          <span style={{ marginLeft: 16 }}>
-            <K>{"\\pi = +10 \\times 45 \\times \\tfrac{1}{12} \\;-\\; 0.5 \\times 10 \\times \\tfrac{1}{12} = 37.50 - 0.42 = +37.1\\text{ €}"}</K>
-            <br />
-            Espérance future : 𝔼[𝒱₁] = 0.
-            <strong style={{ color: ACCENT }}> → Gain total = 37.1 €</strong>
-          </span>
-          <br /><br />
-          <strong style={{ color: ACCENT }}>𝒱₀(50, 45) = max(0, 37.1) = 37.1 €  →  u* = soutirer immédiatement.</strong>
-          <br />
-          <span style={{ color: T.muted, fontSize: 12 }}>
-            Sur 12 mois réels, 𝒱₁ ≠ 0 — garder du gaz en stock vaut quelque chose (espoir de vendre plus cher).
-            L'arbitrage "encaisser maintenant vs attendre un pic" devient le cœur du problème.
-          </span>
+
+        {/* Carte u = −10 */}
+        <div style={{ border: `2px solid ${ACCENT}55`, borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ background: `${ACCENT}22`, padding: '10px 16px', borderBottom: `1px solid ${ACCENT}44`, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ color: ACCENT, fontWeight: 700, fontSize: 13 }}>📤 u = −10 — Soutirer 10 GWh</span>
+            <span style={{ background: ACCENT, color: '#000', fontSize: 10, fontWeight: 700, borderRadius: 4, padding: '2px 7px' }}>✓ OPTIMAL</span>
+          </div>
+          <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Cashflow π</div>
+              <div style={{ fontSize: 13 }}>
+                <K>{"\\pi = \\underbrace{10 \\times 45 \\times \\tfrac{1}{12}}_{\\text{vente}} \\;-\\; \\underbrace{0.5 \\times 10 \\times \\tfrac{1}{12}}_{\\text{coût op.}} = 37.50 - 0.42"}</K>
+                <div style={{ color: T.a4, fontWeight: 700, fontSize: 14, marginTop: 4 }}>= +37.1 €</div>
+              </div>
+            </div>
+            <div>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Valeur future 𝔼[𝒱₁]</div>
+              <div style={{ color: T.text, fontSize: 13 }}>𝒱₁ = 0 partout → 𝔼[𝒱₁] = 0 €</div>
+            </div>
+            <div style={{ borderTop: `1px solid ${ACCENT}33`, paddingTop: 10 }}>
+              <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Gain total = π + e⁻ʳᐩᵗ · 𝔼[𝒱₁]</div>
+              <div style={{ color: ACCENT, fontSize: 22, fontWeight: 700 }}>+37.1 €</div>
+            </div>
+          </div>
         </div>
+
+      </Grid>
+
+      {/* Boîte résultat */}
+      <div style={{ background: `${ACCENT}18`, border: `2px solid ${ACCENT}55`, borderRadius: 8, padding: '14px 18px', margin: '10px 0 4px', display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+        <div>
+          <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Décision optimale</div>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>
+            𝒱₀(50, 45) = max(0, 37.1) = <strong>37.1 €</strong>
+          </div>
+        </div>
+        <div style={{ width: 1, background: `${ACCENT}44`, alignSelf: 'stretch' }} />
+        <div>
+          <div style={{ color: T.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 4 }}>Action u*</div>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 15 }}>Soutirer immédiatement (u = −10)</div>
+        </div>
+      </div>
+
+      {/* Note sur 12 mois réels */}
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '6px 0 12px', padding: '0 4px' }}>
+        Sur 12 mois réels, 𝒱₁ ≠ 0 — garder du gaz en stock vaut quelque chose (espoir de le vendre plus cher
+        le mois suivant). L'arbitrage "encaisser maintenant vs attendre un pic" devient non-trivial, et c'est
+        précisément ce que Bellman résout.
       </div>
 
       {/* ── Algorithme DP ───────────────────────────────────────────────────── */}
