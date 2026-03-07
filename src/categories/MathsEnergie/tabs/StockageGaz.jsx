@@ -50,12 +50,30 @@ function buildTransitionMatrix(NS, sGrid, kappa, mu, sigma, dt) {
   return Pi
 }
 
-function runBellmanDP({ NV = 15, NS = 12, NT = 12, Vmin = 0, Vmax = 100, qinj = 10, qwit = 10, kappa = 1.5, mu = 40, sigma = 8, r = 0.05, cOp = 0.5, dt = 1 / 12 } = {}) {
+function runBellmanDP({ NV = 20, NS = 25, NT = 12, Vmin = 0, Vmax = 100, qinj = 10, qwit = 10, kappa = 1.5, mu = 40, sigma = 8, r = 0.05, cOp = 0.5, dt = 1 / 12, seasonAmp = 0.3 } = {}) {
   const vGrid = Array.from({ length: NV }, (_, i) => Vmin + (i / (NV - 1)) * (Vmax - Vmin))
   const statStd = sigma / Math.sqrt(2 * Math.max(kappa, 0.01))
-  const sGrid = Array.from({ length: NS }, (_, j) => mu - 3 * statStd + (j / (NS - 1)) * 6 * statStd)
-  const Pi = buildTransitionMatrix(NS, sGrid, kappa, mu, sigma, dt)
-  const NU = 11
+
+  // ----- Seasonal mean-reversion target: μ(t) = μ × (1 + A·cos(2π(t−8)/NT)) -----
+  // Gas year: t=0 = April (low prices → inject), t≈8 = December (peak → withdraw)
+  // Phase shift of −8 months puts the cosine peak at t=8 (Dec) and trough at t=2 (Jun)
+  const muSeason = Array.from({ length: NT + 1 }, (_, t) =>
+    mu * (1 + seasonAmp * Math.cos(2 * Math.PI * (t - 8) / NT))
+  )
+
+  // ----- Price grid wide enough to cover the full seasonal range -----
+  const muMax = mu * (1 + Math.abs(seasonAmp))
+  const muMin = mu * (1 - Math.abs(seasonAmp))
+  const sLo = Math.max(1, muMin - 3 * statStd)
+  const sHi = muMax + 3 * statStd
+  const sGrid = Array.from({ length: NS }, (_, j) => sLo + (j / (NS - 1)) * (sHi - sLo))
+
+  // ----- Per-month transition matrices: Pi[t] uses μ(t+1) as target -----
+  const PiArr = Array.from({ length: NT }, (_, t) =>
+    buildTransitionMatrix(NS, sGrid, kappa, muSeason[t + 1], sigma, dt)
+  )
+
+  const NU = 15
   const uGrid = Array.from({ length: NU }, (_, k) => -qwit + (k / (NU - 1)) * (qinj + qwit))
   // V[t][i][j]: value at time t, vol index i, price index j
   const V = Array.from({ length: NT + 1 }, () =>
@@ -66,6 +84,11 @@ function runBellmanDP({ NV = 15, NS = 12, NT = 12, Vmin = 0, Vmax = 100, qinj = 
   )
   const disc = Math.exp(-r * dt)
   for (let t = NT - 1; t >= 0; t--) {
+    const Pit = PiArr[t]
+    // Precompute columns of V[t+1] for interpolation (avoid O(NV) alloc in inner loop)
+    const cols = Array.from({ length: NS }, (_, k) =>
+      V[t + 1].map(row => row[k])
+    )
     for (let i = 0; i < NV; i++) {
       for (let j = 0; j < NS; j++) {
         const Vi = vGrid[i]
@@ -78,8 +101,7 @@ function runBellmanDP({ NV = 15, NS = 12, NT = 12, Vmin = 0, Vmax = 100, qinj = 
           if (Vnew < Vmin - 1e-9 || Vnew > Vmax + 1e-9) continue
           let EV = 0
           for (let k = 0; k < NS; k++) {
-            const col = V[t + 1].map(row => row[k])
-            EV += Pi[j][k] * linInterp(vGrid, col, Vnew)
+            EV += Pit[j][k] * linInterp(vGrid, cols[k], Vnew)
           }
           const cashflow = -u * Sj * dt - cOp * Math.abs(u) * dt
           const gain = cashflow + disc * EV
@@ -90,12 +112,13 @@ function runBellmanDP({ NV = 15, NS = 12, NT = 12, Vmin = 0, Vmax = 100, qinj = 
       }
     }
   }
-  return { V, policy, vGrid, sGrid, Pi }
+  return { V, policy, vGrid, sGrid, muSeason }
 }
 
 function runIntrinsicDP({ NV = 15, NT = 12, Vmin = 0, Vmax = 100, qinj = 10, qwit = 10, mu = 40, spread = 15, r = 0.05, cOp = 0.5, dt = 1 / 12 } = {}) {
   const vGrid = Array.from({ length: NV }, (_, i) => Vmin + (i / (NV - 1)) * (Vmax - Vmin))
-  const fwd = Array.from({ length: NT + 1 }, (_, t) => mu + spread * 0.5 * Math.cos(2 * Math.PI * t / NT + Math.PI))
+  // Gas year: t=0=Avr (low fwd), t≈8=Déc (high fwd). Phase shift −8 puts peak at Dec.
+  const fwd = Array.from({ length: NT + 1 }, (_, t) => mu + spread * 0.5 * Math.cos(2 * Math.PI * (t - 8) / NT))
   const NU = 11
   const uGrid = Array.from({ length: NU }, (_, k) => -qwit + (k / (NU - 1)) * (qinj + qwit))
   const V = Array.from({ length: NT + 1 }, () => new Array(NV).fill(0))
@@ -144,10 +167,12 @@ function Td({ children, accent }) {
 
 // ─── Onglet 1 : Acteur & Modèle ──────────────────────────────────────────────
 
-const MONTHS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
-const DEMAND_PROFILE = [90, 85, 70, 50, 35, 25, 20, 22, 38, 55, 78, 92]
+// ─── Année gazière : Avril (t=0) → Mars (t=11) ──────────────────────────────
+const MONTHS = ['Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc', 'Jan', 'Fév', 'Mar']
+// Demande en GWh/mois, ordonnée en année gazière (Avr→Mar)
+const DEMAND_PROFILE = [50, 35, 25, 20, 22, 38, 55, 78, 92, 90, 85, 70]
 // Profil attendu saisonnier couvert par les forwards (consommation moyenne par mois)
-const EXPECTED_DEMAND = [77, 72, 59, 43, 29, 21, 17, 19, 31, 47, 67, 79]
+const EXPECTED_DEMAND = [43, 29, 21, 17, 19, 31, 47, 67, 79, 77, 72, 59]
 // Scénarios de stress thermique pour dimensionner la puissance de soutirage
 const STRESS_SCENARIOS = [
   { label: 'Hiver doux', dT: 3, days: 2 },
@@ -433,26 +458,39 @@ export function BellmanTab() {
   const [r, setR] = useState(0.05)
   const [qinj, setQinj] = useState(10)
   const [qwit, setQwit] = useState(10)
+  const [seasonAmp, setSeasonAmp] = useState(0.3)
 
   const result = useMemo(() => {
-    return runBellmanDP({ NV: 15, NS: 12, NT: 12, Vmin: 0, Vmax: 100, qinj, qwit, kappa, mu, sigma, r, cOp: 0.5, dt: 1 / 12 })
-  }, [kappa, mu, sigma, r, qinj, qwit])
+    return runBellmanDP({ NV: 20, NS: 25, NT: 12, Vmin: 0, Vmax: 100, qinj, qwit, kappa, mu, sigma, r, cOp: 0.5, dt: 1 / 12, seasonAmp })
+  }, [kappa, mu, sigma, r, qinj, qwit, seasonAmp])
 
-  const jMid = 6
-  const iMid = 7
+  const jMid = 12
+  const iMid = 10
 
-  const valueData = result.vGrid.map((v, i) => ({
+  // ── Sélection interactive du point (V, S, t) ──
+  const [vSel, setVSel] = useState(50)
+  const [sSel, setSSel] = useState(40)
+  const [tSel, setTSel] = useState(0)   // mois sélectionné (0 = Jan … 11 = Déc)
+
+  const iSel = result.vGrid.reduce((best, v, i) => Math.abs(v - vSel) < Math.abs(result.vGrid[best] - vSel) ? i : best, 0)
+  const jSel = result.sGrid.reduce((best, s, j) => Math.abs(s - sSel) < Math.abs(result.sGrid[best] - sSel) ? j : best, 0)
+
+  // Cross-section V : valeur & action en fonction du volume, à S fixé, au mois tSel
+  const crossV = result.vGrid.map((v, i) => ({
     volume: +v.toFixed(1),
-    valeur: +result.V[0][i][jMid].toFixed(2),
+    valeur: +result.V[tSel][i][jSel].toFixed(2),
+    action: +result.policy[tSel][i][jSel].toFixed(2),
   }))
 
-  const policyData = result.vGrid.map((v, i) => ({
-    volume: +v.toFixed(1),
-    contrôle: +result.policy[0][i][jMid].toFixed(2),
+  // Cross-section S : valeur & action en fonction du prix, à V fixé, au mois tSel
+  const crossS = result.sGrid.map((s, j) => ({
+    prix: +s.toFixed(1),
+    valeur: +result.V[tSel][iSel][j].toFixed(2),
+    action: +result.policy[tSel][iSel][j].toFixed(2),
   }))
 
-  const v0 = result.V[0][iMid][jMid]
-  const u0 = result.policy[0][iMid][jMid]
+  const vAtPoint = result.V[tSel][iSel][jSel]
+  const uAtPoint = result.policy[tSel][iSel][jSel]
 
   return (
     <div>
@@ -1547,83 +1585,225 @@ export function BellmanTab() {
         </div>
       </Accordion>
 
-      {/* ── Simulation interactive ──────────────────────────────────────────── */}
-      <SectionTitle accent={ACCENT}>Explorer l'effet de chaque paramètre</SectionTitle>
+      {/* ── Tableau de bord opérateur ──────────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Tableau de bord — explorer la grille Bellman</SectionTitle>
 
-      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
-        Les deux graphiques montrent une coupe à <strong>prix médian S = μ</strong> et <strong>t = 0</strong>
-        (début de la période de 12 mois, 50 GWh en stock pour les métriques).
-        Gauche : <em>"combien vaut mon stockage selon son remplissage ?"</em> —
-        Droite : <em>"que dois-je faire selon l'état du stock ?"</em>
-      </div>
+      <IntuitionBlock emoji="🗺️" title="La carte de décision de l'opérateur" accent={ACCENT}>
+        L'algorithme de Bellman produit une <strong>carte 3D</strong> : pour chaque combinaison
+        (mois t, volume en stock V, prix du gaz S), il dit précisément quoi faire et combien ça vaut.
+        Ci-dessous, vous pouvez explorer cette carte de quatre façons :
+        <br />
+        ① Le <strong>slider temporel</strong> — naviguez en année gazière d'Avril (injection) à Mars (soutirage) pour voir la saisonnalité.
+        <br />
+        ② La <strong>matrice de décision</strong> — vue d'ensemble de toutes les zones inject / attente / soutire au mois sélectionné.
+        <br />
+        ③ Les <strong>coupes croisées</strong> — comment la valeur et l'action évoluent quand on fait varier V (à S fixé) ou S (à V fixé).
+        <br />
+        ④ Le <strong>diagnostic ponctuel</strong> — sélectionnez un point (V, S) et lisez la recommandation de Bellman.
+      </IntuitionBlock>
 
-      <Grid cols={3} gap="12px">
+      <Grid cols={4} gap="12px">
         <Slider label="κ — vitesse de retour à la moyenne du prix" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="μ — prix d'équilibre long terme (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v} €`} />
+        <Slider label="μ — prix d'équilibre moyen annuel (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v} €`} />
         <Slider label="σ — volatilité instantanée du prix (€/MWh)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+        <Slider label="A — amplitude saisonnière du prix (%)" value={seasonAmp} min={0} max={0.6} step={0.05} onChange={setSeasonAmp} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
         <Slider label="r — taux d'actualisation annuel" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={ACCENT} format={v => `${(v * 100).toFixed(1)}%`} />
         <Slider label="q_inj — débit max d'injection (GWh/mois)" value={qinj} min={2} max={20} step={1} onChange={setQinj} accent={ACCENT} format={v => `${v}`} />
         <Slider label="q_wit — débit max de soutirage (GWh/mois)" value={qwit} min={2} max={20} step={1} onChange={setQwit} accent={ACCENT} format={v => `${v}`} />
       </Grid>
 
-      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '12px 0' }}>
-        <InfoChip label="𝒱₀(50 GWh, prix médian)" value={v0.toFixed(2)} unit="€" accent={ACCENT} />
-        <InfoChip label="Décision optimale u*" value={u0 > 0.5 ? `+${u0.toFixed(1)} inj` : u0 < -0.5 ? `${u0.toFixed(1)} sout` : '0 attente'} accent={u0 > 0.5 ? T.a1 : u0 < -0.5 ? T.a4 : T.muted} />
-        <InfoChip label="Grille DP" value="15×12×12" unit="nœuds" accent={T.muted} />
+      {/* ── Slider temporel ── */}
+      <div style={{ background: `${ACCENT}12`, border: `2px solid ${ACCENT}44`, borderRadius: 10, padding: '12px 20px', margin: '10px 0' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 300px' }}>
+            <Slider label={`t — mois de l'année gazière : ${MONTHS[tSel]} (${tSel + 1}/12)`} value={tSel} min={0} max={11} step={1} onChange={setTSel} accent={ACCENT} format={v => MONTHS[v]} />
+          </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {MONTHS.map((m, idx) => (
+              <button key={idx} onClick={() => setTSel(idx)} style={{
+                background: idx === tSel ? ACCENT : `${T.muted}15`,
+                color: idx === tSel ? '#000' : T.muted,
+                border: 'none', borderRadius: 4, padding: '4px 8px', fontSize: 11,
+                fontWeight: idx === tSel ? 800 : 500, cursor: 'pointer',
+                transition: 'all .15s',
+              }}>{m}</button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
+          <InfoChip label="Mois" value={MONTHS[tSel]} accent={ACCENT} />
+          <InfoChip label={`μ(${MONTHS[tSel]})`} value={`${result.muSeason[tSel].toFixed(1)} €`} accent={result.muSeason[tSel] > mu ? T.a8 : T.a1} />
+          <InfoChip label="Saison" value={tSel <= 5 ? '☀️ Injection (Avr→Sep)' : '❄️ Soutirage (Oct→Mar)'} accent={tSel <= 5 ? T.a1 : T.a8} />
+        </div>
+      </div>
+
+      {/* ── A. Panneau diagnostic pour le point sélectionné ── */}
+      <div style={{ background: `${ACCENT}0d`, border: `2px solid ${ACCENT}44`, borderRadius: 10, padding: '14px 20px', margin: '14px 0' }}>
+        <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1 1 250px' }}>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>🎯 Point sélectionné</div>
+            <Grid cols={2} gap="8px">
+              <Slider label="V — volume en stock (GWh)" value={vSel} min={0} max={100} step={5} onChange={setVSel} accent={ACCENT} format={v => `${v}`} />
+              <Slider label="S — prix spot actuel (€/MWh)" value={sSel} min={Math.max(10, Math.round(mu - 3 * sigma / Math.sqrt(2 * Math.max(kappa, 0.01))))} max={Math.round(mu + 3 * sigma / Math.sqrt(2 * Math.max(kappa, 0.01)))} step={1} onChange={setSSel} accent={ACCENT} format={v => `${v} €`} />
+            </Grid>
+          </div>
+          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', minWidth: 160 }}>
+            <div style={{ background: uAtPoint > 0.5 ? `${T.a1}20` : uAtPoint < -0.5 ? `${T.a4}20` : `${T.muted}18`, border: `2px solid ${uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted}`, borderRadius: 8, padding: '10px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 22, marginBottom: 2 }}>{uAtPoint > 0.5 ? '⬆️' : uAtPoint < -0.5 ? '⬇️' : '⏸️'}</div>
+              <div style={{ color: uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted, fontWeight: 800, fontSize: 14, textTransform: 'uppercase' }}>
+                {uAtPoint > 0.5 ? 'INJECTER' : uAtPoint < -0.5 ? 'SOUTIRER' : 'ATTENDRE'}
+              </div>
+              <div style={{ color: T.text, fontSize: 11, marginTop: 2 }}>
+                u* = {uAtPoint > 0.5 ? '+' : ''}{uAtPoint.toFixed(1)} GWh/mois
+              </div>
+            </div>
+          </div>
+          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center', minWidth: 180 }}>
+            <InfoChip label={`𝒱(${MONTHS[tSel]}, ${Math.round(vSel)}, ${Math.round(sSel)})`} value={vAtPoint.toFixed(2)} unit="€" accent={ACCENT} />
+            <InfoChip label="Grille DP" value={`${result.vGrid.length}×${result.sGrid.length}×12`} unit="nœuds" accent={T.muted} />
+            <div style={{ color: T.muted, fontSize: 10, lineHeight: 1.5 }}>
+              {uAtPoint > 0.5
+                ? `Stock bas + prix acceptable → acheter ${Math.abs(uAtPoint).toFixed(1)} GWh/mois pour remplir le tank.`
+                : uAtPoint < -0.5
+                  ? `Le prix justifie de vendre → soutirer ${Math.abs(uAtPoint).toFixed(1)} GWh/mois et encaisser.`
+                  : `Ni le prix ni le stock ne justifient d'agir → conserver la flexibilité et attendre.`
+              }
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── B. Carte de décision (heatmap) ── */}
+      <SectionTitle accent={ACCENT}>Carte de décision u*(V, S) en {MONTHS[tSel]} — la politique optimale en un coup d'œil</SectionTitle>
+
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px' }}>
+        Chaque cellule montre l'<strong>action optimale</strong> calculée par Bellman au mois <strong>{MONTHS[tSel]}</strong> (t = {tSel} en année gazière).
+        Les couleurs révèlent les <strong>trois zones</strong> : injection (bleu), attente (gris) et soutirage (vert).
+        Naviguez de <strong>Avr</strong> (t=0, début injection) à <strong>Mar</strong> (t=11, fin soutirage) pour voir la saisonnalité.
+        Repérez le point sélectionné (⊕) — il correspond au diagnostic ci-dessus.
+      </div>
+
+      <div style={{ overflowX: 'auto', margin: '8px 0' }}>
+        <table style={{ borderCollapse: 'collapse', fontSize: 11, width: '100%', tableLayout: 'fixed' }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '4px 6px', color: ACCENT, fontWeight: 700, fontSize: 10, textAlign: 'left', borderBottom: `1px solid ${ACCENT}44`, width: 55 }}>V \ S →</th>
+              {result.sGrid.map((s, j) => (
+                <th key={j} style={{ padding: '4px 2px', color: j === jSel ? ACCENT : T.muted, fontWeight: j === jSel ? 800 : 600, fontSize: 10, textAlign: 'center', borderBottom: `1px solid ${ACCENT}44`, background: j === jSel ? `${ACCENT}12` : 'transparent' }}>
+                  {s.toFixed(0)}€
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {result.vGrid.map((v, i) => (
+              <tr key={i}>
+                <td style={{ padding: '3px 6px', color: i === iSel ? ACCENT : T.muted, fontWeight: i === iSel ? 800 : 600, fontSize: 10, borderBottom: `1px solid ${T.border}`, background: i === iSel ? `${ACCENT}12` : 'transparent' }}>
+                  {v.toFixed(0)} GWh
+                </td>
+                {result.sGrid.map((s, j) => {
+                  const u = result.policy[tSel][i][j]
+                  const isSelected = i === iSel && j === jSel
+                  const bg = u > 0.5 ? `${T.a1}${isSelected ? '55' : '28'}` : u < -0.5 ? `${T.a4}${isSelected ? '55' : '28'}` : `${T.muted}${isSelected ? '30' : '10'}`
+                  const fg = u > 0.5 ? T.a1 : u < -0.5 ? T.a4 : T.muted
+                  return (
+                    <td key={j} style={{
+                      padding: '3px 1px', textAlign: 'center', fontSize: 10, fontWeight: isSelected ? 800 : 500,
+                      background: bg, color: fg,
+                      borderBottom: `1px solid ${T.border}`,
+                      border: isSelected ? `2px solid ${ACCENT}` : `1px solid ${T.border}`,
+                      borderRadius: isSelected ? 3 : 0,
+                      cursor: 'pointer',
+                    }} onClick={() => { setVSel(v); setSSel(s) }} title={`V=${v.toFixed(0)}, S=${s.toFixed(0)}: u*=${u.toFixed(1)}`}>
+                      {isSelected ? '⊕' : u > 0.5 ? `+${u.toFixed(0)}` : u < -0.5 ? u.toFixed(0) : '·'}
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Légende de la carte */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '6px 0 14px' }}>
+        {[
+          { color: T.a1, label: '+N = Injecter N GWh/mois', desc: 'Stock bas et/ou prix bas → acheter du gaz pour le revendre plus tard.' },
+          { color: T.muted, label: '· = Attendre', desc: 'Ni le prix ni le stock ne justifient d\'agir. Conserver la flexibilité.' },
+          { color: T.a4, label: '−N = Soutirer N GWh/mois', desc: 'Stock élevé et/ou prix élevé → vendre du gaz et encaisser.' },
+          { color: ACCENT, label: '⊕ = Point sélectionné', desc: 'Cliquez sur une cellule pour changer la sélection. Les coupes ci-dessous s\'adaptent.' },
+        ].map(({ color, label, desc }, idx) => (
+          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 180 }}>
+            <span style={{ color, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{label.split(' ')[0]}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.5 }}><strong style={{ color }}>{label.slice(label.indexOf(' ') + 1)}</strong> — {desc}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── C. Coupes croisées ── */}
+      <SectionTitle accent={ACCENT}>Coupes croisées — deux perspectives sur la valeur et la décision</SectionTitle>
+
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px' }}>
+        Les deux graphiques ci-dessous sont des <strong>tranches</strong> de la grille 2D.
+        Gauche : on fixe le prix à S = {result.sGrid[jSel].toFixed(0)} € et on fait varier le volume.
+        Droite : on fixe le volume à V = {result.vGrid[iSel].toFixed(0)} GWh et on fait varier le prix.
+        Ensemble, ils forment une <strong>croix</strong> qui se croise au point sélectionné (⊕).
       </div>
 
       <Grid cols={2} gap="16px">
-        <ChartWrapper title="Fonction valeur 𝒱₀(V, S=μ) — valeur selon le remplissage du stockage" accent={ACCENT} height={220}>
+        <ChartWrapper title={`𝒱(${MONTHS[tSel]}, V, S=${result.sGrid[jSel].toFixed(0)}€) — valeur selon le remplissage`} accent={ACCENT} height={220}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={valueData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <LineChart data={crossV} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="volume" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Volume (GWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <XAxis dataKey="volume" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Volume V (GWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+              <YAxis yAxisId="val" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <YAxis yAxisId="act" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }} />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <Line type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2.5} dot={false} name="𝒱₀(V, μ)" />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <ReferenceLine yAxisId="act" y={0} stroke={T.muted} strokeDasharray="4 2" />
+              <Line yAxisId="val" type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2.5} dot={false} name={`Valeur 𝒱 ${MONTHS[tSel]} (€)`} />
+              <Line yAxisId="act" type="monotone" dataKey="action" stroke={T.a4} strokeWidth={1.8} dot={false} strokeDasharray="5 3" name="Action u* (GWh/m)" />
             </LineChart>
           </ResponsiveContainer>
         </ChartWrapper>
-        <ChartWrapper title="Politique optimale u*(V, S=μ) — la règle de décision au prix d'équilibre" accent={ACCENT} height={220}>
+        <ChartWrapper title={`𝒱(${MONTHS[tSel]}, V=${result.vGrid[iSel].toFixed(0)}GWh, S) — valeur selon le prix`} accent={ACCENT} height={220}>
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={policyData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <LineChart data={crossS} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="volume" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Volume (GWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+              <YAxis yAxisId="val" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+              <YAxis yAxisId="act" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }} />
               <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <ReferenceLine y={0} stroke={T.muted} strokeDasharray="4 2" />
-              <Line type="monotone" dataKey="contrôle" stroke={T.a4} strokeWidth={2.5} dot={false} name="u*(V, μ)" />
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+              <ReferenceLine yAxisId="act" y={0} stroke={T.muted} strokeDasharray="4 2" />
+              <Line yAxisId="val" type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2.5} dot={false} name={`Valeur 𝒱 ${MONTHS[tSel]} (€)`} />
+              <Line yAxisId="act" type="monotone" dataKey="action" stroke={T.a4} strokeWidth={1.8} dot={false} strokeDasharray="5 3" name="Action u* (GWh/m)" />
             </LineChart>
           </ResponsiveContainer>
         </ChartWrapper>
       </Grid>
 
-      {/* Clés de lecture des graphiques */}
+      {/* Clés de lecture */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '14px 0' }}>
 
-        {/* ── Fonction valeur ── */}
         <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: '12px 16px' }}>
-          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la fonction valeur (gauche)</div>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la coupe « volume » (gauche)</div>
           {[
             {
               icon: '📈',
-              text: <><strong style={{ color: T.text }}>Croissante</strong> — plus de stock = plus de gaz à vendre quand les prix montent. Ex : à V = 100 GWh la valeur est environ 2× celle à V = 50 GWh.</>,
+              text: <><strong style={{ color: T.text }}>Valeur croissante</strong> — plus de stock = plus de gaz à vendre lors d'un pic. La pente <K>{"\\partial\\mathcal{V}/\\partial V"}</K> est le <em>delta volume</em>.</>,
             },
             {
               icon: '🔝',
-              text: <><strong style={{ color: T.text }}>S'aplatit à V<sub>max</sub></strong> — stock plein, impossible d'injecter davantage. Le GWh supplémentaire n'a nulle part où aller → valeur marginale nulle, la pente s'efface.</>,
+              text: <><strong style={{ color: T.text }}>Aplatissement aux extrêmes</strong> — stock plein → impossible d'injecter ; stock vide → rien à soutirer. Valeur marginale → 0 aux bords.</>,
             },
             {
-              icon: '🔻',
-              text: <><strong style={{ color: T.text }}>S'aplatit à V<sub>min</sub></strong> — stock vide, rien à soutirer. La flexibilité disparaît dans les deux sens.</>,
+              icon: '🔄',
+              text: <><strong style={{ color: T.text }}>Action en pointillés</strong> — la courbe verte passe de u &gt; 0 (injection à bas stock) à u &lt; 0 (soutirage à haut stock). Le croisement avec u = 0 est le <strong>seuil d'attente</strong>.</>,
             },
             {
               icon: '📊',
-              text: <><strong style={{ color: T.text }}>↑ σ → courbe plus haute</strong> — le stockage est une option réelle : on vend aux pics, on n'est pas obligé d'agir aux creux. Plus les prix bougent, plus ces occasions sont fréquentes. <K>{"\\mathcal{V}"}</K> est convexe en <K>{"\\sigma"}</K>.</>,
-            },
-            {
-              icon: '⏳',
-              text: <><strong style={{ color: T.text }}>↑ r → courbe plus basse</strong> — un gain de 100 € dans 6 mois ne vaut que <K>{"e^{-r \\cdot 0.5} \\times 100\\,\\text{€}"}</K> aujourd'hui. Plus r est élevé, plus les cashflows futurs se déprécient.</>,
+              text: <><strong style={{ color: T.text }}>↑ σ → courbe plus haute</strong> — plus de volatilité = plus d'occasions de profit = stockage plus précieux. C'est la convexité en <K>{"\\sigma"}</K>.</>,
             },
           ].map(({ icon, text }, i) => (
             <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
@@ -1633,29 +1813,24 @@ export function BellmanTab() {
           ))}
         </div>
 
-        {/* ── Politique optimale ── */}
         <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 8, padding: '12px 16px' }}>
-          <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la politique optimale (droite)</div>
+          <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 10 }}>Lire la coupe « prix » (droite)</div>
           {[
             {
-              icon: '⬆️',
-              text: <><strong style={{ color: T.text }}>u &gt; 0 — stock bas → injecter</strong> : acheter maintenant pour avoir du gaz à vendre lors d'un futur pic. Comme remplir son garde-manger avant l'hiver.</>,
+              icon: '💰',
+              text: <><strong style={{ color: T.text }}>Valeur croissante en S</strong> — si le stock n'est pas vide, un prix plus élevé = revenu de soutirage plus élevé. Le stockage est <em>long</em> le prix du gaz.</>,
             },
             {
               icon: '⬇️',
-              text: <><strong style={{ color: T.text }}>u &lt; 0 — stock élevé → soutirer</strong> : vendre au prix actuel. À stock plein et prix médian, garder du gaz supplémentaire ne rapporte rien de plus.</>,
+              text: <><strong style={{ color: T.text }}>u* bascule en négatif</strong> — passé un certain seuil de prix, Bellman recommande de soutirer. Ce seuil dépend du remplissage V et de la saisonnalité (début vs fin de contrat).</>,
             },
             {
               icon: '⏸️',
-              text: <><strong style={{ color: T.text }}>u ≈ 0 — stock intermédiaire → attendre</strong> : ni injecter ni soutirer ne se justifie encore. L'algorithme préfère conserver la flexibilité. Une hausse de <K>{"S"}</K> déclenchera le soutirage, une baisse l'injection.</>,
+              text: <><strong style={{ color: T.text }}>Zone d'attente</strong> — autour de μ, injections et soutirages se valent. L'algorithme préfère attendre une opportunité plus nette.</>,
             },
             {
-              icon: '🎛️',
-              text: <><strong style={{ color: T.text }}>↑ q<sub>wit</sub> ou q<sub>inj</sub> → politique plus agressive</strong> : les plafonds d'action s'élargissent, les seuils de déclenchement s'écartent, la courbe devient plus pentue.</>,
-            },
-            {
-              icon: '⚡',
-              text: <><strong style={{ color: T.text }}>↑ σ → zone d'attente rétrécie</strong> : avec une forte volatilité, les pics sont intenses mais courts. Agir vite quand l'occasion se présente devient plus rentable → la bande neutre (u ≈ 0) se réduit.</>,
+              icon: '↕️',
+              text: <><strong style={{ color: T.text }}>↑ κ → bascule plus franche</strong> — forte mean-reversion → les prix reviennent vite → il faut saisir les pics immédiatement → seuil de soutirage plus proche de μ.</>,
             },
           ].map(({ icon, text }, i) => (
             <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 7, alignItems: 'flex-start' }}>
@@ -2248,18 +2423,18 @@ export function ValeurTab() {
   const [kappa, setKappa] = useState(1.5)
   const mu = 40
 
-  const dpParams = { NV: 12, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, mu, r: 0.05, cOp: 0.5, dt: 1 / 12 }
+  const dpParams = { NV: 15, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, mu, r: 0.05, cOp: 0.5, dt: 1 / 12 }
 
   const intrinsic = useMemo(() => {
     return runIntrinsicDP({ ...dpParams, spread })
   }, [spread])
 
   const stochastic = useMemo(() => {
-    return runBellmanDP({ ...dpParams, NS: 10, kappa, sigma })
+    return runBellmanDP({ ...dpParams, NS: 18, kappa, sigma, seasonAmp: 0.3 })
   }, [kappa, sigma])
 
-  const iMid = 6
-  const jMid = 5
+  const iMid = 7
+  const jMid = 9
 
   const viVal = intrinsic.V[0] ? linInterp(intrinsic.vGrid, intrinsic.V[0], 50) : 0
   const vstochVal = stochastic.V[0] ? stochastic.V[0][iMid][jMid] : 0
@@ -2275,9 +2450,9 @@ export function ValeurTab() {
   const sigmaRange = [2, 4, 6, 8, 10, 12, 15, 18, 22]
   const veVsSigma = useMemo(() => {
     return sigmaRange.map(s => {
-      const stoch = runBellmanDP({ ...dpParams, NS: 8, kappa, sigma: s })
+      const stoch = runBellmanDP({ ...dpParams, NS: 14, kappa, sigma: s, seasonAmp: 0.3 })
       const vi = intrinsic.V[0] ? linInterp(intrinsic.vGrid, intrinsic.V[0], 50) : 0
-      const vs = stoch.V[0][Math.floor(8 / 2)][4]
+      const vs = stoch.V[0][Math.floor(stoch.vGrid.length / 2)][Math.floor(14 / 2)]
       return { sigma: s, VE: +Math.max(0, vs - vi).toFixed(2) }
     })
   }, [kappa, spread])
@@ -2684,10 +2859,10 @@ export function DeltaTab() {
   const [s0, setS0] = useState(40)
 
   const result = useMemo(() => {
-    return runBellmanDP({ NV: 15, NS: 14, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma, r: 0.05, cOp: 0.5, dt: 1 / 12 })
+    return runBellmanDP({ NV: 20, NS: 20, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma, r: 0.05, cOp: 0.5, dt: 1 / 12, seasonAmp: 0.3 })
   }, [kappa, mu, sigma])
 
-  const jMid = 7
+  const jMid = 10
   const deltaVData = result.vGrid.map((v, i) => {
     const jPlus = Math.min(jMid + 1, result.sGrid.length - 1)
     const jMinus = Math.max(jMid - 1, 0)
@@ -2696,7 +2871,7 @@ export function DeltaTab() {
     return { volume: +v.toFixed(0), delta: +delta.toFixed(3) }
   })
 
-  const iMid = 7
+  const iMid = 10
   const deltaSData = result.sGrid.map((s, j) => {
     const jPlus = Math.min(j + 1, result.sGrid.length - 1)
     const jMinus = Math.max(j - 1, 0)
