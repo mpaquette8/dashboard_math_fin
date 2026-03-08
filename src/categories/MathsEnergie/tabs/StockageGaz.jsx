@@ -3221,12 +3221,15 @@ export function DeltaTab() {
     linéaire: +(result.V[0][iMid][jMid] + currentDelta * (s - result.sGrid[jMid])).toFixed(2),
   }))
 
-  // Gamma computation
+  // Gamma computation — différence centrée d'ordre 2 : Γ ≈ (V[j+1] - 2V[j] + V[j-1]) / h²
+  // Les bornes (j=0 et j=N-1) sont exclues : le clamping de jMinus/jPlus y dégénère la formule
+  // en une dérivée première scalée, produisant un spike artéfactuel. Aux prix extrêmes la
+  // décision est déterministe (injecter ou soutirer systématiquement) → convexité ≈ 0.
   const gammaData = result.sGrid.map((s, j) => {
-    const jPlus = Math.min(j + 1, result.sGrid.length - 1)
-    const jMinus = Math.max(j - 1, 0)
-    const dS = (result.sGrid[jPlus] - result.sGrid[jMinus]) / 2
-    const d2V = (result.V[0][iMid][jPlus] - 2 * result.V[0][iMid][j] + result.V[0][iMid][jMinus]) / (dS * dS + 1e-10)
+    if (j === 0 || j === result.sGrid.length - 1)
+      return { prix: +s.toFixed(1), gamma: 0 }
+    const h = (result.sGrid[j + 1] - result.sGrid[j - 1]) / 2
+    const d2V = (result.V[0][iMid][j + 1] - 2 * result.V[0][iMid][j] + result.V[0][iMid][j - 1]) / (h * h + 1e-10)
     return { prix: +s.toFixed(1), gamma: +d2V.toFixed(4) }
   })
 
@@ -3726,7 +3729,7 @@ Chaque jour, au fixing spot :
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
         {[
-          { icon: '📈', text: <><strong>Graphe gauche</strong> : la courbe rouge (valeur réelle) est <em>au-dessus</em> de la droite grise (approximation Δ) aux extrêmes. C'est la convexité Γ &gt; 0 : les mouvements de prix rapportent plus que prévu par Δ seul.</> },
+          { icon: '📈', text: <><strong>Graphe gauche</strong> : la courbe rouge (valeur réelle) est <em>au-dessus</em> de la droite grise (approximation Δ) pour tout S ≠ S₀ — l'écart s'amplifie avec la distance à S₀. C'est la convexité Γ &gt; 0 : les mouvements de prix rapportent toujours plus que prévu par Δ seul, quelle que soit la direction.</> },
           { icon: '🔔', text: <><strong>Graphe droit</strong> : le gamma est maximal autour de S ≈ μ (zone d'incertitude maximale) et diminue aux extrêmes (où la décision est "évidente" : soutirer tout ou injecter tout).</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
