@@ -289,7 +289,7 @@ export function SymbolLegend({ symbols, accent = T.a1 }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 6 }}>
         {symbols.map(([sym, def]) => (
           <div key={sym} style={{ display: 'flex', gap: 8, alignItems: 'baseline' }}>
-            <code style={{ color: accent, fontWeight: 700, minWidth: 40, fontFamily: 'monospace', fontSize: 14 }}>{sym}</code>
+            <span style={{ color: accent, fontWeight: 700, minWidth: 40, fontSize: 14 }}><K>{sym}</K></span>
             <span style={{ color: T.muted, fontSize: 13 }}>— {def}</span>
           </div>
         ))}

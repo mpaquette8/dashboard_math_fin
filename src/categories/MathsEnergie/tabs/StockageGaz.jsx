@@ -2244,27 +2244,198 @@ export function PrixTab() {
       </Step>
 
       <Step num={3} accent={ACCENT}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div><strong>Construire la matrice de transition Π</strong></div>
-          <FormulaBox accent={ACCENT}>
-            <K display>{"\\Pi_{jk} = \\mathbb{P}(S_{t+1} = s_k \\mid S_t = s_j) \\propto \\exp\\!\\left(-\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}\\right)"}</K>
+
+          {/* Analogie */}
+          <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 7, padding: '10px 14px', color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            <strong style={{ color: ACCENT }}>Analogie :</strong> Imaginez que vous lancez une balle depuis le nœud <K>{"s_j"}</K>.
+            La balle atterrit principalement près de la cible <K>{"\\bar{s}_j"}</K> (mean-reversion).
+            Plus un nœud <K>{"s_k"}</K> est loin de <K>{"\\bar{s}_j"}</K>, moins la balle a de chances d'y atterrir.
+            La matrice Π encode exactement cette distribution de probabilités d'atterrissage.
+          </div>
+
+          {/* Formule annotée */}
+          <FormulaBox accent={ACCENT} label="Noyau gaussien de transition">
+            <K display>{"\\Pi_{jk} \\propto \\exp\\!\\left(-\\underbrace{\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}}_{\\text{distance normalisée}^2 / 2}\\right)"}</K>
           </FormulaBox>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
-            Pour chaque ligne j (prix de départ), évaluer la densité gaussienne centrée sur <K>{"\\bar{s}_j"}</K>
-            à chaque nœud d'arrivée <K>{"s_k"}</K>, puis normaliser la ligne (somme → 1).
+
+          <SymbolLegend accent={ACCENT} symbols={[
+            ['\\Pi_{jk}', 'probabilité de passer du prix s_j au prix s_k en un pas Δt'],
+            ['s_k', 'nœud d\'arrivée (prix au mois suivant) — indexé k sur la grille'],
+            ['\\bar{s}_j', 'espérance conditionnelle depuis s_j (calculée à l\'étape 2)'],
+            ['\\sigma_{\\Delta t}', 'écart-type conditionnel sur la période Δt (voir formule ci-dessous)'],
+            ['\\propto', 'proportionnel à — la normalisation est faite séparément (somme de ligne → 1)'],
+          ]} />
+
+          {/* Décomposition terme à terme */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10, margin: '4px 0' }}>
+
+            {/* Terme A */}
+            <div style={{ background: `${T.a1}11`, border: `1px solid ${T.a1}33`, borderRadius: 7, padding: '10px 12px' }}>
+              <div style={{ color: T.a1, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>
+                📐 Terme A — distance au carré
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>
+                <K>{"(s_k - \\bar{s}_j)^2"}</K> mesure l'écart entre le nœud d'arrivée et l'espérance conditionnelle.
+                Mettre au carré garantit que l'écart est toujours positif et pénalise davantage les grands écarts.
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, background: `${T.a1}18`, borderRadius: 5, padding: '5px 8px' }}>
+                Exemple : depuis <K>{"s_j = 55"}</K> €, cible <K>{"\\bar{s}_j \\approx {" + (55 * Math.exp(-kappa / 12) + mu * (1 - Math.exp(-kappa / 12))).toFixed(1) + "}"}</K> €<br />
+                Vers <K>{"s_k = 45"}</K> € : <K>{"(45 - " + (55 * Math.exp(-kappa / 12) + mu * (1 - Math.exp(-kappa / 12))).toFixed(1) + ")^2 \\approx " + Math.pow(45 - (55 * Math.exp(-kappa / 12) + mu * (1 - Math.exp(-kappa / 12))), 2).toFixed(0)}</K><br />
+                Vers <K>{"s_k = " + (55 * Math.exp(-kappa / 12) + mu * (1 - Math.exp(-kappa / 12))).toFixed(0) + ""}</K> € (cible) : <K>{"\\approx 0"}</K> (distance nulle)
+              </div>
+            </div>
+
+            {/* Terme B */}
+            <div style={{ background: `${T.a5}11`, border: `1px solid ${T.a5}33`, borderRadius: 7, padding: '10px 12px' }}>
+              <div style={{ color: T.a5, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>
+                📏 Terme B — variance conditionnelle
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>
+                <K>{"\\sigma_{\\Delta t}^2 = \\sigma^2 \\cdot \\frac{1 - e^{-2\\kappa\\Delta t}}{2\\kappa}"}</K><br />
+                C'est la variance de la distribution de <K>{"S_{t+\\Delta t}"}</K> conditionnellement à <K>{"S_t = s_j"}</K>.
+                Différent de <K>{"\\sigma^2 \\Delta t"}</K> (GBM) : la mean-reversion <em>contracte</em> la variance.
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, background: `${T.a5}18`, borderRadius: 5, padding: '5px 8px' }}>
+                Avec κ = {kappa}, σ = {sigma}, Δt = 1/12 :<br />
+                <K>{"\\sigma_{\\Delta t} = " + sigma + " \\times \\sqrt{\\frac{1 - " + Math.exp(-2 * kappa / 12).toFixed(3) + "}{" + (2 * kappa).toFixed(1) + "}} \\approx " + (sigma * Math.sqrt((1 - Math.exp(-2 * kappa / 12)) / (2 * kappa))).toFixed(2) + " \\text{ €}"}</K>
+              </div>
+            </div>
+
+            {/* Terme C */}
+            <div style={{ background: `${T.a4}11`, border: `1px solid ${T.a4}33`, borderRadius: 7, padding: '10px 12px' }}>
+              <div style={{ color: T.a4, fontWeight: 700, fontSize: 12, marginBottom: 4 }}>
+                ⚖️ Terme C — l'exponentielle et le signe "∝"
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7 }}>
+                <K>{"\\exp(-x)"}</K> transforme une distance en poids positif.
+                <strong> Plus le nœud est loin de <K>{"\\bar{s}_j"}</K>, plus son poids est faible.</strong>{' '}
+                Le symbole <strong>∝</strong> indique que ces poids sont <em>proportionnels</em> à la densité gaussienne
+                — il faut encore normaliser pour que la somme de la ligne soit exactement 1.
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, background: `${T.a4}18`, borderRadius: 5, padding: '5px 8px' }}>
+                Normalisation : <K>{"\\Pi_{jk} = \\frac{w_{jk}}{\\sum_{k'} w_{jk'}}"}</K> où <K>{"w_{jk} = \\exp\\!\\left(-\\frac{(s_k - \\bar{s}_j)^2}{2\\sigma_{\\Delta t}^2}\\right)"}</K>
+              </div>
+            </div>
+          </div>
+
+          {/* Pourquoi ∝ et pas = */}
+          <div style={{ background: `${ACCENT}0a`, border: `1px dashed ${ACCENT}55`, borderRadius: 7, padding: '10px 14px', color: T.muted, fontSize: 11, lineHeight: 1.75 }}>
+            <strong style={{ color: ACCENT }}>Pourquoi "∝" et pas "=" ?</strong>{' '}
+            En théorie, la loi exacte de <K>{"S_{t+\\Delta t}"}</K> est gaussienne sur <K>{"\\mathbb{R}"}</K> entier.
+            Notre grille est <strong>finie</strong> — elle ne couvre que l'intervalle{' '}
+            <K>{"[\\mu - 3\\sigma_{\\text{stat}},\\, \\mu + 3\\sigma_{\\text{stat}}]"}</K>.
+            On "projette" donc la densité continue sur cette grille : on évalue la densité à chaque nœud,
+            puis on normalise pour que les poids somment à 1. La normalisation absorbe le fait que la grille
+            tronque les queues de la distribution (les 0.3 % de masse hors grille).
+          </div>
+
+          {/* Synthèse */}
+          <div style={{ borderLeft: `3px solid ${ACCENT}`, paddingLeft: 10, color: T.muted, fontSize: 12, fontStyle: 'italic', lineHeight: 1.7 }}>
+            En résumé : pour chaque prix de départ <K>{"s_j"}</K>, on place une cloche gaussienne centrée
+            sur <K>{"\\bar{s}_j"}</K> (la cible du OU), on l'évalue aux <K>{"N_S"}</K> nœuds de la grille,
+            et on normalise — c'est la ligne <em>j</em> de la matrice Π.
           </div>
         </div>
       </Step>
 
-      {/* Pseudocode */}
+      {/* Exemple numérique détaillé */}
+      <div style={{ ...panelStyle, margin: '14px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
+          Exemple numérique — construction de la ligne j correspondant à <K>{"s_j = 55"}</K> €
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginBottom: 10 }}>
+          Paramètres : κ = {kappa}, μ = {mu} €, σ = {sigma} €, Δt = 1/12 an
+        </div>
+        {(() => {
+          const eMk = Math.exp(-kappa / 12)
+          const condVar = (sigma * sigma) * (1 - Math.exp(-2 * kappa / 12)) / (2 * kappa)
+          const condStd = Math.sqrt(condVar)
+          const sj = 55
+          const sBar = sj * eMk + mu * (1 - eMk)
+          const nodes = [mu - 2 * parseFloat(statStd), mu - parseFloat(statStd), mu, mu + parseFloat(statStd), mu + 2 * parseFloat(statStd)]
+          const weights = nodes.map(sk => Math.exp(-0.5 * Math.pow((sk - sBar) / condStd, 2)))
+          const wSum = weights.reduce((a, b) => a + b, 0)
+          const probs = weights.map(w => w / wSum)
+          return (
+            <div>
+              <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>
+                <strong>Étape a)</strong> Espérance conditionnelle :{' '}
+                <K display>{"\\bar{s}_j = 55 \\times " + eMk.toFixed(4) + " + " + mu + " \\times " + (1 - eMk).toFixed(4) + " = " + sBar.toFixed(2) + " \\text{ €}"}</K>
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>
+                <strong>Étape b)</strong> Volatilité conditionnelle :{' '}
+                <K display>{"\\sigma_{\\Delta t} = " + sigma + " \\times \\sqrt{\\frac{1 - e^{-" + (2 * kappa / 12).toFixed(3) + "}}{" + (2 * kappa).toFixed(1) + "}} = " + condStd.toFixed(3) + " \\text{ €}"}</K>
+              </div>
+              <div style={{ color: T.muted, fontSize: 12, marginBottom: 8 }}>
+                <strong>Étape c)</strong> Poids gaussiens <K>{"w_{jk}"}</K> puis normalisation :
+              </div>
+              <div style={{ overflowX: 'auto' }}>
+                <table style={{ borderCollapse: 'collapse', fontSize: 11, width: '100%' }}>
+                  <thead>
+                    <tr>
+                      {['Nœud s_k (€)', 'Écart s_k − s̄_j', 'z = écart / σ_Δt', 'w_jk = exp(−z²/2)', 'Π_jk (normalisé)'].map((h, i) => (
+                        <th key={i} style={{ padding: '4px 8px', background: `${ACCENT}22`, color: ACCENT, fontWeight: 700, textAlign: 'center', borderBottom: `1px solid ${ACCENT}44`, whiteSpace: 'nowrap', fontSize: 10 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {nodes.map((sk, idx) => {
+                      const ecart = sk - sBar
+                      const z = ecart / condStd
+                      const w = weights[idx]
+                      const p = probs[idx]
+                      const isMax = idx === probs.indexOf(Math.max(...probs))
+                      return (
+                        <tr key={idx} style={{ background: isMax ? `${T.a4}18` : 'transparent' }}>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', color: isMax ? T.a4 : T.muted, fontWeight: isMax ? 700 : 400 }}>{sk.toFixed(1)} {isMax ? '← max' : ''}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', color: T.muted }}>{ecart > 0 ? '+' : ''}{ecart.toFixed(2)}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', color: T.muted }}>{z.toFixed(3)}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', color: T.muted }}>{w.toFixed(4)}</td>
+                          <td style={{ padding: '4px 8px', textAlign: 'center', color: isMax ? T.a4 : T.muted, fontWeight: isMax ? 700 : 400 }}>{(p * 100).toFixed(1)} %</td>
+                        </tr>
+                      )
+                    })}
+                    <tr style={{ borderTop: `1px solid ${ACCENT}44` }}>
+                      <td colSpan={3} style={{ padding: '4px 8px', color: T.muted, textAlign: 'right', fontStyle: 'italic', fontSize: 10 }}>Somme des poids → 1 après normalisation</td>
+                      <td style={{ padding: '4px 8px', textAlign: 'center', color: T.muted }}>{weights.reduce((a, b) => a + b, 0).toFixed(4)}</td>
+                      <td style={{ padding: '4px 8px', textAlign: 'center', color: T.a4, fontWeight: 700 }}>100 %</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.65 }}>
+                La probabilité maximale va au nœud le plus proche de <K>{"\\bar{s}_j = " + sBar.toFixed(1) + " \\text{ €}"}</K>.
+                Les nœuds éloignés de plus de 2σ<sub>Δt</sub> ({(2 * condStd).toFixed(1)} €) ont des probabilités très faibles.
+              </div>
+            </div>
+          )
+        })()}
+      </div>
+
+      {/* Pseudocode enrichi */}
       <div style={panelStyle}>
-        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Pseudocode — Construction de Π</div>
-        <pre style={{ color: T.text, fontSize: 11, lineHeight: 1.9, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
-{`  POUR j = 0 à NS-1 :                               // pour chaque prix de départ
-      s̄ⱼ ← sⱼ × exp(-κ·Δt) + μ × (1 - exp(-κ·Δt))   // espérance conditionnelle
-      POUR k = 0 à NS-1 :                             // pour chaque prix d'arrivée
-          Π[j][k] ← exp(-(sₖ - s̄ⱼ)² / (2·σ²_Δt))    // noyau gaussien
-      Π[j][:] ← Π[j][:] / Σₖ Π[j][k]                 // normalisation → somme = 1`}
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Pseudocode — Construction de Π (annoté)</div>
+        <pre style={{ color: T.text, fontSize: 11, lineHeight: 2, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  // Pré-calcul : volatilité conditionnelle (identique pour toutes les lignes)
+  σ_Δt ← σ × sqrt((1 − exp(−2κ·Δt)) / (2κ))     // ≠ σ√Δt  (mean-reversion réduit σ)
+
+  POUR j = 0 à NS−1 :                              // pour chaque nœud de départ s_j
+
+    // Étape 2 (rappel) : espérance conditionnelle = cible gaussienne de la ligne j
+    s̄_j ← s_j × exp(−κ·Δt) + μ × (1 − exp(−κ·Δt))
+
+    // Étape 3a : évaluer le noyau gaussien centré en s̄_j à chaque nœud d'arrivée
+    POUR k = 0 à NS−1 :
+      z       ← (s_k − s̄_j) / σ_Δt               // distance normalisée
+      Π[j][k] ← exp(−0.5 × z²)                    // poids ∝ densité N(s̄_j, σ²_Δt)
+
+    // Étape 3b : normaliser la ligne → loi de probabilité (somme = 1)
+    rowSum  ← Σ_k Π[j][k]                          // somme des poids bruts
+    Π[j][:] ← Π[j][:] / rowSum                    // chaque entrée ÷ somme
+
+  // Résultat : Π est une matrice stochastique (chaque ligne est une loi de proba)`}
         </pre>
       </div>
 
