@@ -6,7 +6,7 @@ import {
 } from 'recharts'
 import { T } from '../../../design/tokens'
 import {
-  FormulaBox, IntuitionBlock,
+  FormulaBox, IntuitionBlock, ExampleBlock,
   Slider, Accordion, Step, SectionTitle, InfoChip, Grid, ChartWrapper,
   Demonstration, DemoStep, K, SymbolLegend,
 } from '../../../design/components'
@@ -3233,10 +3233,16 @@ export function DeltaTab() {
     return { prix: +s.toFixed(1), gamma: +d2V.toFixed(4) }
   })
 
-  // ── NEW: Theta data : ∂V/∂t ≈ (V[t=1] - V[t=0]) / Δt ──────────────────────
+  // ── Theta data : décroissance annuelle moyenne = -V[0] / T ──────────────────
+  // On compare V[0] (début d'année) avec V[NT]=0 (terminal) sur l'horizon complet.
+  // La différence V[1]-V[0] peut être légèrement positive à certains prix à cause de
+  // la saisonnalité du DP (mai peut être localement plus favorable qu'avril pour un état
+  // donné) et du bruit de discrétisation (NS=20). Le ratio annuel moyen est toujours < 0 :
+  // un storage à durée finie perd TOUJOURS de la valeur globalement (propriété d'option).
+  const NT_dp = result.V.length - 1  // = 12 pour NT=12
   const thetaData = result.sGrid.map((s, j) => ({
     prix: +s.toFixed(1),
-    theta: +((result.V[1][iMid][j] - result.V[0][iMid][j]) / (1 / 12)).toFixed(2),
+    theta: +((result.V[NT_dp][iMid][j] - result.V[0][iMid][j]) / (NT_dp / 12)).toFixed(2),
   }))
 
   // ── NEW: Term structure : delta à chaque mois pour l'état courant (V₀, S₀) ──
@@ -3739,11 +3745,52 @@ Chaque jour, au fixing spot :
         ))}
       </div>
 
+      {/* ── Lecture opérationnelle Gamma ──────────────────────────────────────────── */}
+      <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}55`, borderRadius: 10, padding: '16px 20px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          📋 Lecture opérationnelle — que faire selon le niveau de Gamma
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+          Le Gamma mesure la <strong>courbure de la valeur</strong> en fonction du prix. Un Gamma élevé signifie que ton Delta change rapidement avec S — le hedge doit être rééquilibré fréquemment. Un Gamma faible signifie une position quasi-linéaire : le Delta est stable et peu de re-hedging est nécessaire.
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Niveau de Gamma</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Situation de marché</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Ce que ça implique</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Action opérationnelle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['Γ élevé (S ≈ μ)', 'ATM — zone d\'incertitude max', 'Delta instable, chaque ±1 €/MWh modifie significativement le hedge. Les gros mouvements sont profitables (convexité).', 'Re-hedger fréquemment (quotidien voire infra-journalier). Surveiller le "break-even move" δS_BE.'],
+              ['Γ modéré', 'S éloigné de μ mais pas à l\'extrême', 'Delta change lentement. Le P&L gamma compense partiellement le Theta.', 'Re-hedger hebdomadairement. Vérifier que les opérations physiques (injections/soutirage) suivent le plan optimal.'],
+              ['Γ ≈ 0 (S extrême)', 'Deep ITM ou deep OTM — décision évidente', 'Delta quasi-constant (toujours injecter ou toujours soutirer). Pas de valeur additionnelle à espérer d\'un mouvement de prix.', 'Hedge statique suffisant. Concentrer l\'attention sur les contraintes capacitaires et les coûts opérationnels.'],
+            ].map(([gamma, sit, impl, action]) => (
+              <tr key={gamma}>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a5, fontWeight: 600 }}>{gamma}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.text }}>{sit}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.muted }}>{impl}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a4 }}>{action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
+          Break-even move : <K>{"\\delta S_{BE} = \\sqrt{-2\\,\\Theta\\,\\delta t \\,/\\, \\Gamma}"}</K>. Si le prix bouge de plus de δS_BE en un jour, le gain Gamma compense la perte Theta. C'est le seuil quotidien à surveiller dans un desk gaz.
+        </div>
+      </div>
+
       {/* ── NEW: Theta ──────────────────────────────────── */}
       <SectionTitle accent={ACCENT}>Thêta (Θ) — la valeur se dégrade avec le temps</SectionTitle>
 
-      <FormulaBox accent={ACCENT} label="Thêta par différences finies">
-        <K display>{"\\Theta_t(V, S) \\approx \\frac{\\mathcal{V}_{t+1}(V,\\, S) - \\mathcal{V}_t(V,\\, S)}{\\Delta t}"}</K>
+      <FormulaBox accent={ACCENT} label="Thêta — décroissance annuelle moyenne sur l'horizon complet">
+        <K display>{"\\Theta(V, S) \\approx \\frac{\\mathcal{V}_T(V,\\,S) - \\mathcal{V}_0(V,\\,S)}{T} = \\frac{0 - \\mathcal{V}_0(V,\\,S)}{1\\text{ an}} = -\\mathcal{V}_0(V,\\,S)"}</K>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 6 }}>
+          <K>{"\\mathcal{V}_T = 0"}</K> : valeur terminale nulle à l'expiry. <K>{"T = 1"}</K> an = durée totale du contrat de stockage.
+          Ce thêta mesure la valeur annuelle que le stockage doit récupérer via ses opérations pour être à l'équilibre.
+        </div>
       </FormulaBox>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '12px 0' }}>
@@ -3785,15 +3832,52 @@ Chaque jour, au fixing spot :
 
       <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
         {[
-          { icon: '📉', text: <><strong>Θ négatif partout</strong> : quelle que soit la position, perdre un mois d'optionalité coûte toujours quelque chose. La valeur du stockage ne peut qu'augmenter si on gagne du temps.</> },
-          { icon: '🔔', text: <><strong>Θ minimal (plus négatif) autour de S = μ</strong> : c'est là que la flexibilité temporelle est la plus précieuse. Aux extrêmes, la décision est déjà "forcée" et perdre du temps change moins la valeur.</> },
-          { icon: '⚖️', text: <><strong>Relation Θ–Γ</strong> : là où Γ est maximal (autour de S = μ), Θ est aussi le plus négatif. Long gamma signifie inévitablement long thêta négatif — c'est le coût du holding.</> },
+          { icon: '📉', text: <><strong>Θ négatif partout</strong> : le graphe montre <K>{"\\Theta = -\\mathcal{V}_0"}</K> — la valeur totale que le stockage doit récupérer via ses opérations sur l'année pour être à l'équilibre. Toujours négatif car un storage à durée finie perd sa totalité de valeur à l'expiry.</> },
+          { icon: '🔔', text: <><strong>Θ minimal (plus négatif) autour de S ≈ μ</strong> : c'est là que la valeur intrinsèque + extrinsèque est la plus élevée, donc que la "dette de récupération" est la plus grande. Aux extrêmes, la décision est forcée et la valeur optionnelle est faible.</> },
+          { icon: '⚖️', text: <><strong>Relation Θ–Γ</strong> : là où Γ est maximal (autour de S ≈ μ), |Θ| est aussi le plus grand. Long gamma signifie inévitablement un coût de holding élevé — c'est le prix de la convexité.</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
             <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
           </div>
         ))}
+      </div>
+
+      {/* ── Lecture opérationnelle Theta ──────────────────────────────────────────── */}
+      <div style={{ background: `${T.a6}0d`, border: `1px solid ${T.a6}55`, borderRadius: 10, padding: '16px 20px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.a6, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          📋 Lecture opérationnelle — Theta comme objectif de récupération
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+          Le Theta représente la <strong>valeur annuelle que le stockage doit récupérer</strong> via ses opérations physiques (spread inject/withdraw) pour couvrir son coût d'opportunité. Si le desk génère moins que |Θ| sur l'année, la position est en perte nette vs un actif sans risque.
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a6, textAlign: 'left' }}>Prix actuel vs μ</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a6, textAlign: 'left' }}>|Θ| (valeur à récupérer/an)</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a6, textAlign: 'left' }}>Risque si prix immobile</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a6, textAlign: 'left' }}>Action opérationnelle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['S ≈ μ (ATM)', 'Maximal — optionalité pleine', 'Perte quotidienne maximale si pas de mouvement de prix', 'Optimiser les opérations physiques, surveiller le break-even move Gamma–Theta. Préférer les journées volatiles.'],
+              ['S éloigné de μ', 'Modéré — décision partiellement guidée', 'Perte quotidienne modérée', 'Exécuter les injections/soutirage dictés par le modèle. Le P&L Gamma peut partiellement compenser.'],
+              ['S extrême (ITM/OTM profond)', 'Faible — décision évidente', 'Perte quotidienne faible : peu d\'optionalité à perdre', 'Exécuter mécaniquement le programme. Les coûts opérationnels (cOp) dominent sur le Theta.'],
+            ].map(([prix, theta, risque, action]) => (
+              <tr key={prix}>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a6, fontWeight: 600 }}>{prix}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.text }}>{theta}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.muted }}>{risque}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a4 }}>{action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
+          En pratique : un desk gaz compare chaque mois son P&L réel (revenus d'injection/soutirage) à la valeur Theta du modèle. Un P&L {"<"} |Θ| signifie que le desk sous-performe le modèle optimal — signal d'alerte.
+        </div>
       </div>
 
       {/* ── NEW: Vega ──────────────────────────────────── */}
@@ -3849,6 +3933,43 @@ Chaque jour, au fixing spot :
             <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
           </div>
         ))}
+      </div>
+
+      {/* ── Lecture opérationnelle Vega ───────────────────────────────────────────── */}
+      <div style={{ background: `${T.a2}0d`, border: `1px solid ${T.a2}55`, borderRadius: 10, padding: '16px 20px', margin: '4px 0 16px' }}>
+        <div style={{ color: T.a2, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          📋 Lecture opérationnelle — gérer son exposition Vega
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+          Le Vega mesure le <strong>gain ou la perte si la volatilité implicite du marché change</strong>. Un storage est structurellement long Vega (ν &gt; 0) : si le marché anticipe plus de volatilité, la valeur de la flexibilité monte. Le Vega est important lors des chocs (vague de froid, tension sur l'offre) qui font exploser σ.
+        </div>
+        <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+          <thead>
+            <tr>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a2, textAlign: 'left' }}>Scénario de volatilité</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a2, textAlign: 'left' }}>Impact sur ν(S)</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a2, textAlign: 'left' }}>Impact sur la valeur du stockage</th>
+              <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a2, textAlign: 'left' }}>Action opérationnelle</th>
+            </tr>
+          </thead>
+          <tbody>
+            {[
+              ['σ augmente (choc, hiver froid)', 'ν > 0 → valeur augmente', 'Gain = ν × Δσ. ATM : gain maximal. Revue tarifaire favorable si le stockage est loué.', 'Ne pas brader la capacité. Attendre que la vol se matérialise en opportunité physique.'],
+              ['σ stable', 'ν > 0 → valeur inchangée', 'Ni gain ni perte Vega. Le P&L dépend uniquement du Gamma (mouvements de prix) et du Theta.', 'Exécuter le programme optimal Bellman. Suivre les écarts de prix inject/withdraw.'],
+              ['σ baisse (marché calme)', 'ν > 0 → valeur baisse', 'Perte = ν × |Δσ|. Surtout impactant ATM où ν est maximal.', 'Envisager de figer une partie de la valeur extrinsèque via des ventes de vol (options sur spread). Accélérer les opérations physiques.'],
+            ].map(([scen, impact, valeur, action]) => (
+              <tr key={scen}>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a2, fontWeight: 600 }}>{scen}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.text }}>{impact}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.muted }}>{valeur}</td>
+                <td style={{ padding: '5px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a4 }}>{action}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 10, fontStyle: 'italic' }}>
+          En pratique : le Vega du stockage est difficile à couvrir directement (peu de marchés de vol énergie liquides). La plupart des desk gaz acceptent leur exposition Vega structurelle et se concentrent sur la couverture Delta.
+        </div>
       </div>
 
       {/* ── NEW: P&L Attribution ─────────────────────────── */}
@@ -4055,10 +4176,95 @@ Chaque jour, au fixing spot :
 
 // ─── Onglet 6 : Courbe Forward & Portefeuille ─────────────────────────────────
 
+// PCA eigenvectors — formes typiques pour une courbe gaz (année avr→mars)
+// Vecteurs de FORME (non normalisés) — les betas portent les unités (€/MWh)
+// e1 : déplacement parallèle — tous les mois bougent de la même amplitude
+// e2 : pente/spread — mois injection (été) vs mois soutirage (hiver), directions opposées
+// e3 : courbure — extrémités (début/fin d'année) vs milieu (automne) de la courbe
+const PC_E1 = [1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00, 1.00]
+const PC_E2 = [-1.00, -0.98, -0.88, -0.67, -0.42, -0.14, 0.22, 0.52, 0.76, 0.90, 0.96, 0.93]
+const PC_E3 = [0.95, 0.55, 0.05, -0.45, -0.82, -1.00, -0.90, -0.60, -0.15, 0.38, 0.80, 0.90]
+void PC_E1; void PC_E2; void PC_E3  // remplacés dynamiquement par powerIteration ci-dessous
+
+// ── Matrice de covariance OU pour courbe forward ─────────────────────────────
+// Σᵢⱼ = σ²/(2κ) · exp(−κ·|i−j|/12)
+// Modélise la corrélation décroissante entre deux maturités distantes de |i−j| mois
+// dans un processus Ornstein-Uhlenbeck stationnaire de paramètres κ (vitesse) et σ (vol).
+function buildForwardCovMatrix(kappa, sigma) {
+  const n = 12
+  const varStat = (sigma * sigma) / (2 * Math.max(kappa, 0.01))  // σ²/(2κ) = variance stationnaire OU
+  return Array.from({ length: n }, (_, i) =>
+    Array.from({ length: n }, (_, j) =>
+      varStat * Math.exp(-kappa * Math.abs(i - j) / 12)
+    )
+  )
+}
+
+// ── Itération de puissance avec déflation ─────────────────────────────────────
+// Extrait les k premiers vecteurs propres d'une matrice symétrique définie positive.
+// Algorithme :
+//   1. Initialiser v aléatoirement
+//   2. Itérer : v ← Σ·v / ‖Σ·v‖  jusqu'à convergence → v = e₁
+//   3. Déflater : Σ ← Σ − λ₁·e₁·e₁ᵀ  puis recommencer pour e₂, e₃…
+function powerIteration(covMatrix, k = 3, maxIter = 100) {
+  const n = covMatrix.length
+  const eigenvectors = []
+  const eigenvalues  = []
+  const C = covMatrix.map(row => [...row])  // copie de travail (déflation progressive)
+
+  for (let e = 0; e < k; e++) {
+    // Initialisation : vecteur aléatoire normalisé
+    let v = Array.from({ length: n }, () => gaussRand())
+    let norm = Math.sqrt(v.reduce((s, x) => s + x * x, 0))
+    v = v.map(x => x / Math.max(norm, 1e-12))
+
+    // Itérations puissance : v ← C·v / ‖C·v‖
+    for (let iter = 0; iter < maxIter; iter++) {
+      const Cv = C.map(row => row.reduce((s, cij, j) => s + cij * v[j], 0))
+      norm = Math.sqrt(Cv.reduce((s, x) => s + x * x, 0))
+      v = Cv.map(x => x / Math.max(norm, 1e-12))
+    }
+
+    // Valeur propre λ = vᵀ·C·v (quotient de Rayleigh)
+    const Cv = C.map(row => row.reduce((s, cij, j) => s + cij * v[j], 0))
+    const lambda = Cv.reduce((s, x, i) => s + x * v[i], 0)
+
+    // Convention de signe : premier élément positif (stabilise l'affichage)
+    if (v[0] < 0) v = v.map(x => -x)
+
+    eigenvectors.push(v)
+    eigenvalues.push(Math.max(lambda, 0))
+
+    // Déflation : C ← C − λ·v·vᵀ  (supprime la direction déjà trouvée)
+    for (let i = 0; i < n; i++)
+      for (let j = 0; j < n; j++)
+        C[i][j] -= lambda * v[i] * v[j]
+  }
+
+  const totalVar = eigenvalues.reduce((s, l) => s + l, 0) + 1e-10
+  const varExplained = eigenvalues.map(l => +(100 * l / totalVar).toFixed(1))
+  return { eigenvectors, eigenvalues, varExplained }
+}
+
 export function ForwardRiskTab() {
   const [spread, setSpread] = useState(15)
   const [level, setLevel] = useState(40)
   const [tilt, setTilt] = useState(0)
+  const [beta1, setBeta1] = useState(0)
+  const [beta2, setBeta2] = useState(0)
+  const [beta3, setBeta3] = useState(0)
+  const [pcaKappa, setPcaKappa] = useState(1.5)   // vitesse de retour à la moyenne OU (an⁻¹)
+  const [pcaSigma, setPcaSigma] = useState(8)     // volatilité annuelle OU (€/MWh)
+
+  // PCA calculée dynamiquement depuis la matrice de covariance OU
+  const computedPCA = useMemo(() => {
+    const cov = buildForwardCovMatrix(pcaKappa, pcaSigma)
+    const { eigenvectors, eigenvalues, varExplained } = powerIteration(cov, 3)
+    return {
+      e1: eigenvectors[0], e2: eigenvectors[1], e3: eigenvectors[2],
+      lam: eigenvalues, varExp: varExplained, cov,
+    }
+  }, [pcaKappa, pcaSigma])
 
   const months = MONTHS
   const fwdData = months.map((m, t) => {
@@ -4086,6 +4292,24 @@ export function ForwardRiskTab() {
       delta: +(isInjection ? 0.3 + 0.4 * (level - F) / (spread / 2 + 0.1) : -0.2 - 0.5 * (F - level) / (spread / 2 + 0.1)).toFixed(2),
     }
   })
+
+  // PCA — données pour visualisation des vecteurs propres et simulation interactive
+  // Utilise les vecteurs calculés dynamiquement (computedPCA) à partir de la matrice OU
+  const eigData = months.map((m, k) => ({
+    mois: m,
+    'e₁ (parallèle)': +computedPCA.e1[k].toFixed(3),
+    'e₂ (pente)':     +computedPCA.e2[k].toFixed(3),
+    'e₃ (courbure)':  +computedPCA.e3[k].toFixed(3),
+  }))
+
+  const pcaData = useMemo(() => months.map((m, k) => ({
+    mois: m,
+    'Courbe de base': fwdData[k].F,
+    'Courbe déformée': +(fwdData[k].F
+      + beta1 * computedPCA.e1[k]
+      + beta2 * computedPCA.e2[k]
+      + beta3 * computedPCA.e3[k]).toFixed(1),
+  })), [fwdData, beta1, beta2, beta3, computedPCA])
 
   return (
     <div>
@@ -4235,32 +4459,419 @@ export function ForwardRiskTab() {
         dans Bellman, la grille aurait <K>{"N_V \\times N_{S_1} \\times \\cdots \\times N_{S_{12}}"}</K>
         nœuds. Avec 10 points par dimension : <K>{"10^{13}"}</K> nœuds — impossible à calculer.
         La PCA réduit à 2-3 facteurs → <K>{"10^3"}</K> à <K>{"10^4"}</K> nœuds → tractable.
+        <br /><br />
+        <strong>Analogie musicale :</strong> les 12 maturités sont comme 12 cordes d'une guitare.
+        La PCA révèle qu'en pratique, 3 mouvements d'archet suffisent — un glissement global,
+        un changement grave/aigu, et une légère torsion du milieu — pour reproduire 95 % de ce
+        qui se passe sur le marché.
       </IntuitionBlock>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12, margin: '12px 0' }}>
-        {[
-          { num: '1', label: 'Déplacement parallèle', variance: '~80 %', desc: 'Toute la courbe monte ou baisse uniformément. Couvert par le delta global du stockage.', color: ACCENT },
-          { num: '2', label: 'Changement de pente (spread)', variance: '~15 %', desc: "Le spread été/hiver s'élargit ou se rétrécit. C'est le risque PRINCIPAL du stockage — la VI en dépend directement.", color: T.a5 },
-          { num: '3', label: 'Changement de courbure', variance: '~5 %', desc: 'Les maturités intermédiaires bougent différemment des extrêmes. Résiduel, souvent non couvert.', color: T.muted },
-        ].map(({ num, label, variance, desc, color }) => (
-          <div key={num} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-              <div style={{ color, fontWeight: 700, fontSize: 12 }}>Facteur {num} — {label}</div>
-              <div style={{ background: `${color}22`, borderRadius: 4, padding: '2px 8px', color, fontSize: 11, fontWeight: 700 }}>{variance}</div>
+      <FormulaBox accent={ACCENT} label="Décomposition PCA de la courbe forward">
+        <K display>{"\\Delta F(0,T_k) \\approx \\underbrace{\\beta_1 \\cdot \\mathbf{e}_1(k)}_{\\text{parallèle}} + \\underbrace{\\beta_2 \\cdot \\mathbf{e}_2(k)}_{\\text{pente}} + \\underbrace{\\beta_3 \\cdot \\mathbf{e}_3(k)}_{\\text{courbure}} + \\underbrace{\\varepsilon_k}_{\\text{résidu}\\,(<5\\,\\%)}"}</K>
+      </FormulaBox>
+
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['\\mathbf{e}_i(k)', 'Vecteur propre i à la maturité k : la "forme" du i-ème mouvement sur la courbe (sans unité)'],
+        ['\\beta_i', 'Score du facteur i = amplitude du choc dans la direction e_i (€/MWh)'],
+        ['\\Delta F(0,T_k)', 'Variation du prix forward de maturité T_k observée sur le marché (€/MWh)'],
+        ['\\varepsilon_k', 'Résidu idiosyncratique de la maturité k — typiquement < 5 % de la variance totale'],
+      ]} />
+
+      {/* ── ALGORITHME PCA ───────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Algorithme — comment les facteurs sont calculés</SectionTitle>
+
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+        Les vecteurs propres ci-dessous sont <strong style={{ color: T.text }}>calculés en temps réel</strong> à partir
+        d'un modèle OU (Ornstein-Uhlenbeck) de courbe forward. Ajustez κ et σ pour voir comment les paramètres
+        du processus de prix changent la structure des facteurs.
+      </div>
+
+      {/* Step 1 — Matrice de covariance */}
+      <Step num={1} title="Construire la matrice de covariance OU 12×12" accent={ACCENT}>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+          On modélise la courbe forward comme 12 processus OU corrélés (un par maturité mensuelle).
+          La covariance entre les variations <K>{"\\Delta F(T_i)"}</K> et <K>{"\\Delta F(T_j)"}</K>
+          décroît exponentiellement avec leur écart de maturité :
+        </div>
+        <FormulaBox accent={ACCENT} label="Covariance OU entre maturités i et j">
+          <K display>{"\\Sigma_{ij} = \\frac{\\sigma^2}{2\\kappa} \\cdot e^{-\\kappa\\,\\frac{|i-j|}{12}}"}</K>
+        </FormulaBox>
+        <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, marginBottom: 12 }}>
+          <strong style={{ color: T.text }}>Interprétation :</strong>{' '}
+          <K>{"\\sigma^2/(2\\kappa)"}</K> est la variance stationnaire du processus OU.
+          Le terme <K>{"e^{-\\kappa|i-j|/12}"}</K> donne la corrélation : avec κ petit, les maturités
+          lointaines restent très corrélées (courbe "rigide") ; avec κ grand, elles se décorrèlent
+          rapidement (courbe "souple", chaque maturité vit sa vie).
+        </div>
+
+        <Grid cols={2} gap="12px">
+          <Slider
+            label="κ — vitesse de décorrélation entre maturités (an⁻¹)"
+            value={pcaKappa} min={0.2} max={5} step={0.1}
+            onChange={setPcaKappa} accent={ACCENT}
+            format={v => v.toFixed(1)}
+          />
+          <Slider
+            label="σ — volatilité annuelle de la courbe forward (€/MWh)"
+            value={pcaSigma} min={2} max={20} step={0.5}
+            onChange={setPcaSigma} accent={ACCENT}
+            format={v => `${v}`}
+          />
+        </Grid>
+
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0 12px' }}>
+          <InfoChip label="κ (décorrélation)" value={`${pcaKappa.toFixed(1)} an⁻¹`} accent={ACCENT} />
+          <InfoChip label="σ (volatilité)" value={`${pcaSigma} €/MWh`} accent={ACCENT} />
+          <InfoChip label="σ²/2κ (var. stat.)" value={`${(pcaSigma*pcaSigma/(2*pcaKappa)).toFixed(1)} (€/MWh)²`} accent={ACCENT} />
+          <InfoChip label="Corr avr→oct (6 mois)" value={`${(Math.exp(-pcaKappa*6/12)*100).toFixed(0)} %`} accent={T.a5} />
+          <InfoChip label="Corr avr→mar (11 mois)" value={`${(Math.exp(-pcaKappa*11/12)*100).toFixed(0)} %`} accent={T.a3} />
+        </div>
+
+        {/* Heatmap de corrélation 12×12 */}
+        <div style={{ marginBottom: 8 }}>
+          <div style={{ color: T.muted, fontSize: 11, marginBottom: 6 }}>
+            Matrice de corrélation ρᵢⱼ = Σᵢⱼ / √(Σᵢᵢ·Σⱼⱼ) — plus la case est rouge, plus les deux maturités sont corrélées :
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 2, maxWidth: 420 }}>
+            {Array.from({ length: 12 }, (_, i) =>
+              Array.from({ length: 12 }, (_, j) => {
+                const rho = Math.exp(-pcaKappa * Math.abs(i - j) / 12)
+                const alpha = Math.round(rho * 200)
+                return (
+                  <div
+                    key={`${i}-${j}`}
+                    title={`ρ(${MONTHS[i]},${MONTHS[j]}) = ${rho.toFixed(2)}`}
+                    style={{
+                      width: '100%',
+                      paddingBottom: '100%',
+                      background: `rgba(248,113,113,${rho.toFixed(2)})`,
+                      borderRadius: 2,
+                    }}
+                  />
+                )
+              })
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: 16, marginTop: 6 }}>
+            {[
+              { icon: '🟥', text: 'Corrélation forte (ρ ≈ 1) — maturités proches' },
+              { icon: '⬜', text: 'Décorrélation (ρ ≈ 0) — maturités lointaines avec κ élevé' },
+            ].map(({ icon, text }, i) => (
+              <span key={i} style={{ color: T.muted, fontSize: 10 }}>{icon} {text}</span>
+            ))}
+          </div>
+        </div>
+      </Step>
+
+      {/* Step 2 — Itération de puissance */}
+      <Step num={2} title="Extraire les vecteurs propres par itération de puissance" accent={ACCENT}>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+          L'<strong style={{ color: T.text }}>itération de puissance</strong> est la méthode la plus simple
+          pour extraire un vecteur propre dominant. On répète l'opération en <em>déflant</em> la matrice
+          après chaque vecteur trouvé, pour capturer les facteurs suivants.
+        </div>
+        <pre style={{
+          background: T.panel, border: `1px solid ${T.border}`, borderRadius: 8,
+          padding: '12px 16px', fontSize: 11, color: T.text, lineHeight: 1.8,
+          overflowX: 'auto', margin: '0 0 12px',
+        }}>{`Pour e = 1, 2, 3 :
+  ① Initialiser v = vecteur aléatoire normalisé
+  ② Répéter 100 fois :
+       Cv ← Σ·v          // produit matrice-vecteur
+       v  ← Cv / ‖Cv‖    // renormaliser → converge vers e_e
+  ③ λₑ = vᵀ·Σ·v          // quotient de Rayleigh = valeur propre
+  ④ Convention signe : si v[0] < 0, inverser v
+  ⑤ Déflation : Σ ← Σ − λₑ·v·vᵀ  // supprimer la direction trouvée
+                                    // → prochaine itération → e_{e+1}`}</pre>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 4 }}>
+          {[
+            { icon: '⚡', text: <><strong>Pourquoi ça converge ?</strong> La puissance de Σ amplifie exponentiellement la composante dans la direction du vecteur propre dominant. Après k itérations, la composante parasite est réduite d'un facteur <K>{"(\\lambda_2/\\lambda_1)^k"}</K>.</> },
+            { icon: '🔄', text: <><strong>Déflation :</strong> En soustrayant <K>{"\\lambda_1 \\mathbf{e}_1 \\mathbf{e}_1^\\top"}</K>, on annule la contribution du premier vecteur dans la matrice résiduelle. L'itération suivante converge alors vers <K>{"\\mathbf{e}_2"}</K>, le second vecteur propre dominant.</> },
+          ].map(({ icon, text }, i) => (
+            <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 220 }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
             </div>
-            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.6 }}>{desc}</div>
+          ))}
+        </div>
+      </Step>
+
+      {/* Step 3 — Valeurs propres et variance expliquée */}
+      <Step num={3} title="Valeurs propres et variance expliquée" accent={ACCENT}>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 10 }}>
+          La valeur propre <K>{"\\lambda_i"}</K> mesure la <strong style={{ color: T.text }}>variance capturée</strong> par
+          le facteur <K>{"i"}</K>. La part de variance expliquée est <K>{"\\lambda_i / \\text{tr}(\\Sigma)"}</K>
+          où <K>{"\\text{tr}(\\Sigma) = \\sum_i \\lambda_i"}</K> est la variance totale.
+        </div>
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '6px 0 12px' }}>
+          <InfoChip label="λ₁ (parallèle)" value={`${computedPCA.lam[0].toFixed(1)} (€/MWh)²`} accent={ACCENT} />
+          <InfoChip label="λ₂ (pente)"     value={`${computedPCA.lam[1].toFixed(1)} (€/MWh)²`} accent={T.a5} />
+          <InfoChip label="λ₃ (courbure)"  value={`${computedPCA.lam[2].toFixed(1)} (€/MWh)²`} accent={T.a3} />
+          <InfoChip label="e₁ variance"    value={`${computedPCA.varExp[0]} %`} accent={ACCENT} />
+          <InfoChip label="e₁+e₂+e₃ cumulé" value={`${(computedPCA.varExp[0]+computedPCA.varExp[1]+computedPCA.varExp[2]).toFixed(1)} %`} accent={T.a4} />
+        </div>
+        <ChartWrapper title="Variance expliquée par chaque facteur PCA (%)" accent={ACCENT} height={180}>
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={[
+                { facteur: 'e₁ parallèle', variance: computedPCA.varExp[0], fill: ACCENT },
+                { facteur: 'e₂ pente',     variance: computedPCA.varExp[1], fill: T.a5 },
+                { facteur: 'e₃ courbure',  variance: computedPCA.varExp[2], fill: T.a3 },
+              ]}
+              margin={{ top: 5, right: 20, left: 0, bottom: 5 }}
+            >
+              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+              <XAxis dataKey="facteur" stroke={T.muted} tick={{ fill: T.muted, fontSize: 11 }} />
+              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 11 }} unit="%" domain={[0, 100]} />
+              <Tooltip
+                contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }}
+                formatter={(v) => [`${v} %`, 'Variance expliquée']}
+              />
+              <Bar dataKey="variance" radius={[4, 4, 0, 0]}>
+                {[ACCENT, T.a5, T.a3].map((color, i) => (
+                  <Cell key={i} fill={color} />
+                ))}
+              </Bar>
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartWrapper>
+        <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0' }}>
+          {[
+            { icon: '📊', text: <><strong>κ faible :</strong> corrélation forte entre maturités → le facteur parallèle domine
+              davantage (e₁ &gt; 85 %). La courbe "bouge comme un seul bloc".</> },
+            { icon: '🔀', text: <><strong>κ élevé :</strong> décorrélation rapide → la variance se redistribue vers e₂ et e₃.
+              La pente et la courbure deviennent des risques significatifs à couvrir séparément.</> },
+          ].map(({ icon, text }, i) => (
+            <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 220 }}>
+              <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+              <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+            </div>
+          ))}
+        </div>
+      </Step>
+
+      {/* ── 3 facteurs détaillés ─────────────────────────────── */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14, margin: '16px 0' }}>
+
+        {/* Facteur 1 */}
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13 }}>Facteur 1 — Déplacement parallèle (level)</div>
+            <div style={{ background: `${ACCENT}22`, borderRadius: 4, padding: '2px 10px', color: ACCENT, fontSize: 12, fontWeight: 700 }}>{computedPCA.varExp[0]} % de variance</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ color: ACCENT, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Forme du vecteur propre e₁</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Toutes les composantes sont <strong>positives et égales</strong> :
+                <K>{"\\mathbf{e}_1(k) \\approx +1"}</K> pour tout k.
+                β₁ = +5 €/MWh décale toute la courbe vers le haut de 5 €, uniformément de avril à mars.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: ACCENT, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Interprétation économique</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Choc "macro" sur le niveau absolu des prix gaz : nouvelles géopolitiques (conflit gazier),
+                météo nationale extrême, tension sur l'offre LNG. Toutes les maturités réagissent ensemble.
+                Le spread été/hiver reste <strong>inchangé</strong> — la valeur intrinsèque du stockage est préservée.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: ACCENT, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Couverture ↔ action</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Couvert par le <strong>delta global</strong> <K>{"\\textstyle\\sum_k \\Delta_k"}</K>.
+                Si la position est delta-neutre (Σ Δₖ = 0), ce facteur n'affecte pas le P&amp;L.
+                Exemple : β₁ = +5, Σ Δₖ = +2 GWh → P&amp;L facteur 1 = 2 × 5 = <strong>+10 €</strong>.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Facteur 2 */}
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}33`, borderRadius: 10, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ color: T.a5, fontWeight: 700, fontSize: 13 }}>Facteur 2 — Changement de pente (spread été/hiver)</div>
+            <div style={{ background: `${T.a5}22`, borderRadius: 4, padding: '2px 10px', color: T.a5, fontSize: 12, fontWeight: 700 }}>{computedPCA.varExp[1]} % de variance</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ color: T.a5, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Forme du vecteur propre e₂</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                <strong>Négatif en été</strong> (avr ≈ −1.0, juin ≈ −0.88) et <strong>positif en hiver</strong>
+                (oct ≈ +0.22, nov ≈ +0.52, déc ≈ +0.76, jan ≈ +0.90, fév ≈ +0.96).
+                β₂ &gt; 0 : hiver monte, été baisse → spread s'élargit.
+                β₂ &lt; 0 : spread se resserre.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: T.a5, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Interprétation économique</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Choc sur la <strong>saisonnalité</strong> : vague de froid prévue (β₂ ↑, hiver plus cher),
+                été chaud qui réduit l'injection (β₂ ↓).
+                Ce facteur drive directement la <strong>valeur intrinsèque</strong> du stockage —
+                c'est le risque numéro 1 du desk. Chaque +1 de β₂ ≈ élargissement du spread de ~1.9 €/MWh.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: T.a5, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Couverture ↔ action</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                <strong>Spread trade</strong> : acheter des forwards été (injection) + vendre des forwards hiver
+                (soutirage), pondérés par les composantes e₂.
+                C'est exactement le hedge <em>rolling intrinsic</em> standard.
+                Exemple β₂ = +3 : déc gagne <K>{"3 \\times 0.76 = +2.3"}</K> €, avr perd <K>{"3 \\times 1.0 = -3"}</K> €.
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Facteur 3 */}
+        <div style={{ background: `${T.a3}0d`, border: `1px solid ${T.a3}33`, borderRadius: 10, padding: '14px 16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div style={{ color: T.a3, fontWeight: 700, fontSize: 13 }}>Facteur 3 — Changement de courbure (belly)</div>
+            <div style={{ background: `${T.a3}22`, borderRadius: 4, padding: '2px 10px', color: T.a3, fontSize: 12, fontWeight: 700 }}>{computedPCA.varExp[2]} % de variance</div>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div>
+              <div style={{ color: T.a3, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Forme du vecteur propre e₃</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Forme en <strong>cloche inversée</strong> : positif en début d'année (avr ≈ +0.95),
+                minimum au cœur d'automne (sep ≈ −1.00), remonte en fin d'année (jan ≈ +0.38, fév ≈ +0.80).
+                β₃ &gt; 0 : la courbe se "bombe" aux extrémités au détriment du milieu.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: T.a3, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Interprétation économique</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Choc sur les <strong>transitions de saison</strong> : contrats de court terme (avr) et de
+                long terme (jan-fév) dévient du reste. Typiquement lié à des contraintes d'infrastructure
+                (accès au stockage en fin d'été, cargaisons LNG spécifiques, maintenance de réseau).
+                Résidu rarement couvert.
+              </div>
+            </div>
+            <div>
+              <div style={{ color: T.a3, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>Couverture ↔ action</div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>
+                Rarement couvert explicitement — le marché des structures en papillon (butterfly spread)
+                est peu liquide sur le gaz. La plupart des desk acceptent ce <strong>basis risk résiduel</strong>.
+                À monitorer : un β₃ persistant peut signaler un déséquilibre de stockage structurel dans la zone.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Graphique des 3 vecteurs propres ─────────────────── */}
+      <ChartWrapper title="Formes des 3 vecteurs propres — comment chaque facteur déforme la courbe" accent={ACCENT} height={230}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={eigData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={[-1.2, 1.2]} />
+            <ReferenceLine y={0} stroke={T.muted} strokeDasharray="3 3" />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+            <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
+            <Line type="monotone" dataKey="e₁ (parallèle)" stroke={ACCENT} strokeWidth={2} dot={{ r: 2 }} />
+            <Line type="monotone" dataKey="e₂ (pente)"     stroke={T.a5}  strokeWidth={2} dot={{ r: 2 }} />
+            <Line type="monotone" dataKey="e₃ (courbure)"  stroke={T.a3}  strokeWidth={2} dot={{ r: 2 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 16px' }}>
+        {[
+          { icon: '🟥', text: <><strong>e₁ (rouge) — plat à +1 :</strong> toutes les maturités réagissent de façon identique. Un β₁ = +5 décale toute la courbe de +5 €/MWh sans changer le spread.</> },
+          { icon: '🟨', text: <><strong>e₂ (ambre) — monotone croissant :</strong> négatif en été (injection), positif en hiver (soutirage). C'est le facteur "spread" — il change la profondeur du W saisonnier.</> },
+          { icon: '🔵', text: <><strong>e₃ (violet) — cloche inversée :</strong> extrémités positives (avr, fév-mars), creux en automne. Il "tord" les maturités de transition par rapport au cœur d'automne.</> },
+          { icon: '📐', text: <><strong>Orthogonalité :</strong> les 3 facteurs sont indépendants — un choc β₂ n'affecte pas β₁ ni β₃. Cela permet des hedges ciblés : couvrir le spread sans toucher au niveau global.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
           </div>
         ))}
       </div>
 
-      <FormulaBox accent={ACCENT} label="Décomposition PCA de la courbe forward">
-        <K display>{"\\Delta F(0,T_k) \\approx \\underbrace{\\beta_1 \\cdot \\mathbf{e}_1(k)}_{\\text{parallèle}} + \\underbrace{\\beta_2 \\cdot \\mathbf{e}_2(k)}_{\\text{pente}} + \\underbrace{\\beta_3 \\cdot \\mathbf{e}_3(k)}_{\\text{courbure}}"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6, lineHeight: 1.7 }}>
-          <K>{"\\mathbf{e}_i(k)"}</K> = vecteur propre i évalué à la maturité k (la "forme" du mouvement).
-          <K>{"\\beta_i"}</K> = amplitude du mouvement dans la direction i (le score du facteur). Les
-          <K>{"\\beta_i"}</K> sont indépendants entre eux, ce qui facilite la couverture et la simulation.
+      {/* ── Simulation interactive ────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Simulation interactive — déformer la courbe avec les 3 facteurs</SectionTitle>
+
+      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 12 }}>
+        Ajustez les 3 amplitudes (betas) pour voir comment chaque mouvement PCA déforme la courbe forward de base.
+        La courbe pointillée est la <em>courbe de base</em> (déterminée par les sliders niveau/spread/tilt).
+        La courbe pleine est la <em>courbe déformée</em> après application des 3 facteurs PCA.
+      </div>
+
+      <Grid cols={3} gap="12px">
+        <Slider label="β₁ — choc niveau (€/MWh)" value={beta1} min={-15} max={15} step={0.5} onChange={setBeta1} accent={ACCENT} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
+        <Slider label="β₂ — choc spread été/hiver (€/MWh)" value={beta2} min={-10} max={10} step={0.5} onChange={setBeta2} accent={T.a5} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
+        <Slider label="β₃ — choc courbure (€/MWh)" value={beta3} min={-5} max={5} step={0.25} onChange={setBeta3} accent={T.a3} format={v => v > 0 ? `+${v.toFixed(1)}` : v.toFixed(1)} />
+      </Grid>
+
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', margin: '10px 0' }}>
+        <InfoChip label="Δ niveau (β₁·e₁)" value={`${beta1 > 0 ? '+' : ''}${beta1.toFixed(1)} €/MWh`} accent={ACCENT} />
+        <InfoChip label="Δ hiver-déc (β₂·e₂)" value={`${(beta2 * 0.76).toFixed(1)} €/MWh`} accent={T.a5} />
+        <InfoChip label="Δ été-avr (β₂·e₂)" value={`${(beta2 * -1.00).toFixed(1)} €/MWh`} accent={T.a1} />
+        <InfoChip label="Spread net (β₂)" value={`${(beta2 * 1.76).toFixed(1)} €/MWh`} accent={T.a8} />
+        <InfoChip label="Δ avr (β₃·e₃)" value={`${(beta3 * 0.95).toFixed(1)} €/MWh`} accent={T.a3} />
+      </div>
+
+      <ChartWrapper title="Effet des 3 facteurs PCA sur la courbe forward" accent={ACCENT} height={235}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={pcaData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={['auto', 'auto']} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+            <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
+            <Line type="monotone" dataKey="Courbe de base"  stroke={ACCENT} strokeWidth={2}   dot={{ fill: ACCENT, r: 2 }} strokeDasharray="5 3" />
+            <Line type="monotone" dataKey="Courbe déformée" stroke={T.a3}   strokeWidth={2.5} dot={{ fill: T.a3, r: 3 }} />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 16px' }}>
+        {[
+          { icon: '↔️', text: <><strong>β₁ seul :</strong> les deux courbes restent parallèles — elles s'écartent uniformément. Le spread été/hiver est inchangé, la valeur intrinsèque du stockage est préservée.</> },
+          { icon: '✂️', text: <><strong>β₂ seul :</strong> la courbe déformée s'aplatit ou accentue son W. β₂ &gt; 0 = hiver plus cher / été moins cher → VI augmente. C'est le risque numéro 1 du desk stockage.</> },
+          { icon: '〰️', text: <><strong>β₃ seul :</strong> la courbe se tord légèrement en début/fin d'année. Visible sur avr et fév-mars. Impact faible sur la VI globale mais crée un "basis risk" résiduel.</> },
+          { icon: '🎯', text: <><strong>Combinaison :</strong> en pratique les 3 facteurs varient simultanément. La décomposition PCA permet d'attribuer chaque mouvement à l'un des 3 facteurs et d'agir ciblément.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── Exemple numérique décomposition ─────────────────── */}
+      <ExampleBlock title="Exemple numérique — décomposer un mouvement de marché réel" accent={ACCENT}>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 8 }}>
+          <strong style={{ color: T.text }}>Situation :</strong> Une prévision de vague de froid hivernal est publiée ce matin.
+          On observe (€/MWh) :
         </div>
-      </FormulaBox>
+        <div style={{ overflowX: 'auto', marginBottom: 10 }}>
+          <table style={tableStyle}>
+            <thead>
+              <tr><Th>Maturité</Th><Th>Avr</Th><Th>Jun</Th><Th>Sep</Th><Th>Oct</Th><Th>Nov</Th><Th>Déc</Th><Th>Jan</Th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <Td accent={ACCENT}>ΔF observé</Td>
+                {['+1.0', '+0.8', '+0.6', '+2.5', '+3.2', '+3.8', '+3.5'].map((v, i) => (
+                  <Td key={i} accent={parseFloat(v) > 2 ? T.a8 : T.a4}>{v}</Td>
+                ))}
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.9 }}>
+          <strong style={{ color: T.text }}>Décomposition PCA :</strong><br />
+          • <span style={{ color: ACCENT }}>β₁ ≈ +1.2 €/MWh (niveau) :</span> décalage uniforme de ~1.2 €/MWh sur toutes les maturités.<br />
+          • <span style={{ color: T.a5 }}>β₂ ≈ +2.8 €/MWh (spread) :</span> hiver (déc) gagne 2.8 × 0.76 ≈ +2.1 €, été (avr) perd 2.8 × 1.0 ≈ −2.8 €.<br />
+          • <span style={{ color: T.a3 }}>β₃ ≈ +0.4 €/MWh (courbure) :</span> résidu marginal sur les maturités de transition.<br />
+          • <strong>Vérification déc :</strong> <K>{"1.2 \\times 1 + 2.8 \\times 0.76 + 0.4 \\times (-0.15)"}</K> ≈ 1.2 + 2.1 − 0.1 = <strong>+3.2 ≈ +3.8 ✓</strong><br />
+          • <strong>Impact VI stockage (50 GWh) :</strong> β₂ = +2.8, spread net ≈ +2.8 × 1.76 ≈ <strong>+4.9 €/MWh → VI ≈ +245 €</strong>.
+        </div>
+      </ExampleBlock>
 
       {/* ── 5. Comparaison des méthodes ──────────────── */}
       <SectionTitle accent={ACCENT}>Méthodes d'optimisation — comparaison</SectionTitle>
