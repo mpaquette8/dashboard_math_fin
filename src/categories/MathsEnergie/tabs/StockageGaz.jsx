@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react'
 import {
   LineChart, Line, BarChart, Bar, ComposedChart,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
-  ResponsiveContainer, ReferenceLine,
+  ResponsiveContainer, ReferenceLine, Cell,
 } from 'recharts'
 import { T } from '../../../design/tokens'
 import {
@@ -97,7 +97,7 @@ function runBellmanDP({ NV = 20, NS = 25, NT = 12, Vmin = 0, Vmax = 100, qinj = 
         let bestU = 0
         for (let ku = 0; ku < NU; ku++) {
           const u = uGrid[ku]
-          const Vnew = Vi + u * dt
+          const Vnew = Vi + u   // u en GWh/mois (discret) — plus de * dt
           if (Vnew < Vmin - 1e-9 || Vnew > Vmax + 1e-9) continue
           let EV = 0
           for (let k = 0; k < NS; k++) {
@@ -468,8 +468,8 @@ export function BellmanTab() {
   const iMid = 10
 
   // ── Sélection interactive du point (V, S, t) ──
-  const [vSel, setVSel] = useState(50)
-  const [sSel, setSSel] = useState(40)
+  const [vSel, setVSel] = useState(20)   // tank peu rempli au départ → injection visible en été
+  const [sSel, setSSel] = useState(34)   // prix d'été (μ min) par défaut → INJECTER visible
   const [tSel, setTSel] = useState(0)   // mois sélectionné (0 = Avr … 11 = Mar)
 
   // --- Indices grille les plus proches du point sélectionné ---
@@ -480,26 +480,12 @@ export function BellmanTab() {
   const sMin = Math.round(result.sGrid[0])
   const sMax = Math.round(result.sGrid[result.sGrid.length - 1])
 
-  // Cross-section V : valeur & action en fonction du volume, à S fixé, au mois tSel
-  const crossV = result.vGrid.map((v, i) => ({
-    volume: +v.toFixed(1),
-    valeur: +result.V[tSel][i][jSel].toFixed(2),
-    action: +result.policy[tSel][i][jSel].toFixed(2),
-  }))
-
   // Cross-section S : valeur & action en fonction du prix, à V fixé, au mois tSel
+  // (utilisée dans le graphique prix-seuil de la Section B)
   const crossS = result.sGrid.map((s, j) => ({
     prix: +s.toFixed(1),
     valeur: +result.V[tSel][iSel][j].toFixed(2),
     action: +result.policy[tSel][iSel][j].toFixed(2),
-  }))
-
-  // Cross-section T : valeur & action au point (V,S) sélectionné en fonction du mois
-  const crossT = MONTHS.map((m, t) => ({
-    mois: m,
-    valeur: t < 12 ? +result.V[t][iSel][jSel].toFixed(2) : 0,
-    action: t < 12 ? +result.policy[t][iSel][jSel].toFixed(2) : 0,
-    muT: +result.muSeason[t].toFixed(1),
   }))
 
   // --- Profil optimal annuel : on simule la trajectoire V*(t) en suivant la politique Bellman ---
@@ -525,7 +511,7 @@ export function BellmanTab() {
         mu: +muSeason[t].toFixed(1),
         cumCash: +cumCash.toFixed(1),
       })
-      V = Math.max(0, Math.min(100, V + u / 12))
+      V = Math.max(0, Math.min(100, V + u))
     }
     // État final (fin Mars)
     traj.push({
@@ -540,13 +526,6 @@ export function BellmanTab() {
 
   const vAtPoint = result.V[tSel][iSel][jSel]
   const uAtPoint = result.policy[tSel][iSel][jSel]
-
-  // --- Sous-échantillonnage de la heatmap pour lisibilité (max 12 lignes × 13 colonnes) ---
-  const hmMaxRows = 12, hmMaxCols = 13
-  const vStep = Math.max(1, Math.ceil(result.vGrid.length / hmMaxRows))
-  const sStep = Math.max(1, Math.ceil(result.sGrid.length / hmMaxCols))
-  const hmVIndices = Array.from({ length: result.vGrid.length }, (_, i) => i).filter((_, i) => i % vStep === 0)
-  const hmSIndices = Array.from({ length: result.sGrid.length }, (_, j) => j).filter((_, j) => j % sStep === 0)
 
   return (
     <div>
@@ -1642,344 +1621,233 @@ export function BellmanTab() {
       </Accordion>
 
       {/* ── Tableau de bord opérateur ──────────────────────────────────────── */}
-      <SectionTitle accent={ACCENT}>Tableau de bord — explorer la grille Bellman</SectionTitle>
+      <SectionTitle accent={ACCENT}>Tableau de bord — la politique Bellman en pratique</SectionTitle>
 
-      <IntuitionBlock emoji="🗺️" title="La carte de décision de l'opérateur" accent={ACCENT}>
-        L'algorithme de Bellman produit une <strong>politique optimale</strong> : pour chaque combinaison
-        (mois t, volume V, prix S), il prescrit l'action u* et la valeur 𝒱.
-        Ce tableau de bord permet d'explorer cette politique de <strong>cinq façons</strong> complémentaires :
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 16px', marginTop: 10, fontSize: 13 }}>
-          <div><strong style={{ color: ACCENT }}>① Profil optimal annuel</strong> — la trajectoire V*(t) que suivrait un opérateur rationnel sur 12 mois.</div>
-          <div><strong style={{ color: ACCENT }}>② Courbe forward saisonnière</strong> — le prix d'équilibre μ(t) mois par mois, moteur de la décision.</div>
-          <div><strong style={{ color: ACCENT }}>③ Matrice de décision</strong> — la carte inject / attente / soutire au mois sélectionné.</div>
-          <div><strong style={{ color: ACCENT }}>④ Coupes croisées (V, S, t)</strong> — comment valeur et action varient selon chaque axe.</div>
-          <div><strong style={{ color: ACCENT }}>⑤ Diagnostic ponctuel</strong> — sélectionnez (t, V, S) et lisez la recommandation.</div>
+      <IntuitionBlock emoji="🏪" title="L'opérateur comme un marchand avisé" accent={ACCENT}>
+        Imaginez un épicier qui stocke des conserves. <strong>L'été</strong>, quand les tomates abondent et le prix chute,
+        il en achète un maximum et les met en bocaux. <strong>L'hiver</strong>, quand les prix flambent et les tomates
+        fraîches manquent, il vend son stock au prix fort.
+        <br /><br />
+        L'opérateur de stockage gazier fait <strong>exactement la même chose</strong> : acheter (injecter) quand
+        le prix est bas en été, vendre (soutirer) quand le prix est haut en hiver. C'est le principe
+        d'<em>arbitrage temporel</em> que Bellman optimise mathématiquement.
+        <div style={{ display: 'flex', gap: 12, marginTop: 12, flexWrap: 'wrap', fontSize: 13 }}>
+          <div style={{ background: `${T.a1}18`, border: `1px solid ${T.a1}44`, borderRadius: 6, padding: '6px 14px' }}>
+            <strong style={{ color: T.a1 }}>① Stratégie sur 12 mois</strong> — voir le cycle complet été/hiver
+          </div>
+          <div style={{ background: `${T.a4}18`, border: `1px solid ${T.a4}44`, borderRadius: 6, padding: '6px 14px' }}>
+            <strong style={{ color: T.a4 }}>② Votre situation</strong> — diagnostic ponctuel interactif
+          </div>
         </div>
       </IntuitionBlock>
 
-      {/* ── Paramètres du modèle ── */}
-      <Grid cols={4} gap="12px">
-        <Slider label="κ — vitesse de retour à la moyenne du prix" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="μ — prix d'équilibre moyen annuel (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v} €`} />
-        <Slider label="σ — volatilité instantanée du prix (€/MWh)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
-        <Slider label="A — amplitude saisonnière du prix (%)" value={seasonAmp} min={0} max={0.6} step={0.05} onChange={setSeasonAmp} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
-        <Slider label="r — taux d'actualisation annuel" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={ACCENT} format={v => `${(v * 100).toFixed(1)}%`} />
-        <Slider label="q_inj — débit max d'injection (GWh/mois)" value={qinj} min={2} max={20} step={1} onChange={setQinj} accent={ACCENT} format={v => `${v}`} />
-        <Slider label="q_wit — débit max de soutirage (GWh/mois)" value={qwit} min={2} max={20} step={1} onChange={setQwit} accent={ACCENT} format={v => `${v}`} />
-      </Grid>
+      {/* ── Paramètres du modèle (accordéon) ── */}
+      <Accordion title="⚙️ Paramètres du modèle" accent={ACCENT} badge="Réglages">
+        <Grid cols={4} gap="12px">
+          <Slider label="κ — vitesse de retour à la moyenne du prix" value={kappa} min={0.5} max={5} step={0.1} onChange={setKappa} accent={ACCENT} format={v => v.toFixed(1)} />
+          <Slider label="μ — prix d'équilibre moyen annuel (€/MWh)" value={mu} min={20} max={80} step={1} onChange={setMu} accent={ACCENT} format={v => `${v} €`} />
+          <Slider label="σ — volatilité instantanée du prix (€/MWh)" value={sigma} min={1} max={25} step={0.5} onChange={setSigma} accent={ACCENT} format={v => v.toFixed(1)} />
+          <Slider label="A — amplitude saisonnière du prix (%)" value={seasonAmp} min={0} max={0.6} step={0.05} onChange={setSeasonAmp} accent={T.a5} format={v => `${(v * 100).toFixed(0)}%`} />
+          <Slider label="r — taux d'actualisation annuel" value={r} min={0} max={0.15} step={0.005} onChange={setR} accent={ACCENT} format={v => `${(v * 100).toFixed(1)}%`} />
+          <Slider label="q_inj — débit max d'injection (GWh/mois)" value={qinj} min={2} max={20} step={1} onChange={setQinj} accent={ACCENT} format={v => `${v} GWh/m`} />
+          <Slider label="q_wit — débit max de soutirage (GWh/mois)" value={qwit} min={2} max={20} step={1} onChange={setQwit} accent={ACCENT} format={v => `${v} GWh/m`} />
+        </Grid>
+      </Accordion>
 
-      {/* ═══════════ A. PROFIL OPTIMAL ANNUEL ═══════════ */}
-      <SectionTitle accent={ACCENT}>① Profil optimal annuel — « comment opérer le stockage sur 12 mois »</SectionTitle>
+      {/* ═══════════ A. STRATÉGIE ANNUELLE ═══════════ */}
+      <SectionTitle accent={ACCENT}>① La stratégie optimale sur un cycle annuel</SectionTitle>
 
-      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px' }}>
-        Ce graphique simule un opérateur qui suit <strong>exactement</strong> la politique Bellman
-        sur toute l'année gazière, en supposant que le prix réalisé = μ(t) (scénario forward central).
-        L'aire bleue montre le <strong>volume en stock V*(t)</strong> — le cœur de la stratégie.
-        Le volume de départ est celui sélectionné ci-dessous (V₀ = {vSel} GWh).
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
+        Chaque barre représente l'action optimale prescrite par Bellman pour ce mois.{' '}
+        <span style={{ color: T.a1, fontWeight: 700 }}>Bleue = injecter</span> (prix bas → acheter et stocker),{' '}
+        <span style={{ color: T.a4, fontWeight: 700 }}>verte = soutirer</span> (prix hauts → vendre),{' '}
+        <span style={{ color: T.muted, fontWeight: 600 }}>grise = attendre</span>.{' '}
+        La courbe <span style={{ color: T.a5, fontWeight: 700 }}>orange pointillée</span> est le prix forward μ(t).
       </div>
 
-      <Slider label="V₀ — volume de départ au 1er Avril (GWh)" value={vSel} min={0} max={100} step={5} onChange={setVSel} accent={ACCENT} format={v => `${v} GWh`} />
-
-      <Grid cols={2} gap="16px">
-        <ChartWrapper title="Volume en stock V*(t) et prix forward μ(t)" accent={ACCENT} height={260}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={optimalCycle} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <YAxis yAxisId="vol" stroke={T.a1} tick={{ fill: T.a1, fontSize: 10 }} domain={[0, 105]}
-                label={{ value: 'V (GWh)', fill: T.a1, fontSize: 10, angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="prix" orientation="right" stroke={ACCENT} tick={{ fill: ACCENT, fontSize: 10 }}
-                label={{ value: 'μ(t) (€)', fill: ACCENT, fontSize: 10, angle: 90, position: 'insideRight' }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Line yAxisId="vol" type="monotone" dataKey="volume" stroke={T.a1} strokeWidth={2.5} dot={{ r: 3, fill: T.a1 }} name="Volume V* (GWh)" />
-              <Line yAxisId="prix" type="monotone" dataKey="mu" stroke={ACCENT} strokeWidth={2} dot={false} strokeDasharray="6 3" name="μ(t) — forward (€)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-        <ChartWrapper title="Flux mensuels u*(t) et cashflow cumulé" accent={T.a4} height={260}>
-          <ResponsiveContainer width="100%" height="100%">
-            <ComposedChart data={optimalCycle.slice(0, 12)} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <YAxis yAxisId="flux" stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }}
-                label={{ value: 'u* (GWh/m)', fill: T.a4, fontSize: 10, angle: -90, position: 'insideLeft' }} />
-              <YAxis yAxisId="cash" orientation="right" stroke={T.a5} tick={{ fill: T.a5, fontSize: 10 }}
-                label={{ value: 'Cash (€)', fill: T.a5, fontSize: 10, angle: 90, position: 'insideRight' }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <ReferenceLine yAxisId="flux" y={0} stroke={T.muted} strokeDasharray="4 2" />
-              <Bar yAxisId="flux" dataKey="action" name="Flux u* (GWh/m)" fill={T.a4} fillOpacity={0.6} />
-              <Line yAxisId="cash" type="monotone" dataKey="cumCash" stroke={T.a5} strokeWidth={2} dot={false} name="Cash cumulé (€)" />
-            </ComposedChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
+      <Grid cols={2} gap="14px" style={{ alignItems: 'center' }}>
+        <Slider label="V₀ — volume de départ au 1ᵉʳ Avril (GWh)" value={vSel} min={0} max={100} step={5} onChange={setVSel} accent={ACCENT} format={v => `${v} GWh`} />
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <InfoChip label="V max atteint" value={`${Math.max(...optimalCycle.map(p => p.volume)).toFixed(0)}`} unit="GWh" accent={T.a1} />
+          <InfoChip label="V fin (Mars)" value={`${optimalCycle[optimalCycle.length - 1].volume}`} unit="GWh" accent={ACCENT} />
+          <InfoChip label="Profit total" value={`${optimalCycle[optimalCycle.length - 1].cumCash.toFixed(0)}`} unit="€" accent={T.a5} />
+          <InfoChip label="Spread μ max−min" value={`${(Math.max(...result.muSeason.slice(0, 12)) - Math.min(...result.muSeason.slice(0, 12))).toFixed(0)}`} unit="€/MWh" accent={T.a8} />
+        </div>
       </Grid>
 
-      {/* Métriques du cycle */}
-      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', margin: '8px 0 14px' }}>
-        <InfoChip label="V₀ (départ)" value={`${optimalCycle[0].volume}`} unit="GWh" accent={T.a1} />
-        <InfoChip label="V_max atteint" value={`${Math.max(...optimalCycle.map(p => p.volume)).toFixed(0)}`} unit="GWh" accent={T.a1} />
-        <InfoChip label="V_fin (Mars)" value={`${optimalCycle[optimalCycle.length - 1].volume}`} unit="GWh" accent={T.a1} />
-        <InfoChip label="Cash total" value={`${optimalCycle[optimalCycle.length - 1].cumCash}`} unit="€" accent={T.a5} />
-        <InfoChip label="μ min (été)" value={`${Math.min(...result.muSeason.slice(0, 12)).toFixed(0)}`} unit="€" accent={T.a1} />
-        <InfoChip label="μ max (hiver)" value={`${Math.max(...result.muSeason.slice(0, 12)).toFixed(0)}`} unit="€" accent={ACCENT} />
-      </div>
+      <ChartWrapper title="Stratégie Bellman — flux mensuels u*(t), volume en stock et prix forward" accent={ACCENT} height={310}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={optimalCycle.slice(0, 12)} margin={{ top: 10, right: 28, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 11 }} />
+            <YAxis yAxisId="vol" stroke={T.a1} tick={{ fill: T.a1, fontSize: 10 }} domain={[0, 105]}
+              label={{ value: 'V (GWh)', fill: T.a1, fontSize: 10, angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="flux" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }}
+              label={{ value: 'u* (GWh/m)', fill: T.a4, fontSize: 10, angle: 90, position: 'insideRight' }} />
+            <Tooltip
+              contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }}
+              formatter={(val, name) => [typeof val === 'number' ? val.toFixed(1) : val, name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <ReferenceLine yAxisId="flux" y={0} stroke={T.muted} strokeDasharray="4 2" />
+            <Bar yAxisId="flux" dataKey="action" name="u* — flux mensuel (GWh/m)" radius={[3, 3, 0, 0]}>
+              {optimalCycle.slice(0, 12).map((entry, idx) => (
+                <Cell key={idx}
+                  fill={entry.action > 0.5 ? T.a1 : entry.action < -0.5 ? T.a4 : `${T.muted}88`}
+                  fillOpacity={0.85}
+                />
+              ))}
+            </Bar>
+            <Line yAxisId="vol" type="monotone" dataKey="volume" stroke={T.a1} strokeWidth={2.5}
+              dot={{ r: 4, fill: T.a1, strokeWidth: 0 }} name="Volume V* (GWh)" />
+            <Line yAxisId="flux" type="monotone" dataKey="mu" stroke={T.a5} strokeWidth={2}
+              dot={false} strokeDasharray="6 3" name="Prix forward μ(t) (€/MWh)" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
-      {/* Clés de lecture du profil */}
-      <div style={{ background: `${T.a1}0d`, border: `1px solid ${T.a1}33`, borderRadius: 8, padding: '12px 16px', margin: '0 0 14px' }}>
-        <div style={{ color: T.a1, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>📖 Lire le profil optimal</div>
+      <div style={{ background: `${T.a1}0d`, border: `1px solid ${T.a1}33`, borderRadius: 8, padding: '12px 16px', margin: '10px 0 18px' }}>
+        <div style={{ color: T.a1, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>📖 Comment lire ce graphique</div>
         {[
-          { icon: '📈', text: <><strong style={{ color: T.text }}>Phase d'injection (Avr→Sep)</strong> — le prix μ(t) est sous la moyenne annuelle. L'opérateur achète du gaz à bas prix et le stocke. Le volume monte progressivement.</> },
-          { icon: '📉', text: <><strong style={{ color: T.text }}>Phase de soutirage (Oct→Mar)</strong> — le prix μ(t) dépasse la moyenne. L'opérateur revend le gaz stocké à prix fort. Le volume redescend.</> },
-          { icon: '💰', text: <><strong style={{ color: T.text }}>Cashflow cumulé</strong> — négatif en été (on achète), puis fortement positif en hiver (on vend cher). Le profit total = spread saisonnier × volume cyclé − coûts opérationnels.</> },
-          { icon: '🎛️', text: <><strong style={{ color: T.text }}>Essayez A = 0%</strong> — sans saisonnalité, le cycle disparaît. Le stockage ne vaut alors que sa <em>valeur extrinsèque</em> (optionalité liée à σ).</> },
+          { icon: '🔵', text: <><strong style={{ color: T.a1 }}>Barres bleues (Avr→Sep)</strong> — prix forward μ(t) sous la moyenne. Bellman prescrit d'<strong>injecter</strong> : on achète à bas prix pour stocker et revendre en hiver.</> },
+          { icon: '🟢', text: <><strong style={{ color: T.a4 }}>Barres vertes (Oct→Mar)</strong> — prix forward au-dessus de la moyenne. Bellman prescrit de <strong>soutirer</strong> : on revend le gaz stocké au prix fort.</> },
+          { icon: '📈', text: <><strong>Courbe de volume V*(t)</strong> — elle monte pendant la phase bleue (tank qui se remplit) et redescend pendant la phase verte. L'amplitude du cycle dépend de V₀ et des capacités q_inj / q_wit.</> },
+          { icon: '🔶', text: <><strong style={{ color: T.a5 }}>Courbe orange pointillée</strong> — le prix forward μ(t). Quand elle est basse, on injecte ; quand elle est haute, on soutire. Injection et prix bas sont toujours corrélés.</> },
+          { icon: '🎛️', text: <>Essayez <strong>A = 0%</strong> dans les réglages — sans saisonnalité, toutes les barres deviennent grises. Plus de cycle, le stockage ne vaut que son optionalité (liée à σ).</> },
         ].map(({ icon, text }, i) => (
-          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 6, alignItems: 'flex-start' }}>
+          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 5, alignItems: 'flex-start' }}>
             <span style={{ flexShrink: 0, fontSize: 14 }}>{icon}</span>
             <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.65 }}>{text}</span>
           </div>
         ))}
       </div>
 
-      {/* ═══════════ B. NAVIGATION TEMPORELLE + DIAGNOSTIC ═══════════ */}
-      <SectionTitle accent={ACCENT}>② Navigation temporelle & diagnostic ponctuel</SectionTitle>
+      {/* ═══════════ B. DIAGNOSTIC PONCTUEL ═══════════ */}
+      <SectionTitle accent={ACCENT}>② Votre situation — que prescrit Bellman ?</SectionTitle>
 
-      {/* Slider temporel */}
-      <div style={{ background: `${ACCENT}12`, border: `2px solid ${ACCENT}44`, borderRadius: 10, padding: '12px 20px', margin: '10px 0' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 300px' }}>
-            <Slider label={`t — mois de l'année gazière : ${MONTHS[tSel]} (${tSel + 1}/12)`} value={tSel} min={0} max={11} step={1} onChange={setTSel} accent={ACCENT} format={v => MONTHS[v]} />
-          </div>
-          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-            {MONTHS.map((m, idx) => (
+      <div style={{ color: T.muted, fontSize: 13, lineHeight: 1.7, margin: '0 0 12px' }}>
+        Vous êtes l'opérateur. Sélectionnez votre mois, votre volume en stock et le prix de marché.
+        Bellman vous indique immédiatement la décision qui maximise le profit à long terme —
+        et le graphique de droite montre à <strong>quel prix exact vous devriez changer de stratégie</strong>.
+      </div>
+
+      {/* Sélecteur de mois coloré par saison */}
+      <div style={{ background: `${ACCENT}10`, border: `1px solid ${ACCENT}33`, borderRadius: 10, padding: '12px 18px', margin: '0 0 14px' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>
+          🗓️ Mois sélectionné :{' '}
+          <span style={{ color: tSel <= 5 ? T.a1 : T.a8 }}>
+            {MONTHS[tSel]} — {tSel <= 5 ? '☀️ été (prix bas → zone injection)' : '❄️ hiver (prix hauts → zone soutirage)'}
+          </span>
+        </div>
+        <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap' }}>
+          {MONTHS.map((m, idx) => {
+            const isSummer = idx <= 5
+            const isSelected = idx === tSel
+            return (
               <button key={idx} onClick={() => setTSel(idx)} style={{
-                background: idx === tSel ? ACCENT : `${T.muted}15`,
-                color: idx === tSel ? '#000' : T.muted,
-                border: 'none', borderRadius: 4, padding: '4px 7px', fontSize: 10,
-                fontWeight: idx === tSel ? 800 : 500, cursor: 'pointer',
+                background: isSelected ? (isSummer ? T.a1 : T.a8) : `${isSummer ? T.a1 : T.a8}18`,
+                color: isSelected ? '#000' : (isSummer ? T.a1 : T.a8),
+                border: `1px solid ${isSummer ? T.a1 : T.a8}55`,
+                borderRadius: 5, padding: '5px 10px', fontSize: 11,
+                fontWeight: isSelected ? 800 : 500, cursor: 'pointer',
                 transition: 'all .15s',
               }}>{m}</button>
-            ))}
-          </div>
+            )
+          })}
         </div>
-        <div style={{ display: 'flex', gap: 12, marginTop: 8, flexWrap: 'wrap' }}>
-          <InfoChip label="Mois" value={MONTHS[tSel]} accent={ACCENT} />
-          <InfoChip label={`μ(${MONTHS[tSel]})`} value={`${result.muSeason[tSel].toFixed(1)} €`} accent={result.muSeason[tSel] > mu ? T.a8 : T.a1} />
-          <InfoChip label="Saison" value={tSel <= 5 ? '☀️ Injection (Avr→Sep)' : '❄️ Soutirage (Oct→Mar)'} accent={tSel <= 5 ? T.a1 : T.a8} />
-          <InfoChip label="Grille DP" value={`${result.vGrid.length}×${result.sGrid.length}×12`} unit="nœuds" accent={T.muted} />
+        <div style={{ display: 'flex', gap: 10, marginTop: 8, flexWrap: 'wrap' }}>
+          <InfoChip label={`Prix forward μ(${MONTHS[tSel]})`} value={`${result.muSeason[tSel].toFixed(1)} €/MWh`} accent={result.muSeason[tSel] > mu ? T.a8 : T.a1} />
+          <InfoChip label="vs moyenne annuelle μ" value={result.muSeason[tSel] >= mu ? `+${(result.muSeason[tSel] - mu).toFixed(1)} €` : `${(result.muSeason[tSel] - mu).toFixed(1)} €`} accent={result.muSeason[tSel] >= mu ? T.a8 : T.a1} />
         </div>
       </div>
 
-      {/* Panneau diagnostic */}
-      <div style={{ background: `${ACCENT}0d`, border: `2px solid ${ACCENT}44`, borderRadius: 10, padding: '14px 20px', margin: '14px 0' }}>
-        <div style={{ display: 'flex', gap: 16, alignItems: 'stretch', flexWrap: 'wrap' }}>
-          <div style={{ flex: '1 1 250px' }}>
-            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>🎯 Point sélectionné</div>
-            <Grid cols={2} gap="8px">
-              <Slider label="V — volume en stock (GWh)" value={vSel} min={0} max={100} step={5} onChange={setVSel} accent={ACCENT} format={v => `${v}`} />
-              <Slider label="S — prix spot actuel (€/MWh)" value={sSel} min={sMin} max={sMax} step={1} onChange={setSSel} accent={ACCENT} format={v => `${v} €`} />
-            </Grid>
-          </div>
-          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 8, justifyContent: 'center', minWidth: 160 }}>
-            <div style={{ background: uAtPoint > 0.5 ? `${T.a1}20` : uAtPoint < -0.5 ? `${T.a4}20` : `${T.muted}18`, border: `2px solid ${uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted}`, borderRadius: 8, padding: '10px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 22, marginBottom: 2 }}>{uAtPoint > 0.5 ? '⬆️' : uAtPoint < -0.5 ? '⬇️' : '⏸️'}</div>
-              <div style={{ color: uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted, fontWeight: 800, fontSize: 14, textTransform: 'uppercase' }}>
-                {uAtPoint > 0.5 ? 'INJECTER' : uAtPoint < -0.5 ? 'SOUTIRER' : 'ATTENDRE'}
-              </div>
-              <div style={{ color: T.text, fontSize: 11, marginTop: 2 }}>
-                u* = {uAtPoint > 0.5 ? '+' : ''}{uAtPoint.toFixed(1)} GWh/mois
-              </div>
+      <Grid cols={2} gap="16px">
+        {/* Panneau gauche : sliders + décision */}
+        <div style={{ background: `${ACCENT}0d`, border: `2px solid ${ACCENT}44`, borderRadius: 10, padding: '16px 20px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>🎯 Votre état actuel</div>
+          <Slider label="V — volume en stock (GWh)" value={vSel} min={0} max={100} step={5} onChange={setVSel} accent={ACCENT} format={v => `${v} GWh`} />
+          <div style={{ marginBottom: 10 }} />
+          <Slider label="S — prix spot du marché (€/MWh)" value={sSel} min={sMin} max={sMax} step={1} onChange={setSSel} accent={T.a5} format={v => `${v} €/MWh`} />
+
+          {/* Bloc décision */}
+          <div style={{
+            marginTop: 16,
+            background: uAtPoint > 0.5 ? `${T.a1}20` : uAtPoint < -0.5 ? `${T.a4}20` : `${T.muted}15`,
+            border: `2px solid ${uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted}`,
+            borderRadius: 10, padding: '14px 18px', textAlign: 'center',
+          }}>
+            <div style={{ fontSize: 30, marginBottom: 4 }}>
+              {uAtPoint > 0.5 ? '⬆️' : uAtPoint < -0.5 ? '⬇️' : '⏸️'}
             </div>
-          </div>
-          <div style={{ flex: '0 0 auto', display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'center', minWidth: 180 }}>
-            <InfoChip label={`𝒱(${MONTHS[tSel]}, ${Math.round(vSel)}, ${Math.round(sSel)})`} value={vAtPoint.toFixed(2)} unit="€" accent={ACCENT} />
-            <div style={{ color: T.muted, fontSize: 10, lineHeight: 1.5 }}>
+            <div style={{
+              color: uAtPoint > 0.5 ? T.a1 : uAtPoint < -0.5 ? T.a4 : T.muted,
+              fontWeight: 800, fontSize: 18, textTransform: 'uppercase', letterSpacing: 1,
+            }}>
+              {uAtPoint > 0.5 ? 'INJECTER' : uAtPoint < -0.5 ? 'SOUTIRER' : 'ATTENDRE'}
+            </div>
+            <div style={{ color: T.text, fontSize: 12, marginTop: 4 }}>
+              u* = {uAtPoint > 0.5 ? '+' : ''}{uAtPoint.toFixed(1)} GWh/mois
+            </div>
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 8, lineHeight: 1.55, textAlign: 'left' }}>
               {uAtPoint > 0.5
-                ? `Prix bas (${Math.round(sSel)}€ < μ=${mu}€) → acheter ${Math.abs(uAtPoint).toFixed(1)} GWh/mois en prévision de l'hiver.`
+                ? `S=${Math.round(sSel)}€ < μ(${MONTHS[tSel]})=${result.muSeason[tSel].toFixed(0)}€ — prix bas pour cette saison. Bellman prescrit d'acheter ${uAtPoint.toFixed(1)} GWh/mois et de les stocker pour les revendre en hiver.`
                 : uAtPoint < -0.5
-                  ? `Prix élevé (${Math.round(sSel)}€) → soutirer ${Math.abs(uAtPoint).toFixed(1)} GWh/mois et encaisser le spread.`
-                  : `Prix ≈ μ(t) → la flexibilité a plus de valeur que l'action. Attendre une opportunité.`
+                  ? `S=${Math.round(sSel)}€ > μ(${MONTHS[tSel]})=${result.muSeason[tSel].toFixed(0)}€ — prix élevé pour cette saison. Bellman prescrit de vendre ${Math.abs(uAtPoint).toFixed(1)} GWh/mois et d'encaisser le spread.`
+                  : `S≈μ(${MONTHS[tSel]})=${result.muSeason[tSel].toFixed(0)}€ — prix au niveau saisonnier. La flexibilité vaut plus que l'action immédiate.`
               }
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* ═══════════ C. MATRICE DE DÉCISION (sous-échantillonnée) ═══════════ */}
-      <SectionTitle accent={ACCENT}>③ Matrice de décision u*(V, S) en {MONTHS[tSel]}</SectionTitle>
-
-      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px' }}>
-        Chaque cellule montre l'<strong>action optimale</strong> au mois <strong>{MONTHS[tSel]}</strong>.
-        Couleurs : <span style={{ color: T.a1, fontWeight: 700 }}>bleu = injection</span>,{' '}
-        <span style={{ color: T.muted, fontWeight: 700 }}>gris = attente</span>,{' '}
-        <span style={{ color: T.a4, fontWeight: 700 }}>vert = soutirage</span>.
-        Cliquez une cellule pour déplacer le point sélectionné.
-        {result.muSeason[tSel] < mu
-          ? <> En <strong>{MONTHS[tSel]}</strong>, μ(t) = {result.muSeason[tSel].toFixed(0)}€ &lt; μ = {mu}€ → on s'attend à voir dominer l'<strong style={{ color: T.a1 }}>injection</strong>.</>
-          : <> En <strong>{MONTHS[tSel]}</strong>, μ(t) = {result.muSeason[tSel].toFixed(0)}€ &gt; μ = {mu}€ → on s'attend à voir dominer le <strong style={{ color: T.a4 }}>soutirage</strong>.</>
-        }
-      </div>
-
-      <div style={{ overflowX: 'auto', margin: '8px 0' }}>
-        <table style={{ borderCollapse: 'collapse', fontSize: 11, width: '100%', tableLayout: 'fixed' }}>
-          <thead>
-            <tr>
-              <th style={{ padding: '4px 6px', color: ACCENT, fontWeight: 700, fontSize: 10, textAlign: 'left', borderBottom: `1px solid ${ACCENT}44`, width: 60 }}>V \ S →</th>
-              {hmSIndices.map(j => {
-                const s = result.sGrid[j]
-                return (
-                  <th key={j} style={{ padding: '4px 2px', color: j === jSel ? ACCENT : T.muted, fontWeight: j === jSel ? 800 : 600, fontSize: 10, textAlign: 'center', borderBottom: `1px solid ${ACCENT}44`, background: j === jSel ? `${ACCENT}12` : 'transparent' }}>
-                    {s.toFixed(0)}€
-                  </th>
-                )
-              })}
-            </tr>
-          </thead>
-          <tbody>
-            {hmVIndices.map(i => (
-              <tr key={i}>
-                <td style={{ padding: '3px 6px', color: i === iSel ? ACCENT : T.muted, fontWeight: i === iSel ? 800 : 600, fontSize: 10, borderBottom: `1px solid ${T.border}`, background: i === iSel ? `${ACCENT}12` : 'transparent' }}>
-                  {result.vGrid[i].toFixed(0)} GWh
-                </td>
-                {hmSIndices.map(j => {
-                  const u = result.policy[tSel][i][j]
-                  const isSelected = i === iSel && j === jSel
-                  const bg = u > 0.5 ? `${T.a1}${isSelected ? '55' : '28'}` : u < -0.5 ? `${T.a4}${isSelected ? '55' : '28'}` : `${T.muted}${isSelected ? '30' : '10'}`
-                  const fg = u > 0.5 ? T.a1 : u < -0.5 ? T.a4 : T.muted
-                  return (
-                    <td key={j} style={{
-                      padding: '3px 1px', textAlign: 'center', fontSize: 10, fontWeight: isSelected ? 800 : 500,
-                      background: bg, color: fg,
-                      borderBottom: `1px solid ${T.border}`,
-                      border: isSelected ? `2px solid ${ACCENT}` : `1px solid ${T.border}`,
-                      borderRadius: isSelected ? 3 : 0,
-                      cursor: 'pointer',
-                    }} onClick={() => { setVSel(result.vGrid[i]); setSSel(result.sGrid[j]) }} title={`V=${result.vGrid[i].toFixed(0)}, S=${result.sGrid[j].toFixed(0)}: u*=${u.toFixed(1)}`}>
-                      {isSelected ? '⊕' : u > 0.5 ? `+${u.toFixed(0)}` : u < -0.5 ? u.toFixed(0) : '·'}
-                    </td>
-                  )
-                })}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {/* Légende */}
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '6px 0 14px' }}>
-        {[
-          { color: T.a1, label: '+N = Injecter', desc: 'Stock bas et/ou prix bas → acheter maintenant, revendre en hiver.' },
-          { color: T.muted, label: '· = Attendre', desc: 'Ni prix ni stock ne justifient d\'agir — conserver la flexibilité.' },
-          { color: T.a4, label: '−N = Soutirer', desc: 'Prix élevé et/ou stock élevé → vendre et encaisser le spread.' },
-          { color: ACCENT, label: '⊕ = Sélection', desc: 'Cliquez pour changer. Tous les graphiques s\'adaptent.' },
-        ].map(({ color, label, desc }, idx) => (
-          <div key={idx} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 170 }}>
-            <span style={{ color, fontWeight: 700, fontSize: 12, flexShrink: 0 }}>{label.split(' ')[0]}</span>
-            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.5 }}><strong style={{ color }}>{label.slice(label.indexOf(' ') + 1)}</strong> — {desc}</span>
+          <div style={{ marginTop: 8, display: 'flex', justifyContent: 'flex-end' }}>
+            <InfoChip label={`𝒱(${MONTHS[tSel]}, ${Math.round(vSel)} GWh, ${Math.round(sSel)} €)`} value={vAtPoint.toFixed(1)} unit="€" accent={ACCENT} />
           </div>
-        ))}
-      </div>
+        </div>
 
-      {/* ═══════════ D. COUPES CROISÉES (V, S, T) ═══════════ */}
-      <SectionTitle accent={ACCENT}>④ Coupes croisées — trois perspectives sur la valeur et la décision</SectionTitle>
-
-      <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, margin: '0 0 10px' }}>
-        Trois tranches de la grille 3D : selon le <strong>volume</strong> (S et t fixés),
-        le <strong>prix</strong> (V et t fixés), et le <strong>mois</strong> (V et S fixés).
-        Le point sélectionné (⊕) est au croisement des trois.
-      </div>
-
-      <Grid cols={3} gap="12px">
-        <ChartWrapper title={`Coupe volume — S=${result.sGrid[jSel].toFixed(0)}€, ${MONTHS[tSel]}`} accent={ACCENT} height={220}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={crossV} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="volume" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} label={{ value: 'V (GWh)', fill: T.muted, fontSize: 9, position: 'insideBottom', offset: -3 }} />
-              <YAxis yAxisId="val" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis yAxisId="act" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 10 }} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
-              <ReferenceLine yAxisId="act" y={0} stroke={T.muted} strokeDasharray="4 2" />
-              <Line yAxisId="val" type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2} dot={false} name="Valeur 𝒱 (€)" />
-              <Line yAxisId="act" type="monotone" dataKey="action" stroke={T.a4} strokeWidth={1.5} dot={false} strokeDasharray="5 3" name="u* (GWh/m)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-        <ChartWrapper title={`Coupe prix — V=${result.vGrid[iSel].toFixed(0)}GWh, ${MONTHS[tSel]}`} accent={ACCENT} height={220}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={crossS} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} label={{ value: 'S (€/MWh)', fill: T.muted, fontSize: 9, position: 'insideBottom', offset: -3 }} />
-              <YAxis yAxisId="val" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis yAxisId="act" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 10 }} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
-              <ReferenceLine yAxisId="act" y={0} stroke={T.muted} strokeDasharray="4 2" />
-              <Line yAxisId="val" type="monotone" dataKey="valeur" stroke={ACCENT} strokeWidth={2} dot={false} name="Valeur 𝒱 (€)" />
-              <Line yAxisId="act" type="monotone" dataKey="action" stroke={T.a4} strokeWidth={1.5} dot={false} strokeDasharray="5 3" name="u* (GWh/m)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-        <ChartWrapper title={`Coupe temporelle — V=${result.vGrid[iSel].toFixed(0)}GWh, S=${result.sGrid[jSel].toFixed(0)}€`} accent={T.a5} height={220}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={crossT} margin={{ top: 5, right: 16, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis yAxisId="val" stroke={T.muted} tick={{ fill: T.muted, fontSize: 9 }} />
-              <YAxis yAxisId="act" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 9 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 10 }} />
-              <Legend wrapperStyle={{ fontSize: 10 }} />
-              <ReferenceLine yAxisId="act" y={0} stroke={T.muted} strokeDasharray="4 2" />
-              <Line yAxisId="val" type="monotone" dataKey="valeur" stroke={T.a5} strokeWidth={2} dot={{ r: 3, fill: T.a5 }} name="Valeur 𝒱 (€)" />
-              <Line yAxisId="act" type="monotone" dataKey="action" stroke={T.a4} strokeWidth={1.5} dot={{ r: 2, fill: T.a4 }} strokeDasharray="5 3" name="u* (GWh/m)" />
-              <Line yAxisId="val" type="monotone" dataKey="muT" stroke={ACCENT} strokeWidth={1.5} dot={false} strokeDasharray="3 3" name="μ(t) (€)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
+        {/* Panneau droit : graphique prix-seuil */}
+        <div>
+          <ChartWrapper title={`Prix-seuil de décision — V=${result.vGrid[iSel].toFixed(0)} GWh en ${MONTHS[tSel]}`} accent={ACCENT} height={280}>
+            <ResponsiveContainer width="100%" height="100%">
+              <ComposedChart data={crossS} margin={{ top: 8, right: 16, left: 0, bottom: 20 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+                <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }}
+                  label={{ value: 'Prix marché S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -10 }} />
+                <YAxis stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }}
+                  label={{ value: 'u* (GWh/m)', fill: T.a4, fontSize: 10, angle: -90, position: 'insideLeft' }} />
+                <Tooltip
+                  contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 10 }}
+                  formatter={(v) => [`${Number(v).toFixed(1)} GWh/m`, 'Action u*']}
+                  labelFormatter={(v) => `S = ${Number(v).toFixed(0)} €/MWh`}
+                />
+                <ReferenceLine y={0} stroke={T.muted} strokeDasharray="4 2" />
+                <ReferenceLine x={Math.round(sSel)} stroke={ACCENT} strokeWidth={2} strokeDasharray="4 2"
+                  label={{ value: `S=${Math.round(sSel)}€`, fill: ACCENT, fontSize: 10, position: 'top' }} />
+                <Bar dataKey="action" name="u* — action optimale" radius={[2, 2, 0, 0]}>
+                  {crossS.map((entry, idx) => (
+                    <Cell key={idx}
+                      fill={entry.action > 0.5 ? T.a1 : entry.action < -0.5 ? T.a4 : `${T.muted}88`}
+                      fillOpacity={0.8}
+                    />
+                  ))}
+                </Bar>
+              </ComposedChart>
+            </ResponsiveContainer>
+          </ChartWrapper>
+          <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 7, padding: '10px 14px', marginTop: 6 }}>
+            {[
+              { icon: '🔵', text: <><strong style={{ color: T.a1 }}>Barres bleues</strong> — à ce prix, injecter est optimal. Le marché est bon marché par rapport à ce que Bellman anticipe pour l'hiver.</> },
+              { icon: '🟢', text: <><strong style={{ color: T.a4 }}>Barres vertes</strong> — à ce prix, soutirer est optimal. Le marché paye bien, encaisser le spread maintenant.</> },
+              { icon: '🔀', text: <><strong>Le seuil de bascule</strong> — la frontière bleu/vert est le prix-seuil S* où la stratégie change. Il dépend du volume et du mois sélectionnés.</> },
+              { icon: '📍', text: <><strong style={{ color: ACCENT }}>Ligne verticale</strong> — votre prix actuel S. Lisez immédiatement dans quelle zone vous vous trouvez.</> },
+            ].map(({ icon, text }, i) => (
+              <div key={i} style={{ display: 'flex', gap: 7, marginBottom: 4, alignItems: 'flex-start' }}>
+                <span style={{ flexShrink: 0 }}>{icon}</span>
+                <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.55 }}>{text}</span>
+              </div>
+            ))}
+          </div>
+        </div>
       </Grid>
 
-      {/* Clés de lecture */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10, margin: '12px 0' }}>
-        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}33`, borderRadius: 8, padding: '10px 14px' }}>
-          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Coupe volume</div>
-          {[
-            { icon: '📈', text: <><strong>Valeur croissante</strong> en V — plus de stock = plus de gaz vendable lors d'un pic. La pente ∂𝒱/∂V est le <em>delta volume</em>.</> },
-            { icon: '🔄', text: <><strong>u* change de signe</strong> — injection à bas volume, soutirage à haut volume. Le croisement u*=0 est le <em>seuil d'attente</em>.</> },
-          ].map(({ icon, text }, i) => (
-            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 5, alignItems: 'flex-start' }}>
-              <span style={{ flexShrink: 0, fontSize: 12 }}>{icon}</span>
-              <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.55 }}>{text}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 8, padding: '10px 14px' }}>
-          <div style={{ color: T.a4, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Coupe prix</div>
-          {[
-            { icon: '💰', text: <><strong>𝒱 croissante en S</strong> — un prix plus élevé = revenu de soutirage plus élevé. Le stockage est <em>long</em> le prix.</> },
-            { icon: '⬇️', text: <><strong>u* bascule en négatif</strong> — passé un seuil, Bellman recommande de soutirer. Le seuil dépend de V et du mois.</> },
-          ].map(({ icon, text }, i) => (
-            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 5, alignItems: 'flex-start' }}>
-              <span style={{ flexShrink: 0, fontSize: 12 }}>{icon}</span>
-              <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.55 }}>{text}</span>
-            </div>
-          ))}
-        </div>
-        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}33`, borderRadius: 8, padding: '10px 14px' }}>
-          <div style={{ color: T.a5, fontWeight: 700, fontSize: 11, marginBottom: 8 }}>Coupe temporelle</div>
-          {[
-            { icon: '📅', text: <><strong>𝒱 décroissante en t</strong> — plus on avance, moins il reste de temps pour profiter → valeur diminue (valeur temps).</> },
-            { icon: '🔁', text: <><strong>u* suit la saisonnalité</strong> — positif quand μ(t) est bas (acheter), négatif quand μ(t) est haut (vendre). C'est le cycle fondamental.</> },
-          ].map(({ icon, text }, i) => (
-            <div key={i} style={{ display: 'flex', gap: 6, marginBottom: 5, alignItems: 'flex-start' }}>
-              <span style={{ flexShrink: 0, fontSize: 12 }}>{icon}</span>
-              <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.55 }}>{text}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* ═══════════ E. EXERCICE GUIDÉ ═══════════ */}
+      {/* ═══════════ C. EXERCICE GUIDÉ ═══════════ */}
       <Accordion title="Exercice — Calculer manuellement un nœud avec deux états de prix futurs" accent={ACCENT} badge="Difficile">
         <p style={{ color: T.muted, fontSize: 13, lineHeight: 1.75 }}>
           Stockage simplifié : 2 pas de temps (t = 0 et t = 1), V = 50 GWh, prix actuel S₀ = 45 €/MWh.
