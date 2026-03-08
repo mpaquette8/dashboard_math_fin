@@ -132,7 +132,7 @@ function runIntrinsicDP({ NV = 15, NT = 12, Vmin = 0, Vmax = 100, qinj = 10, qwi
       let bestU = 0
       for (let ku = 0; ku < NU; ku++) {
         const u = uGrid[ku]
-        const Vnew = Vi + u * dt
+        const Vnew = Vi + u
         if (Vnew < Vmin - 1e-9 || Vnew > Vmax + 1e-9) continue
         const futV = linInterp(vGrid, V[t + 1], Vnew)
         const cashflow = -u * Ft * dt - cOp * Math.abs(u) * dt
@@ -2661,10 +2661,18 @@ export function ValeurTab() {
   const VE = Math.max(0, vstochVal - viVal)
   const ratio = vstochVal > 0.01 ? (VE / vstochVal * 100).toFixed(1) : '—'
 
+  const stockEvolution = (() => {
+    const arr = [50]
+    for (let t = 0; t < dpParams.NT; t++)
+      arr.push(Math.min(dpParams.Vmax, Math.max(dpParams.Vmin, arr[t] + intrinsic.injProfile[t])))
+    return arr
+  })()
+
   const profileData = intrinsic.injProfile.map((u, t) => ({
     mois: MONTHS[t % 12],
     action: +u.toFixed(2),
     prix: +intrinsic.fwd[t].toFixed(1),
+    volume: stockEvolution[t],
   }))
 
   const sigmaRange = [2, 4, 6, 8, 10, 12, 15, 18, 22]
@@ -2672,7 +2680,8 @@ export function ValeurTab() {
     return sigmaRange.map(s => {
       const stoch = runBellmanDP({ ...dpParams, NS: 14, kappa, sigma: s, seasonAmp: 0.3 })
       const vi = intrinsic.V[0] ? linInterp(intrinsic.vGrid, intrinsic.V[0], 50) : 0
-      const vs = stoch.V[0][Math.floor(stoch.vGrid.length / 2)][Math.floor(14 / 2)]
+      const iMidV = Math.floor(stoch.vGrid.length / 2)
+      const vs = linInterp(stoch.sGrid, stoch.V[0][iMidV], mu)
       return { sigma: s, VE: +Math.max(0, vs - vi).toFixed(2) }
     })
   }, [kappa, spread])
@@ -2889,42 +2898,49 @@ export function ValeurTab() {
         <InfoChip label="Prix hiver" value={`${(mu + spread / 2).toFixed(0)} €/MWh`} accent={T.a8} />
       </div>
 
-      <Grid cols={2} gap="16px">
-        <ChartWrapper title="Courbe forward saisonnière F(0,T)" accent={ACCENT} height={200}>
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={profileData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <ReferenceLine y={mu} stroke={T.muted} strokeDasharray="4 2" />
-              <Line type="monotone" dataKey="prix" stroke={T.a5} strokeWidth={2} dot={false} name="F(0,t)" />
-            </LineChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-        <ChartWrapper title="Politique optimale — profil inject/soutire" accent={ACCENT} height={200}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={profileData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
-              <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-              <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
-              <ReferenceLine y={0} stroke={T.muted} />
-              <Bar dataKey="action" fill={ACCENT} name="u* (GWh/mois)" radius={[3, 3, 0, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </ChartWrapper>
-      </Grid>
+      <ChartWrapper title="Stratégie VI — flux mensuels u*(t), volume en stock et courbe forward F(0,T)" accent={ACCENT} height={300}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={profileData} margin={{ top: 10, right: 30, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <YAxis yAxisId="vol" stroke={T.a1} tick={{ fill: T.a1, fontSize: 10 }} domain={[0, 105]}
+              label={{ value: 'V (GWh)', fill: T.a1, fontSize: 10, angle: -90, position: 'insideLeft' }} />
+            <YAxis yAxisId="flux" orientation="right" stroke={T.a4} tick={{ fill: T.a4, fontSize: 10 }}
+              label={{ value: 'u* (GWh/m)', fill: T.a4, fontSize: 10, angle: 90, position: 'insideRight' }} />
+            <Tooltip
+              contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }}
+              formatter={(val, name) => [typeof val === 'number' ? val.toFixed(1) : val, name]}
+            />
+            <Legend wrapperStyle={{ fontSize: 11 }} />
+            <ReferenceLine yAxisId="flux" y={0} stroke={T.muted} strokeDasharray="4 2" />
+            <Bar yAxisId="flux" dataKey="action" name="u* — flux mensuel (GWh/m)" radius={[3, 3, 0, 0]}>
+              {profileData.map((entry, idx) => (
+                <Cell key={idx}
+                  fill={entry.action > 0.5 ? T.a1 : entry.action < -0.5 ? T.a4 : `${T.muted}88`}
+                  fillOpacity={0.85}
+                />
+              ))}
+            </Bar>
+            <Line yAxisId="vol" type="monotone" dataKey="volume" stroke={T.a1} strokeWidth={2.5}
+              dot={{ r: 4, fill: T.a1, strokeWidth: 0 }} name="Volume V* (GWh)" />
+            <Line yAxisId="flux" type="monotone" dataKey="prix" stroke={T.a5} strokeWidth={2}
+              dot={false} strokeDasharray="6 3" name="Prix forward F(0,t) (€/MWh)" />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 12px' }}>
+      <div style={{ background: `${T.a1}0d`, border: `1px solid ${T.a1}33`, borderRadius: 8, padding: '12px 16px', margin: '10px 0 18px' }}>
+        <div style={{ color: T.a1, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>📖 Comment lire ce graphique</div>
         {[
-          { icon: '📉', text: <><strong>Graphe gauche</strong> : la courbe forward. Les creux (été) = période d'injection. Les pics (hiver) = période de soutirage. Le spread entre les deux = marge brute.</> },
-          { icon: '📊', text: <><strong>Graphe droit</strong> : u &gt; 0 (barres vers le haut) = injection. u &lt; 0 = soutirage. Le profil est symétrique et suit la saisonnalité : on remplit le tank en été, on le vide en hiver.</> },
-          { icon: '💰', text: <>La <strong>VI</strong> (InfoChip) augmente linéairement avec le spread : chaque € de spread en plus rapporte directement en marge d'arbitrage saisonnier.</> },
+          { icon: '🔵', text: <><strong style={{ color: T.a1 }}>Barres bleues (Avr→Sep)</strong> — prix forward F(0,t) sous la moyenne. La VI prescrit d'<strong>injecter</strong> : acheter à bas prix et stocker pour revendre en hiver.</> },
+          { icon: '🟢', text: <><strong style={{ color: T.a4 }}>Barres vertes (Oct→Mar)</strong> — prix forward au-dessus de la moyenne. La VI prescrit de <strong>soutirer</strong> : on revend le gaz stocké au prix fort.</> },
+          { icon: '📈', text: <><strong>Courbe de volume V*(t)</strong> — monte pendant la phase bleue (tank qui se remplit en été) et redescend en hiver. Le cycle dépend du spread et des capacités q_inj / q_wit.</> },
+          { icon: '🔶', text: <><strong style={{ color: T.a5 }}>Courbe orange pointillée</strong> — le prix forward F(0,t). Quand il est bas → injection ; quand il est haut → soutirage. La saisonnalité est la source de la VI.</> },
+          { icon: '💰', text: <>La <strong>VI</strong> (InfoChip) augmente avec le spread : chaque € d'écart été/hiver en plus rapporte directement en marge d'arbitrage. À spread = 0, VI = 0 (pas de saisonnalité → pas de VI).</> },
         ].map(({ icon, text }, i) => (
-          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
-            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
-            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          <div key={i} style={{ display: 'flex', gap: 8, marginBottom: 5, alignItems: 'flex-start' }}>
+            <span style={{ flexShrink: 0, fontSize: 14 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 12, lineHeight: 1.65 }}>{text}</span>
           </div>
         ))}
       </div>
