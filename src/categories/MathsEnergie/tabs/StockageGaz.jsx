@@ -2769,8 +2769,14 @@ export function ValeurTab() {
 
       <FormulaBox accent={ACCENT} label="Valeur Intrinsèque — optimisation déterministe">
         <K display>{"VI = \\max_{\\{u_t\\}} \\sum_{t=0}^{T-1} \\underbrace{e^{-rt}}_{\\text{actualisation}} \\cdot \\underbrace{\\pi(u_t,\\, F(0,t))}_{\\text{cashflow au prix forward}} \\quad \\text{s.c. contraintes de stockage}"}</K>
-        <div style={{ color: T.muted, fontSize: 12, marginTop: 6 }}>
-          Même backward DP que Bellman mais avec des prix <em>connus</em> — pas d'intégration stochastique.
+        <div style={{ color: T.muted, fontSize: 12, marginTop: 8, lineHeight: 1.7 }}>
+          <strong style={{ color: T.text }}>DP = Programmation Dynamique</strong> — technique qui décompose
+          un problème de décision sur <K>{"T"}</K> périodes en <K>{"T"}</K> sous-problèmes d'une période.
+          On résout <em>à reculons</em> (backward) : d'abord la dernière période (valeur = 0 à l'échéance),
+          puis l'avant-dernière en utilisant ce résultat, etc. jusqu'à <K>{"t = 0"}</K>.{' '}
+          Ici, les prix <K>{"F(0,t)"}</K> étant <strong>connus</strong>, il n'y a pas besoin d'intégrer
+          sur une distribution de prix futurs — la dimension d'état se réduit de{' '}
+          <K>{"N_V \\times N_S"}</K> (Bellman) à <K>{"N_V"}</K> seulement.
         </div>
       </FormulaBox>
 
@@ -2786,12 +2792,81 @@ export function ValeurTab() {
       </Step>
 
       <Step num={2} accent={ACCENT}>
-        <div>
-          <strong>Backward DP déterministe — optimiser sur F(0,t)</strong>
-          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75, marginTop: 4 }}>
-            À chaque pas t et volume V, tester toutes les actions u admissibles. Comme le prix est
-            <em> connu</em> (forward), pas besoin de matrice Π — on calcule directement la valeur future
-            au prix forward du mois suivant.
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <strong>Backward DP déterministe — comment ça marche, et en quoi c'est plus simple que Bellman</strong>
+
+          {/* Principe backward */}
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            Le <strong>backward DP</strong> fonctionne toujours en deux temps :{' '}
+            <strong>①</strong> initialiser la valeur à l'échéance (<K>{"\\mathcal{V}_T = 0"}</K> — plus de valeur après la saison),
+            puis <strong>②</strong> remonter de <K>{"t = T{-}1"}</K> jusqu'à <K>{"t = 0"}</K>, en résolvant
+            à chaque pas : "connaissant la valeur de demain, quelle est la meilleure décision aujourd'hui ?"
+          </div>
+
+          {/* Comparaison côte à côte */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+
+            <div style={{ background: `${T.a5}11`, border: `1px solid ${T.a5}44`, borderRadius: 7, padding: '10px 12px' }}>
+              <div style={{ color: T.a5, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+                🎲 Bellman stochastique (onglet précédent)
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7, marginBottom: 6 }}>
+                <strong style={{ color: T.text }}>État :</strong> <K>{"(V_i,\\, S_j)"}</K> — volume <em>et</em> prix.<br />
+                Grille de <K>{"N_V \\times N_S"}</K> cases à chaque mois.
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7, marginBottom: 6 }}>
+                <strong style={{ color: T.text }}>Récursion :</strong>
+              </div>
+              <K display>{"\\mathcal{V}_t[i][j] = \\max_u \\Bigl\\{ \\pi(u, S_j) + e^{-r\\Delta t} \\underbrace{\\sum_k \\Pi[j][k] \\cdot \\mathcal{V}_{t+1}[V{+}u][k]}_{\\text{intégration sur }N_S\\text{ prix futurs}} \\Bigr\\}"}</K>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
+                La somme <K>{"\\sum_k \\Pi[j][k]"}</K> pondère les <K>{"N_S"}</K> scénarios de prix futurs — c'est l'<strong>espérance</strong> sous incertitude.
+              </div>
+            </div>
+
+            <div style={{ background: `${ACCENT}11`, border: `1px solid ${ACCENT}44`, borderRadius: 7, padding: '10px 12px' }}>
+              <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>
+                📋 DP déterministe — calcul de VI
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7, marginBottom: 6 }}>
+                <strong style={{ color: T.text }}>État :</strong> <K>{"V_i"}</K> seulement — volume.<br />
+                Grille de <K>{"N_V"}</K> cases seulement (prix connu = <K>{"F(0,t)"}</K>).
+              </div>
+              <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.7, marginBottom: 6 }}>
+                <strong style={{ color: T.text }}>Récursion :</strong>
+              </div>
+              <K display>{"\\mathcal{V}_t[i] = \\max_u \\Bigl\\{ \\pi(u, F(0,t)) + e^{-r\\Delta t} \\underbrace{\\mathcal{V}_{t+1}[V{+}u]}_{\\text{prix futur connu}\\,=\\,F(0,t{+}1)} \\Bigr\\}"}</K>
+              <div style={{ color: T.muted, fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
+                Pas de <K>{"\\sum_k \\Pi[j][k]"}</K> — le prix futur <K>{"F(0,t{+}1)"}</K> est fixé dès <K>{"t{=}0"}</K>. <strong>Zéro incertitude.</strong>
+              </div>
+            </div>
+          </div>
+
+          {/* Pseudocode */}
+          <div style={{ background: `${ACCENT}0a`, border: `1px solid ${ACCENT}33`, borderRadius: 7, padding: '10px 14px' }}>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 11, marginBottom: 7 }}>Pseudocode — DP déterministe (calcul de VI)</div>
+            <pre style={{ color: T.text, fontSize: 10.5, lineHeight: 1.9, margin: 0, fontFamily: 'monospace', overflowX: 'auto' }}>
+{`  𝒱[T][i] ← 0  pour tout i              // valeur nulle à l'échéance (fin de saison)
+
+  POUR t = T−1 à 0 :                     // marche arrière : du dernier mois vers t=0
+    F_t ← F(0, t)                         // prix forward du mois t — connu dès le début
+    POUR i = 0 à NV−1 :                   // pour chaque niveau de stock V_i
+      meilleur ← −∞
+      POUR chaque u admissible :          // tester injection (+) / attente (0) / soutirage (−)
+        cashflow  ← −u·F_t·Δt − c_op·|u|·Δt
+        V_futur   ← V_i + u
+        val_future ← 𝒱[t+1] interpolé en V_futur   // ← PAS de Σ Π[j][k] ici
+        gain      ← cashflow + exp(−r·Δt) · val_future
+        SI gain > meilleur : meilleur ← gain ; u* ← u
+      𝒱[t][i] ← meilleur
+      u*[t][i]  ← u*                     // politique optimale mémorisée`}
+            </pre>
+          </div>
+
+          {/* Synthèse */}
+          <div style={{ borderLeft: `3px solid ${ACCENT}`, paddingLeft: 10, color: T.muted, fontSize: 12, fontStyle: 'italic', lineHeight: 1.7 }}>
+            La DP déterministe est structurellement <strong>identique à Bellman</strong> — même boucle backward, même grille de volume, même optimisation sur u.
+            La seule différence : sans dimension prix ni matrice Π, elle tourne en quelques millisecondes là où Bellman prend plusieurs secondes.
+            VI = résultat de cette DP avec les prix figés sur la courbe forward d'aujourd'hui.
           </div>
         </div>
       </Step>
