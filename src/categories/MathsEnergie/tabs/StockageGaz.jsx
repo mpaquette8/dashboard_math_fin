@@ -3402,17 +3402,116 @@ export function DeltaTab() {
         </ChartWrapper>
       </Grid>
 
-      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+      {/* Clés de lecture des deux graphes */}
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 4px' }}>
         {[
-          { icon: '🟥', text: <><strong>Graphe gauche Δ(V)</strong> : le delta décroît quand le tank se remplit — un stock plein est moins sensible au prix (il va soutirer quoi qu'il arrive). Stock vide → delta maximal (beaucoup de flexibilité restante).</> },
-          { icon: '🟨', text: <><strong>Graphe droit Δ(S)</strong> : le delta augmente avec le prix — plus le prix est élevé, plus le stockage "veut" soutirer, donc plus il est exposé au marché.</> },
-          { icon: '📊', text: <><strong>Forwards à vendre</strong> (InfoChip vert) = Δ × capacité — c'est la couverture instantanée pour neutraliser le risque prix que porte le stockage.</> },
+          { icon: '🟥', text: <><strong>Δ(V) à gauche</strong> : plus le tank se remplit, plus le delta est grand et positif — tu vas surtout <em>vendre</em> (soutirer) → exposition long prix. À tank vide, delta nul ou légèrement négatif : tu es acheteur futur de gaz.</> },
+          { icon: '🟨', text: <><strong>Δ(S) à droite</strong> : plus le prix est élevé, plus le modèle veut soutirer rapidement → exposition croissante. La <em>pente</em> de cette courbe est le gamma Γ — le moteur du re-hedging.</> },
+          { icon: '📊', text: <><strong>InfoChip "Forwards à vendre"</strong> = Δ × capacité. C'est la taille <em>totale</em> de la position forward que tu devrais détenir pour être delta-neutre à l'instant t.</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
             <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
           </div>
         ))}
+      </div>
+
+      {/* ── Lecture opérationnelle pour un profil déjà hedgé à la maille fine ── */}
+      <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}55`, borderRadius: 10, padding: '16px 20px', margin: '12px 0 16px' }}>
+        <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 12 }}>
+          📋 Lecture opérationnelle — profil hedgé à la maille fine avec des forwards
+        </div>
+
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7, marginBottom: 14 }}>
+          Ton hedge forward fixe un plan injection/soutirage déterministe contre la courbe forward du jour du hedge. Ce plan a son propre delta figé.
+          Le modèle Bellman calcule le delta <em>optimal dynamique</em> à tout instant.
+          <br />
+          <strong style={{ color: T.text }}>Delta résiduel = Δ<sub>Bellman</sub>(V<sub>réel</sub>, S<sub>spot</sub>) − Δ<sub>hedge initial</sub></strong>
+          <br />
+          C'est ce résidu qui t'expose au marché et qui doit être re-hedgé en continu.
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+
+          {/* Graphe gauche : Δ(V) */}
+          <div>
+            <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Graphe gauche Δ(V) — impact du remplissage</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: ACCENT, textAlign: 'left' }}>Niveau tank</th>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: ACCENT, textAlign: 'left' }}>Exposition naturelle</th>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: ACCENT, textAlign: 'left' }}>Action de re-hedge</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Vide (V ≈ 0)', 'Acheteur futur de gaz → légèrement court prix', 'Acheter des forwards supplémentaires'],
+                  ['Mi-plein (V ≈ 50)', 'Balance achats/ventes → delta modéré', 'Ajustement marginal'],
+                  ['Plein (V ≈ 100)', 'Vendeur futur (soutirages) → franchement long prix', 'Vendre des forwards supplémentaires'],
+                ].map(([v, exp, action]) => (
+                  <tr key={v}>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.text, fontWeight: 600 }}>{v}</td>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.muted }}>{exp}</td>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a4 }}>{action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>
+              Si ton tank se remplit plus vite que prévu (soutirage moindre), ton delta monte. Tu dois vendre des forwards supplémentaires pour rester neutre.
+            </div>
+          </div>
+
+          {/* Graphe droit : Δ(S) */}
+          <div>
+            <div style={{ color: T.a5, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Graphe droit Δ(S) — impact d'un mouvement de prix</div>
+            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Prix spot</th>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Ce qui change</th>
+                  <th style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}`, color: T.a5, textAlign: 'left' }}>Action de re-hedge</th>
+                </tr>
+              </thead>
+              <tbody>
+                {[
+                  ['Spot bas', 'Modèle veut injecter → peu de ventes prévues → delta faible', 'Réduire la position short forward'],
+                  ['Spot = μ', 'Zone d\'incertitude — decision mixte', 'Maintenir la position courante'],
+                  ['Spot élevé', 'Modèle accélère les soutirages → delta monte fortement', 'Vendre des forwards pour capter la hausse'],
+                ].map(([s, change, action]) => (
+                  <tr key={s}>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.text, fontWeight: 600 }}>{s}</td>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.muted }}>{change}</td>
+                    <td style={{ padding: '4px 8px', borderBottom: `1px solid ${T.border}22`, color: T.a4 }}>{action}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 8, fontStyle: 'italic' }}>
+              La <strong>pente</strong> de Δ(S) = Γ. C'est elle qui génère le gain de convexité quand le prix bouge : chaque mouvement crée un résidu à re-hedger, et ce re-hedging est gagnant en moyenne.
+            </div>
+          </div>
+
+        </div>
+
+        {/* Logique opérationnelle */}
+        <div style={{ marginTop: 14 }}>
+          <div style={{ color: T.text, fontWeight: 700, fontSize: 11, marginBottom: 6 }}>Logique opérationnelle quotidienne</div>
+          <pre style={{ color: T.text, fontSize: 10.5, lineHeight: 1.85, margin: 0, fontFamily: 'monospace', background: `${T.bg}`, borderRadius: 6, padding: '10px 12px', overflowX: 'auto' }}>
+{`À la mise en place du hedge (t = 0) :
+  position_forward = Δ(V₀, S₀) × capacité       ← hedge intrinsèque initial
+
+Chaque jour, au fixing spot :
+  Δ_cible = Bellman(V_réel, S_spot, t_aujourd'hui)  ← lu dans la grille DP
+  résidu   = Δ_cible × capacité − position_forward  ← delta non couvert
+  SI résidu > seuil_min :
+      vendre |résidu| GWh en forward spot ou M+1    ← encaisser le gamma P&L
+  SI résidu < −seuil_min :
+      racheter |résidu| GWh en forward              ← ajuster à la baisse
+  position_forward ← Δ_cible × capacité             ← mise à jour du livre`}
+          </pre>
+        </div>
       </div>
 
       {/* ── NEW: Heatmap 2D Δ(V, S) ─────────────────────── */}
