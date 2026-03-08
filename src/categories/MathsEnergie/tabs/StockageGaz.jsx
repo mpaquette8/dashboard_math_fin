@@ -2677,12 +2677,16 @@ export function ValeurTab() {
 
   const sigmaRange = [2, 4, 6, 8, 10, 12, 15, 18, 22]
   const veVsSigma = useMemo(() => {
+    // Baseline : modèle stochastique à σ ≈ 0 (quasi-déterministe) → valeur intrinsèque sous la saisonnalité stochastique
+    const sigBase = 0.5
+    const base = runBellmanDP({ ...dpParams, NS: 14, kappa, sigma: sigBase, seasonAmp: 0.3 })
+    const iB = Math.floor(base.vGrid.length / 2)
+    const viBase = linInterp(base.sGrid, base.V[0][iB], base.muSeason[0])
     return sigmaRange.map(s => {
       const stoch = runBellmanDP({ ...dpParams, NS: 14, kappa, sigma: s, seasonAmp: 0.3 })
-      const vi = intrinsic.V[0] ? linInterp(intrinsic.vGrid, intrinsic.V[0], 50) : 0
       const iMidV = Math.floor(stoch.vGrid.length / 2)
-      const vs = linInterp(stoch.sGrid, stoch.V[0][iMidV], mu)
-      return { sigma: s, VE: +Math.max(0, vs - vi).toFixed(2) }
+      const vs = linInterp(stoch.sGrid, stoch.V[0][iMidV], stoch.muSeason[0])
+      return { sigma: s, VE: +Math.max(0, vs - viBase).toFixed(2) }
     })
   }, [kappa, spread])
 
@@ -3176,6 +3180,15 @@ export function DeltaTab() {
     return runBellmanDP({ NV: 20, NS: 20, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma, r: 0.05, cOp: 0.5, dt: 1 / 12, seasonAmp: 0.3 })
   }, [kappa, mu, sigma])
 
+  // ── Vega : deux DP légers avec σ±ε ──────────────────────────────────────────
+  const sigEps = 2
+  const resultSigPlus = useMemo(() =>
+    runBellmanDP({ NV: 12, NS: 12, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma: sigma + sigEps, r: 0.05, cOp: 0.5, dt: 1 / 12, seasonAmp: 0.3 }),
+    [kappa, mu, sigma])
+  const resultSigMinus = useMemo(() =>
+    runBellmanDP({ NV: 12, NS: 12, NT: 12, Vmin: 0, Vmax: 100, qinj: 10, qwit: 10, kappa, mu, sigma: Math.max(1, sigma - sigEps), r: 0.05, cOp: 0.5, dt: 1 / 12, seasonAmp: 0.3 }),
+    [kappa, mu, sigma])
+
   const jMid = 10
   const deltaVData = result.vGrid.map((v, i) => {
     const jPlus = Math.min(jMid + 1, result.sGrid.length - 1)
@@ -3216,6 +3229,32 @@ export function DeltaTab() {
     const d2V = (result.V[0][iMid][jPlus] - 2 * result.V[0][iMid][j] + result.V[0][iMid][jMinus]) / (dS * dS + 1e-10)
     return { prix: +s.toFixed(1), gamma: +d2V.toFixed(4) }
   })
+
+  // ── NEW: Theta data : ∂V/∂t ≈ (V[t=1] - V[t=0]) / Δt ──────────────────────
+  const thetaData = result.sGrid.map((s, j) => ({
+    prix: +s.toFixed(1),
+    theta: +((result.V[1][iMid][j] - result.V[0][iMid][j]) / (1 / 12)).toFixed(2),
+  }))
+
+  // ── NEW: Term structure : delta à chaque mois pour l'état courant (V₀, S₀) ──
+  const termStructData = Array.from({ length: 12 }, (_, t) => {
+    const dSt = result.sGrid[jP] - result.sGrid[jM]
+    const delta = (result.V[t][iCurr][jP] - result.V[t][iCurr][jM]) / (dSt + 1e-10)
+    return { mois: MONTHS[t], delta: +delta.toFixed(3) }
+  })
+
+  // ── NEW: Vega data : ∂V/∂σ par différences finies ───────────────────────────
+  const iMidSP = Math.floor(resultSigPlus.vGrid.length / 2)
+  const iMidSM = Math.floor(resultSigMinus.vGrid.length / 2)
+  const vegaData = result.sGrid.map((s, j) => {
+    const vPlus  = linInterp(resultSigPlus.sGrid,  resultSigPlus.V[0][iMidSP],  s)
+    const vMinus = linInterp(resultSigMinus.sGrid, resultSigMinus.V[0][iMidSM], s)
+    return { prix: +s.toFixed(1), vega: +((vPlus - vMinus) / (2 * sigEps)).toFixed(3) }
+  })
+  const vPlusCurr  = linInterp(resultSigPlus.sGrid,  resultSigPlus.V[0][iMidSP],  s0)
+  const vMinusCurr = linInterp(resultSigMinus.sGrid, resultSigMinus.V[0][iMidSM], s0)
+  const currentVega  = +((vPlusCurr - vMinusCurr) / (2 * sigEps)).toFixed(3)
+  const currentTheta = +((result.V[1][iCurr][jCurr] - result.V[0][iCurr][jCurr]) / (1 / 12)).toFixed(2)
 
   return (
     <div>
@@ -3332,6 +3371,8 @@ export function DeltaTab() {
         <InfoChip label="Δ(V, S) courant" value={currentDelta.toFixed(3)} accent={ACCENT} />
         <InfoChip label="Forwards à vendre (100 GWh cap.)" value={`${fwdQty} GWh`} accent={T.a4} />
         <InfoChip label="Action optimale u*" value={result.policy[0][iCurr][jCurr] > 0.5 ? 'INJECTION' : result.policy[0][iCurr][jCurr] < -0.5 ? 'SOUTIRAGE' : 'ATTENTE'} accent={result.policy[0][iCurr][jCurr] > 0.5 ? T.a1 : result.policy[0][iCurr][jCurr] < -0.5 ? T.a4 : T.muted} />
+        <InfoChip label="Θ courant (€/an)" value={currentTheta.toFixed(1)} accent={T.a6} />
+        <InfoChip label="ν courant (€/vol)" value={currentVega.toFixed(2)} accent={T.a2} />
       </div>
 
       <Grid cols={2} gap="16px">
@@ -3374,6 +3415,82 @@ export function DeltaTab() {
         ))}
       </div>
 
+      {/* ── NEW: Heatmap 2D Δ(V, S) ─────────────────────── */}
+      <SectionTitle accent={ACCENT}>Carte de chaleur Δ(V, S) — vue d'ensemble de la surface</SectionTitle>
+
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
+          Chaque cellule = un état (volume, prix) → sa sensibilité au prix spot. Survoler pour la valeur exacte.
+        </div>
+        <div style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+          <div style={{ color: T.muted, fontSize: 9, writingMode: 'vertical-lr', transform: 'rotate(180deg)', alignSelf: 'center', paddingBottom: 20, flexShrink: 0 }}>Volume (GWh)</div>
+          <div style={{ flex: 1, overflowX: 'auto' }}>
+            {[...result.vGrid].reverse().map((v, ri) => {
+              const i = result.vGrid.length - 1 - ri
+              return (
+                <div key={v} style={{ display: 'flex', gap: 2, marginBottom: 1, alignItems: 'center' }}>
+                  <div style={{ width: 26, color: T.muted, fontSize: 8, textAlign: 'right', marginRight: 2, flexShrink: 0 }}>{v.toFixed(0)}</div>
+                  {result.sGrid.map((s, j) => {
+                    const jP3 = Math.min(j + 1, result.sGrid.length - 1)
+                    const jM3 = Math.max(j - 1, 0)
+                    const dS3 = result.sGrid[jP3] - result.sGrid[jM3]
+                    const d = (result.V[0][i][jP3] - result.V[0][i][jM3]) / (dS3 + 1e-10)
+                    const norm = Math.max(-3, Math.min(3, d)) / 3
+                    const r = norm > 0 ? Math.round(norm * 160 + 95) : 95
+                    const bl = norm < 0 ? Math.round(-norm * 160 + 95) : 95
+                    const g = Math.round(95 + (1 - Math.abs(norm)) * 70)
+                    return (
+                      <div
+                        key={j}
+                        title={`V=${v.toFixed(0)} GWh, S=${s.toFixed(1)} €/MWh, Δ=${d.toFixed(2)}`}
+                        style={{ width: 16, height: 14, borderRadius: 2, flexShrink: 0, background: `rgb(${r},${g},${bl})`, cursor: 'default' }}
+                      />
+                    )
+                  })}
+                </div>
+              )
+            })}
+            <div style={{ display: 'flex', gap: 2, marginTop: 4, paddingLeft: 28 }}>
+              {result.sGrid.map((s, j) => (
+                j % 4 === 0
+                  ? <div key={j} style={{ width: 16, color: T.muted, fontSize: 8, textAlign: 'center', flexShrink: 0 }}>{s.toFixed(0)}</div>
+                  : <div key={j} style={{ width: 16, flexShrink: 0 }} />
+              ))}
+            </div>
+            <div style={{ color: T.muted, fontSize: 9, textAlign: 'center', marginTop: 2 }}>Prix S (€/MWh)</div>
+          </div>
+          {/* Color legend */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3, paddingTop: 8, flexShrink: 0 }}>
+            {[3, 2, 1, 0, -1, -2, -3].map(v => {
+              const norm = v / 3
+              const r = norm > 0 ? Math.round(norm * 160 + 95) : 95
+              const bl = norm < 0 ? Math.round(-norm * 160 + 95) : 95
+              const g = Math.round(95 + (1 - Math.abs(norm)) * 70)
+              return (
+                <div key={v} style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <div style={{ width: 13, height: 13, borderRadius: 2, background: `rgb(${r},${g},${bl})` }} />
+                  <span style={{ color: T.muted, fontSize: 8, width: 14 }}>{v > 0 ? `+${v}` : v}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '🟥', text: <><strong>Zone rouge (haut-droit, prix élevé + stock plein)</strong> : delta positif fort. Le stockage est "long" : chaque hausse de prix enrichit le propriétaire qui va soutirer.</> },
+          { icon: '🟦', text: <><strong>Zone bleue (bas-gauche, prix bas + stock vide)</strong> : delta faible voire négatif. Peu de gaz à vendre, et le prix bas n'incite pas à soutirer.</> },
+          { icon: '↘️', text: <><strong>Gradient diagonal</strong> : le delta augmente avec le prix et diminue avec le volume. La forme reflète la politique optimale de Bellman — injection en bas-gauche, soutirage en haut-droit.</> },
+          { icon: '⬛', text: <><strong>Zone noire (coins extrêmes)</strong> : états contraints (V=0 avec prix très bas, ou V=100 avec prix très élevé) — la décision est forcée, le delta est déterminé mécaniquement.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
       {/* ── 6. Seconde analogie ──────────────────────── */}
       <IntuitionBlock emoji="🧭" title="Analogie de la boussole financière" accent={ACCENT}>
         Le delta est comme une boussole qui indique en permanence "vers quel montant le vent du
@@ -3401,6 +3518,49 @@ export function DeltaTab() {
           ))}
         </tbody>
       </table>
+
+      {/* ── NEW: Terme structure du delta ────────────────── */}
+      <SectionTitle accent={ACCENT}>Structure temporelle — le delta évolue à l'approche de l'échéance</SectionTitle>
+
+      <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '14px 18px', marginBottom: 12 }}>
+        <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>⏱️ Intuition — l'urgence augmente avec le temps</div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+          Imagine un billet de concert valable jusqu'à minuit. À deux heures de la fermeture,
+          chaque opportunité de le revendre compte énormément — tu ne peux plus te permettre d'attendre.
+          <br /><br />
+          Pour le stockage : plus on approche de l'échéance du gas year, plus le delta change brusquement.
+          Un stock trop plein en novembre devient "obligatoire à soutirer" — le delta s'affaisse vers une valeur fixe.
+          Un stock vide en mars n'a plus de valeur potentielle — le delta tombe à 0.
+          <br /><br />
+          <em>Utilise les sliders V et S pour voir comment la trajectoire temporelle se modifie selon le point de départ.</em>
+        </div>
+      </div>
+
+      <ChartWrapper title={`Δ mois par mois (V = ${v0} GWh, S = ${s0} €/MWh) — de avril jusqu'à mars`} accent={ACCENT} height={210}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={termStructData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+            <ReferenceLine y={0} stroke={T.muted} strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="delta" stroke={ACCENT} strokeWidth={2.5} dot={{ fill: ACCENT, r: 3 }} name="Δ(t)" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '📉', text: <><strong>Convergence en fin d'année</strong> : à l'approche de mars (t = 11), le delta "choisit son camp" — il converge vers +1 (position long forcée) ou 0 selon que le stock contient encore du gaz ou non.</> },
+          { icon: '🌊', text: <><strong>Saisonnalité</strong> : le delta monte typiquement en automne (anticipation du soutirage hivernal) puis redescend après le pic de demande. L'amplitude dépend de V et S initiaux.</> },
+          { icon: '🎛️', text: <><strong>Sensibilité aux sliders</strong> : modifie le volume V (stock actuel) ou le prix S pour voir comment la trajectoire change. Un stock plein en été donne un delta plat, un stock vide donne un delta qui oscille.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       {/* ── 8. Convexité / Gamma ──────────────────────── */}
       <SectionTitle accent={ACCENT}>Convexité (Γ) — le stockage comme actif optionnel</SectionTitle>
@@ -3469,6 +3629,200 @@ export function DeltaTab() {
         {[
           { icon: '📈', text: <><strong>Graphe gauche</strong> : la courbe rouge (valeur réelle) est <em>au-dessus</em> de la droite grise (approximation Δ) aux extrêmes. C'est la convexité Γ &gt; 0 : les mouvements de prix rapportent plus que prévu par Δ seul.</> },
           { icon: '🔔', text: <><strong>Graphe droit</strong> : le gamma est maximal autour de S ≈ μ (zone d'incertitude maximale) et diminue aux extrêmes (où la décision est "évidente" : soutirer tout ou injecter tout).</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── NEW: Theta ──────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Thêta (Θ) — la valeur se dégrade avec le temps</SectionTitle>
+
+      <FormulaBox accent={ACCENT} label="Thêta par différences finies">
+        <K display>{"\\Theta_t(V, S) \\approx \\frac{\\mathcal{V}_{t+1}(V,\\, S) - \\mathcal{V}_t(V,\\, S)}{\\Delta t}"}</K>
+      </FormulaBox>
+
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, margin: '12px 0' }}>
+        <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Θ &lt; 0 — la valeur se dégrade</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            Le thêta est <strong>négatif</strong> : à chaque mois qui passe sans que le prix bouge,
+            la valeur du stockage diminue. On perd de l'optionalité — moins de temps pour
+            exploiter les futures variations de prix.
+            <br /><br />
+            <strong>Exemple :</strong> Θ = −8 €/an ÷ 12 ≈ −0.67 €/mois. Après 30 jours sans
+            mouvement de prix et sans action, la valeur a décru de 0.67 €.
+          </div>
+        </div>
+        <div style={{ background: `${T.a5}0d`, border: `1px solid ${T.a5}44`, borderRadius: 8, padding: '14px 16px' }}>
+          <div style={{ color: T.a5, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>Équilibre Θ–Γ</div>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+            En finance des options, Θ et Γ sont liés par l'équation de Black-Scholes :
+            <K display>{"\\Theta \\approx -\\tfrac{1}{2}\\sigma^2 S^2 \\Gamma"}</K>
+            Si le prix bouge suffisamment, le gain gamma <K>{"\\tfrac{1}{2}\\Gamma(\\delta S)^2"}</K> compense
+            la perte thêta. Les traders appellent ce seuil le "break-even move" :
+            <K display>{"\\delta S_{\\text{BE}} = \\sqrt{\\frac{-2\\,\\Theta\\,\\delta t}{\\Gamma}}"}</K>
+          </div>
+        </div>
+      </div>
+
+      <ChartWrapper title="Θ(S) — décroissance de valeur en fonction du prix spot (V = 50 GWh)" accent={ACCENT} height={210}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={thetaData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+            <ReferenceLine y={0} stroke={T.muted} strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="theta" stroke={T.a6} strokeWidth={2.5} dot={false} name="Θ(50, S)" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '📉', text: <><strong>Θ négatif partout</strong> : quelle que soit la position, perdre un mois d'optionalité coûte toujours quelque chose. La valeur du stockage ne peut qu'augmenter si on gagne du temps.</> },
+          { icon: '🔔', text: <><strong>Θ minimal (plus négatif) autour de S = μ</strong> : c'est là que la flexibilité temporelle est la plus précieuse. Aux extrêmes, la décision est déjà "forcée" et perdre du temps change moins la valeur.</> },
+          { icon: '⚖️', text: <><strong>Relation Θ–Γ</strong> : là où Γ est maximal (autour de S = μ), Θ est aussi le plus négatif. Long gamma signifie inévitablement long thêta négatif — c'est le coût du holding.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── NEW: Vega ──────────────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Véga (ν) — sensibilité à la volatilité σ</SectionTitle>
+
+      <FormulaBox accent={ACCENT} label="Véga par différences finies (σ ± ε)">
+        <K display>{"\\nu_t(V, S) \\approx \\frac{\\mathcal{V}_t(V,\\,S;\\,\\sigma{+}\\varepsilon) - \\mathcal{V}_t(V,\\,S;\\,\\sigma{-}\\varepsilon)}{2\\varepsilon}"}</K>
+      </FormulaBox>
+
+      <SymbolLegend accent={ACCENT} symbols={[
+        ['\\nu', 'Véga = sensibilité de la valeur à la volatilité (€ par €/MWh de σ)'],
+        ['\\varepsilon', `Petite perturbation de σ (ε = ${sigEps} €/MWh dans cette simulation)`],
+        ['\\sigma', 'Volatilité du spot (€/MWh) — paramètre du processus OU'],
+      ]} />
+
+      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 18px', margin: '8px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 8 }}>ν &gt; 0 — le stockage est "long volatilité"</div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.7 }}>
+          Le stockage de gaz EST une option réelle. Comme toute option, il bénéficie de la
+          volatilité : un prix plus agité crée davantage d'opportunités d'achat bas / vente haut.
+          Plus σ est élevé, plus la VE (valeur extrinsèque) augmente, et plus le stockage vaut.
+          <br /><br />
+          <strong>Analogie du joueur de poker :</strong> un propriétaire de stockage préfère un
+          marché imprévisible à un marché calme. L'imprévisibilité crée des arbitrages — exactement
+          comme un joueur qui profite des erreurs d'un adversaire trop nerveux.
+          <br /><br />
+          <strong>Exemple numérique :</strong> ν = 2.4 et σ passe de 8 à 10 € (δσ = +2).
+          Gain de valeur ≈ 2.4 × 2 = <strong style={{ color: ACCENT }}>+4.8 €</strong> pour ce seul état.
+        </div>
+      </div>
+
+      <ChartWrapper title="ν(S) — sensibilité à σ en fonction du prix spot (V = 50 GWh)" accent={ACCENT} height={210}>
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={vegaData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+            <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
+            <XAxis dataKey="prix" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} label={{ value: 'Prix S (€/MWh)', fill: T.muted, fontSize: 10, position: 'insideBottom', offset: -3 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
+            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 11 }} />
+            <ReferenceLine y={0} stroke={T.muted} strokeDasharray="3 3" />
+            <Line type="monotone" dataKey="vega" stroke={T.a2} strokeWidth={2.5} dot={false} name="ν(50, S)" />
+          </LineChart>
+        </ResponsiveContainer>
+      </ChartWrapper>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '📈', text: <><strong>ν &gt; 0 partout</strong> : quelle que soit la position, une hausse de σ augmente la valeur du stockage. Le propriétaire est structurellement "long vol" — c'est la définition d'un actif optionnel.</> },
+          { icon: '🔔', text: <><strong>ν maximal autour de S = μ</strong> : zone d'incertitude maximale, la volatilité apporte le plus de valeur. Aux extrêmes (prix très bas ou très haut), la décision est plus contrainte et σ aide moins.</> },
+          { icon: '🔗', text: <><strong>Lien Γ–ν</strong> : là où Γ est le plus grand, ν est aussi le plus élevé. La convexité est exactement le mécanisme par lequel σ crée de la valeur — la courbe V(S) bombée amplifie chaque choc de prix.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* ── NEW: P&L Attribution ─────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Attribution du P&L — décomposer le gain quotidien</SectionTitle>
+
+      <IntuitionBlock emoji="🧩" title="Chaque euro de P&L a une origine identifiable" accent={ACCENT}>
+        Le P&L quotidien d'une position de stockage couverte en delta se décompose en quatre
+        composantes, comme les pièces d'un puzzle financier :
+        <br /><br />
+        <strong>P&L total = P&L delta + P&L gamma + P&L thêta + P&L vega</strong>
+        <br /><br />
+        Comprendre cette décomposition, c'est comprendre <em>pourquoi</em> on a gagné ou perdu
+        de l'argent, et comment ajuster la stratégie le lendemain. C'est la routine du "risk
+        explanation" dans tout trading desk énergie.
+      </IntuitionBlock>
+
+      <FormulaBox accent={ACCENT} label="Décomposition complète du P&L quotidien (couvert en Δ)">
+        <K display>{"\\text{P\\&L}_{\\text{total}} = \\underbrace{0}_{\\text{P\\&L}_{\\Delta}\\,(\\text{couvert})} + \\underbrace{\\tfrac{1}{2}\\,\\Gamma\\,(\\delta S)^2}_{\\text{P\\&L}_{\\Gamma}\\,\\geq 0} + \\underbrace{\\Theta \\cdot \\delta t}_{\\text{P\\&L}_{\\Theta}\\,\\leq 0} + \\underbrace{\\nu \\cdot \\delta\\sigma}_{\\text{P\\&L}_{\\nu}}"}</K>
+      </FormulaBox>
+
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10, margin: '12px 0' }}>
+        {[
+          {
+            label: 'P&L Δ = 0', color: ACCENT,
+            desc: 'Si couvert parfaitement en delta, ce terme est nul. La couverture neutralise le risque de premier ordre — c\'est l\'objectif du delta hedging.',
+            formula: '0',
+          },
+          {
+            label: 'P&L Γ ≥ 0', color: T.a4,
+            desc: 'Toujours positif (c\'est un carré !). Gain de convexité — la "récompense" du long gamma. Plus le prix bouge, plus on gagne.',
+            formula: '\\tfrac{1}{2}\\Gamma(\\delta S)^2 \\geq 0',
+          },
+          {
+            label: 'P&L Θ ≤ 0', color: T.a6,
+            desc: 'Décroissance temporelle — toujours négative. C\'est le "loyer" de détenir l\'optionalité : chaque jour qui passe sans mouvement de prix coûte quelque chose.',
+            formula: '\\Theta \\cdot \\delta t \\leq 0',
+          },
+          {
+            label: 'P&L ν ≷ 0', color: T.a2,
+            desc: 'Dépend du sens du mouvement de vol. Si σ implicite monte, P&L ν > 0. Si σ baisse (marché calme), P&L ν < 0.',
+            formula: '\\nu \\cdot \\delta\\sigma',
+          },
+        ].map(({ label, color, desc, formula }) => (
+          <div key={label} style={{ background: `${color}0d`, border: `1px solid ${color}33`, borderRadius: 8, padding: 12 }}>
+            <div style={{ color, fontWeight: 700, fontSize: 12, marginBottom: 6 }}>{label}</div>
+            <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.6, marginBottom: 6 }}>{desc}</div>
+            <K>{"\\small " + formula}</K>
+          </div>
+        ))}
+      </div>
+
+      <div style={panelStyle}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>📊 Exemple numérique — attribution P&L sur une journée</div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.9 }}>
+          <strong>Position initiale :</strong> V = 60 GWh, S = 52 €/MWh, Δ = 0.65, Γ = 0.04, Θ = −72 €/an, ν = 1.2 €/(€/MWh).
+          <br />
+          <strong>Données du lendemain :</strong> S monte de 52 → 57 € (δS = +5 €), σ monte de 8 → 9 €/MWh (δσ = +1).
+          <br /><br />
+          <strong>P&L Δ</strong> = 0 (on avait vendu 65 GWh forward, gain storage ≈ +325 € compensé exactement par −325 € sur la position forward)
+          <br />
+          <strong>P&L Γ</strong> = ½ × 0.04 × 5² = ½ × 0.04 × 25 = <span style={{ color: T.a4, fontWeight: 700 }}>+0.50 €</span> <em>(gain de convexité)</em>
+          <br />
+          <strong>P&L Θ</strong> = (−72 / 365) × 1 jour = <span style={{ color: T.a6, fontWeight: 700 }}>−0.20 €</span> <em>(décroissance temporelle)</em>
+          <br />
+          <strong>P&L ν</strong> = 1.2 × (+1) = <span style={{ color: T.a2, fontWeight: 700 }}>+1.20 €</span> <em>(vol a monté)</em>
+          <br /><br />
+          <strong style={{ color: ACCENT }}>P&L total ≈ 0 + 0.50 − 0.20 + 1.20 = +1.50 €</strong>
+          <br />
+          <em>Le gain dominant vient du choc de vol (ν) et de la convexité (Γ). Le thêta érode légèrement. La couverture delta a neutralisé le risque de premier ordre.</em>
+        </div>
+      </div>
+
+      <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', margin: '8px 0 14px' }}>
+        {[
+          { icon: '⚖️', text: <><strong>Équilibre Γ–Θ</strong> : long gamma signifie inévitablement thêta négatif. Le P&L gamma compense le P&L thêta SI et SEULEMENT SI le prix bouge suffisamment. Seuil de break-even : <K>{"\\delta S_{BE} = \\sqrt{-2\\Theta\\,\\delta t / \\Gamma}"}</K>.</> },
+          { icon: '📋', text: <><strong>Risk explanation quotidienne</strong> : chaque matin, le trading desk recalcule les 4 composantes pour expliquer le P&L de la veille. Si la somme ne colle pas, il y a un problème de modèle ou de données de marché.</> },
         ].map(({ icon, text }, i) => (
           <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
             <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
