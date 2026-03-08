@@ -2682,21 +2682,24 @@ export function ValeurTab() {
 
       {/* ── 1. Intuition ─────────────────────────────────── */}
       <IntuitionBlock emoji="💡" title="La décomposition fondamentale V₀ = VI + VE" accent={ACCENT}>
-        <strong>Analogie de l'assurance :</strong> imagine que tu possèdes une maison (= le stockage)
-        dans une région parfois inondée. La maison vaut un loyer certain si tout se passe bien
-        — c'est la <strong>Valeur Intrinsèque (VI)</strong>.
-        Mais en plus, tu as implicitement une "assurance gratuite" : si une opportunité se présente
-        (prix qui flambent = inondation → tu peux revendre du gaz cher), tu en profites. Si rien ne se
-        passe, tu ne perds rien. Cette assurance gratuite, c'est la <strong>Valeur Extrinsèque (VE)</strong>.
+        Toute la valeur d'un stockage se décompose en deux parties distinctes.
         <br /><br />
-        Toute la valeur d'un stockage se décompose en deux parties :
-        <br />
-        <strong>VI</strong> = ce qu'on gagnerait sur la courbe forward actuelle, <em>si les prix futurs étaient
-        parfaitement connus</em> (problème déterministe).
-        <br />
-        <strong>VE</strong> = la prime d'optionalité — la valeur <em>supplémentaire</em> que l'incertitude
-        et la flexibilité ajoutent. C'est ce que l'imprévisibilité nous <em>rapporte</em>, pas ce
-        qu'elle nous coûte.
+        <strong>Valeur Intrinsèque (VI)</strong> = ce qu'un trader <em>mécanique</em> gagnerait en
+        suivant la courbe forward actuelle à la lettre : injecter quand les forwards d'été sont bas,
+        soutirer quand les forwards d'hiver sont hauts. Pas d'incertitude, pas d'adaptation — juste
+        l'arbitrage saisonnier lisible dans les prix d'aujourd'hui. C'est le plancher garanti.
+        <br /><br />
+        <strong>Valeur Extrinsèque (VE)</strong> = ce qu'un trader <em>flexible</em> gagne <em>en plus</em>
+        grâce à la capacité de re-optimiser quand la réalité dévie de la courbe forward.
+        Exemple : le forward de janvier dit 55 €, mais une vague de froid pousse le spot à 95 €.
+        Un stockage plein permet de soutirer massivement et de capter ces 40 €/MWh d'écart imprévu.
+        Cette flexibilité a une valeur <em>avant même</em> que la vague de froid arrive — simplement
+        parce que la possibilité existe.
+        <br /><br />
+        <strong>Analogie :</strong> VI = le billet de train non-échangeable au tarif le moins cher
+        (gain certain, plan figé). VE = le supplément payé pour un billet flexible (droit de changer
+        si une meilleure option apparaît). Le stockage de gaz est intrinsèquement un billet flexible :
+        même si on ne change jamais de plan, cette flexibilité vaut quelque chose.
       </IntuitionBlock>
 
       {/* ── 2. Formule annotée ─────────────────────────── */}
