@@ -33,7 +33,7 @@ function CrossRef({ to, label }) {
 // ─── Stockage de Gaz (Bellman) tab ───────────────────────────────────────────
 function StockageGazTab() {
   const [sub, setSub] = useState('Acteur & Modèle')
-  const subTabs = ['Acteur & Modèle', 'Équation de Bellman', 'Processus de Prix', 'Valeur Intrinsèque & Extrinsèque', 'Delta & Couverture', 'Courbe Forward & Portefeuille']
+  const subTabs = ['Acteur & Modèle', 'Équation de Bellman', 'Processus de Prix', 'Valeur Intrinsèque & Extrinsèque', 'Greeks & Couverture', 'Courbe Forward & Portefeuille']
   return (
     <div>
       <CrossRef
@@ -56,7 +56,7 @@ function StockageGazTab() {
         {sub === 'Équation de Bellman'               && <BellmanTab />}
         {sub === 'Processus de Prix'                 && <PrixTab />}
         {sub === 'Valeur Intrinsèque & Extrinsèque'  && <ValeurTab />}
-        {sub === 'Delta & Couverture'                && <DeltaTab />}
+        {sub === 'Greeks & Couverture'               && <DeltaTab />}
         {sub === 'Courbe Forward & Portefeuille'     && <ForwardRiskTab />}
       </div>
     </div>
