@@ -198,9 +198,9 @@ export function ActeurTab() {
 
   const loadData = MONTHS.map((m, i) => ({
     mois: m,
-    demande: DEMAND_PROFILE[i],
-    couvertureForward: EXPECTED_DEMAND[i],
-    excèsAléatoire: Math.max(0, DEMAND_PROFILE[i] - EXPECTED_DEMAND[i]),
+    forward: EXPECTED_DEMAND[i],
+    stockage: Math.max(0, DEMAND_PROFILE[i] - EXPECTED_DEMAND[i]),
+    total: DEMAND_PROFILE[i],
   }))
 
   const scenarioData = STRESS_SCENARIOS.map(s => ({
@@ -271,20 +271,36 @@ export function ActeurTab() {
         Cet excès est modeste en énergie (~10–13 GWh/mois) mais très concentré dans le temps — quelques jours critiques de grand froid.
       </IntuitionBlock>
 
-      <ChartWrapper title="Profil annuel (GWh/mois) — Décomposition couverture forward / aléas stockage" accent={ACCENT} height={240}>
+      <ChartWrapper title="Décomposition mensuelle de la demande — Forward hedgé + résiduel stockage (GWh/mois)" accent={ACCENT} height={270}>
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={loadData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+          <ComposedChart data={loadData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
             <CartesianGrid strokeDasharray="3 3" stroke={T.border} />
             <XAxis dataKey="mois" stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} />
-            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={[0, 100]} />
-            <Tooltip contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 12 }} />
+            <YAxis stroke={T.muted} tick={{ fill: T.muted, fontSize: 10 }} domain={[0, 105]} unit=" GWh" />
+            <Tooltip
+              contentStyle={{ background: T.panel, border: `1px solid ${T.border}`, color: T.text, fontSize: 12 }}
+              formatter={(value, name) => [`${value} GWh`, name]}
+            />
             <Legend wrapperStyle={{ color: T.muted, fontSize: 11 }} />
-            <Line type="monotone" dataKey="demande" stroke={ACCENT} strokeWidth={2.5} dot={false} name="Demande clients (réalisé)" />
-            <Line type="monotone" dataKey="couvertureForward" stroke={T.a4} strokeWidth={2} dot={false} strokeDasharray="6 3" name="Couverture forward (profil attendu)" />
-            <Line type="monotone" dataKey="excèsAléatoire" stroke={T.a5} strokeWidth={1.5} dot={false} strokeDasharray="4 2" name="Excès aléatoire → stockage" />
-          </LineChart>
+            <Bar dataKey="forward" stackId="a" fill={T.a4} fillOpacity={0.8} name="Couverture forward (profil attendu)" />
+            <Bar dataKey="stockage" stackId="a" fill={ACCENT} fillOpacity={0.9} name="Résiduel aléatoire → stockage" />
+            <Line type="monotone" dataKey="total" stroke={T.text} strokeWidth={2} dot={{ fill: T.text, r: 2.5 }} name="Demande réalisée (total)" strokeDasharray="5 3" />
+          </ComposedChart>
         </ResponsiveContainer>
       </ChartWrapper>
+      <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', margin: '6px 0 16px' }}>
+        {[
+          { icon: '🟢', text: <><strong>Zone verte (forward)</strong> — la part achetée à terme, certaine : ~85 % de la demande chaque mois. Elle suit le profil saisonnier moyen connu à l'avance.</> },
+          { icon: '🔴', text: <><strong>Zone rouge (stockage)</strong> — l'excès non couvert par les forwards. Quasi nul en été (2–5 GWh/mois), il monte à <strong>11–13 GWh/mois</strong> en décembre–janvier.</> },
+          { icon: '〰️', text: <><strong>Ligne pointillée (total réalisé)</strong> — la demande effective des clients. L'écart avec la zone verte seule mesure ce que le marché spot ou le stockage doit absorber.</> },
+          { icon: '🎯', text: <>L'excès hivernal dure <strong>quelques jours critiques</strong>, pas tout le mois. La puissance de soutirage (GWh/j) est le facteur limitant — pas le volume total.</> },
+        ].map(({ icon, text }, i) => (
+          <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start', flex: 1, minWidth: 200 }}>
+            <span style={{ fontSize: 14, flexShrink: 0 }}>{icon}</span>
+            <span style={{ color: T.muted, fontSize: 11, lineHeight: 1.6 }}>{text}</span>
+          </div>
+        ))}
+      </div>
 
       {/* Bloc 3 — Dimensionnement par puissance */}
       <SectionTitle accent={ACCENT}>Dimensionnement de la puissance de soutirage</SectionTitle>
@@ -393,10 +409,10 @@ export function ActeurTab() {
         ['V_t', 'Volume stocké à la date t (GWh) — état du stock'],
         ['S_t', 'Prix spot du gaz à t (€/MWh)'],
         ['u_t', 'Contrôle : débit injection (u>0) / soutirage (u<0) en GWh/j'],
-        ['q_wit', 'Puissance de soutirage contractée (GWh/j) — contrainte de dimensionnement principale'],
-        ['α', 'Sensibilité thermique du portefeuille (GWh/j par °C d\'écart vs normale)'],
-        ['ΔT', 'Écart de température vs normale saisonnière (°C) — scénario de stress'],
-        ['C(u)', 'Coût opérationnel : C(u) = c_op × |u|'],
+        ['q_{\\text{wit}}', 'Puissance de soutirage contractée (GWh/j) — contrainte de dimensionnement principale'],
+        ['\\alpha', 'Sensibilité thermique du portefeuille (GWh/j par °C d\'écart vs normale saisonnière)'],
+        ['\\Delta T', 'Écart de température vs normale saisonnière (°C) — scénario de stress'],
+        ['C(u)', 'Coût opérationnel : C(u) = c_{\\text{op}} \\times |u|'],
       ]} />
 
       {/* Bloc 5 — Modèle mathématique */}
@@ -445,6 +461,34 @@ export function ActeurTab() {
           </DemoStep>
         </Demonstration>
       </Accordion>
+
+      {/* Pont vers le modèle de Bellman */}
+      <SectionTitle accent={ACCENT}>À retenir — Pont vers le modèle mathématique</SectionTitle>
+      <div style={{ background: `${ACCENT}0d`, border: `1px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 18px', margin: '10px 0' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 13, marginBottom: 10 }}>
+          Ce problème physique se traduit terme à terme dans l'équation de Bellman
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 10 }}>
+          {[
+            { phys: 'Volume en stock V_t', math: 'Variable d\'état', latex: 'V_t \\in [V_{\\min}, V_{\\max}]', color: T.a1 },
+            { phys: 'Prix spot S_t', math: 'Processus stochastique OU', latex: 'S_t \\sim \\text{Ornstein-Uhlenbeck}', color: T.a5 },
+            { phys: 'Injection / soutirage u_t', math: 'Variable de contrôle', latex: 'u_t \\in [-q_{\\text{wit}},\\, q_{\\text{inj}}]', color: T.a4 },
+            { phys: 'Cashflow −u_t·S_t·Δt − C(u_t)', math: 'Récompense immédiate', latex: '\\pi(u_t, S_t)', color: T.a3 },
+            { phys: 'Valeur optimale future', math: 'Fonction valeur récursive', latex: '\\mathcal{V}_t(V_t, S_t)', color: ACCENT },
+          ].map(({ phys, math, latex, color }) => (
+            <div key={phys} style={{ background: `${color}11`, border: `1px solid ${color}33`, borderRadius: 6, padding: '8px 10px' }}>
+              <div style={{ color: T.muted, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 }}>{math}</div>
+              <div style={{ color: T.text, fontSize: 11, fontWeight: 600, marginBottom: 4 }}>{phys}</div>
+              <div style={{ color }}><K>{latex}</K></div>
+            </div>
+          ))}
+        </div>
+        <div style={{ color: T.muted, fontSize: 11, fontStyle: 'italic', lineHeight: 1.7, marginTop: 10, borderTop: `1px solid ${ACCENT}22`, paddingTop: 8 }}>
+          L'équation de Bellman optimise <em>simultanément</em> les décisions sur les 12 mois de l'année gazière,
+          en tenant compte de l'incertitude sur les prix futurs encodée dans la matrice de transition Π.
+          La contrainte <K>{"q_{\\text{wit}}"}</K> dimensionnée ici devient la borne de contrôle dans l'algorithme DP.
+        </div>
+      </div>
     </div>
   )
 }
