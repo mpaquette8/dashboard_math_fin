@@ -1348,6 +1348,344 @@ export function BellmanTab() {
         </div>
       </div>
 
+      {/* ── Exemple numérique complet T → T-1 → T-2 ────────────────────────── */}
+      <SectionTitle accent={ACCENT}>Exemple numérique — la récursion à la main (T → T-1 → T-2)</SectionTitle>
+
+      <IntuitionBlock emoji="🔢" title="Pourquoi cet exemple ?" accent={ACCENT}>
+        Le pseudocode ci-dessus décrit la <em>structure</em> de l'algorithme. Cet exemple en montre les <em>calculs exacts</em>
+        sur un cas ultra-réduit : 2 mois de contrat, 2 niveaux de stock, 3 prix possibles.
+        On va calculer à la main les grilles de valeur <K>{"\\mathcal{V}_T"}</K>, <K>{"\\mathcal{V}_{T-1}"}</K> puis <K>{"\\mathcal{V}_{T-2}"}</K> —
+        et voir comment chaque grille s'appuie sur la suivante.
+      </IntuitionBlock>
+
+      {/* Paramètres du mini-exemple */}
+      <div style={{ background: `${T.a5}10`, border: `1px solid ${T.a5}33`, borderRadius: 8, padding: '12px 16px', margin: '0 0 14px' }}>
+        <div style={{ color: T.a5, fontWeight: 700, fontSize: 12, marginBottom: 8 }}>Paramètres du mini-exemple (simplifiés pour le calcul à la main)</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 10 }}>
+          {[
+            ['T', '2 mois (t = 0, 1, 2)', T.a5],
+            ['V', '{0, 10} GWh', ACCENT],
+            ['S', '{25, 40, 55} €/GWh', T.a8],
+            ['q_wit = q_inj', '10 GWh/mois', T.a4],
+            ['c_op', '0.5 €/GWh', T.muted],
+            ['r', '0 (pas d\'actualisation)', T.muted],
+          ].map(([k, v, c]) => (
+            <span key={k} style={{ background: `${c}15`, border: `1px solid ${c}33`, borderRadius: 5, padding: '3px 10px', fontSize: 12 }}>
+              <strong style={{ color: c }}>{k}</strong>
+              <span style={{ color: T.muted }}> = {v}</span>
+            </span>
+          ))}
+        </div>
+        <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+          <strong style={{ color: T.text }}>Matrice de transition Π</strong> — probabilité de passer d'un prix <K>{"S_j"}</K> (ligne) à un prix <K>{"S_k"}</K> (colonne) en 1 mois :
+        </div>
+        <div style={{ overflowX: 'auto', marginTop: 8 }}>
+          <table style={{ borderCollapse: 'collapse', fontSize: 12, minWidth: 340 }}>
+            <thead>
+              <tr>
+                <th style={{ padding: '5px 12px', textAlign: 'left', color: T.muted, fontWeight: 600, borderBottom: `1px solid ${T.border}` }}>Depuis \ Vers →</th>
+                {['S = 25 € (été)', 'S = 40 € (neutre)', 'S = 55 € (hiver)'].map((h, i) => (
+                  <th key={i} style={{ padding: '5px 12px', textAlign: 'center', color: [T.a1, T.a5, T.a8][i], fontWeight: 700, borderBottom: `1px solid ${T.border}` }}>{h}</th>
+                ))}
+                <th style={{ padding: '5px 12px', textAlign: 'center', color: T.muted, fontWeight: 400, borderBottom: `1px solid ${T.border}`, fontSize: 10, fontStyle: 'italic' }}>Somme</th>
+              </tr>
+            </thead>
+            <tbody>
+              {[
+                { label: 'S = 25 € (été)', row: [0.60, 0.30, 0.10], color: T.a1 },
+                { label: 'S = 40 € (neutre)', row: [0.20, 0.50, 0.30], color: T.a5 },
+                { label: 'S = 55 € (hiver)', row: [0.10, 0.30, 0.60], color: T.a8 },
+              ].map(({ label, row, color }, j) => (
+                <tr key={j} style={{ background: j % 2 === 0 ? `${color}08` : 'transparent' }}>
+                  <td style={{ padding: '5px 12px', color, fontWeight: 600, fontSize: 12 }}>{label}</td>
+                  {row.map((p, k) => (
+                    <td key={k} style={{ padding: '5px 12px', textAlign: 'center', color: T.text, fontSize: 12, fontWeight: p === Math.max(...row) ? 700 : 400, background: p === Math.max(...row) ? `${color}15` : 'transparent' }}>{p.toFixed(2)}</td>
+                  ))}
+                  <td style={{ padding: '5px 12px', textAlign: 'center', color: T.a4, fontSize: 11, fontStyle: 'italic' }}>1.00</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <div style={{ color: T.muted, fontSize: 11, marginTop: 6, lineHeight: 1.6 }}>
+          Lecture : depuis <K>{"S=25"}</K> €, le prix a 60 % de chances de rester bas, 30 % de monter à 40 €, 10 % de monter à 55 €.
+          Depuis <K>{"S=55"}</K> €, il a 60 % de chances de rester haut (persistance hivernale) — c'est le processus Ornstein-Uhlenbeck discrétisé.
+        </div>
+      </div>
+
+      {/* ── Étape t = T ── */}
+      <div style={{ border: `2px solid ${T.a5}44`, borderRadius: 10, overflow: 'hidden', margin: '0 0 12px' }}>
+        <div style={{ background: `${T.a5}22`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ background: T.a5, color: '#000', borderRadius: 5, padding: '3px 10px', fontSize: 12, fontWeight: 800 }}>t = T = 2</span>
+          <span style={{ color: T.a5, fontWeight: 700, fontSize: 13 }}>Initialisation — condition terminale</span>
+        </div>
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            Le contrat expire. Plus aucune décision possible. Par définition :{' '}
+            <K>{"\\mathcal{V}_T(V,\\,S) = 0"}</K> pour tout <K>{"(V, S)"}</K>.
+            C'est notre unique point de départ — la seule valeur connue avec certitude.
+          </div>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ borderCollapse: 'collapse', fontSize: 12 }}>
+              <thead>
+                <tr>
+                  <th style={{ padding: '5px 14px', textAlign: 'left', color: T.muted, borderBottom: `1px solid ${T.a5}44` }}>V \ S</th>
+                  {['25 € (été)', '40 € (neutre)', '55 € (hiver)'].map((h, i) => (
+                    <th key={i} style={{ padding: '5px 20px', textAlign: 'center', color: [T.a1, T.a5, T.a8][i], borderBottom: `1px solid ${T.a5}44` }}>{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {['0 GWh', '10 GWh'].map((v) => (
+                  <tr key={v}>
+                    <td style={{ padding: '5px 14px', color: ACCENT, fontWeight: 600 }}>{v}</td>
+                    {[0, 0, 0].map((val, k) => (
+                      <td key={k} style={{ padding: '5px 20px', textAlign: 'center', color: T.a5, fontWeight: 700, fontStyle: 'italic' }}>0 €</td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div style={{ color: T.muted, fontSize: 11, fontStyle: 'italic', padding: '6px 10px', background: `${T.a5}10`, borderRadius: 5 }}>
+            → Grille <K>{"\\mathcal{V}_T"}</K> entièrement nulle. L'algorithme peut maintenant calculer <K>{"\\mathcal{V}_{T-1}"}</K>.
+          </div>
+        </div>
+      </div>
+
+      {/* ── Étape t = T-1 ── */}
+      <div style={{ border: `2px solid ${ACCENT}44`, borderRadius: 10, overflow: 'hidden', margin: '0 0 12px' }}>
+        <div style={{ background: `${ACCENT}22`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ background: ACCENT, color: '#000', borderRadius: 5, padding: '3px 10px', fontSize: 12, fontWeight: 800 }}>t = T-1 = 1</span>
+          <span style={{ color: ACCENT, fontWeight: 700, fontSize: 13 }}>Premier backward — espérance nulle, gain = cashflow pur</span>
+        </div>
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            On calcule <K>{"\\mathcal{V}_{T-1}[V_i][S_j]"}</K> pour chaque nœud de la grille.
+            Comme <K>{"\\mathcal{V}_T = 0"}</K> partout, le terme d'espérance s'annule :{' '}
+            <K display>{"\\text{gain}(u) = \\pi(u,\\, S_j) + \\underbrace{e^{-r\\Delta t} \\cdot \\sum_k \\Pi[j][k] \\cdot \\mathcal{V}_T[V'][k]}_{= \\,0 \\text{ car } \\mathcal{V}_T = 0} = \\pi(u,\\, S_j)"}</K>
+            La décision est donc purement locale : <strong>maximiser le cashflow immédiat</strong>.
+          </div>
+
+          {/* Calcul pour V=0 */}
+          <div style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 7, padding: '10px 14px' }}>
+            <div style={{ color: T.text, fontWeight: 600, fontSize: 12, marginBottom: 6 }}>Nœud (V = 0 GWh, S = 25 €) — stock vide</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+              Actions admissibles : <K>{"u \\in \\{0,\\, +10\\}"}</K> (impossible de soutirer un stock vide).
+              <br />• <K>{"u = 0"}</K> → <K>{"\\pi = 0"}</K> € → gain = <strong>0 €</strong>
+              <br />• <K>{"u = +10"}</K> → <K>{"\\pi = -10 \\times (25 + 0.5) = -255"}</K> € (achat de gaz au prix été) → gain = <strong>-255 €</strong>
+              <br /><strong style={{ color: ACCENT }}>u* = 0, 𝒱_{T-1}(0, 25) = 0 €</strong> — on n'achète pas à perte immédiate.
+              <span style={{ color: T.muted, fontSize: 11, fontStyle: 'italic' }}> (Le même raisonnement donne 0 € pour S=40 et S=55 avec V=0)</span>
+            </div>
+          </div>
+
+          {/* Calcul pour V=10 */}
+          <div style={{ background: T.panel2, border: `1px solid ${T.border}`, borderRadius: 7, padding: '10px 14px' }}>
+            <div style={{ color: T.text, fontWeight: 600, fontSize: 12, marginBottom: 6 }}>Nœud (V = 10 GWh, S = 40 €) — stock plein, prix neutre</div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+              Actions admissibles : <K>{"u \\in \\{-10,\\, 0\\}"}</K> (impossible d'injecter davantage : <K>{"V_{\\max} = 10"}</K>).
+              <br />• <K>{"u = -10"}</K> → <K>{"\\pi = 10 \\times (40 - 0.5) = +395"}</K> € → gain = <strong>+395 €</strong>
+              <br />• <K>{"u = 0"}</K> → <K>{"\\pi = 0"}</K> € → gain = <strong>0 €</strong>
+              <br /><strong style={{ color: ACCENT }}>u* = -10, 𝒱_{T-1}(10, 40) = 395 €</strong> — dernier mois opérationnel : on vide le tank.
+            </div>
+          </div>
+
+          {/* Table complète V_{T-1} */}
+          <div>
+            <div style={{ color: T.muted, fontSize: 11, marginBottom: 6 }}>Grille complète <K>{"\\mathcal{V}_{T-1}"}</K> après avoir calculé tous les nœuds :</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: '5px 14px', textAlign: 'left', color: T.muted, borderBottom: `1px solid ${ACCENT}44` }}>V \ S</th>
+                    {[['25 € (été)', T.a1], ['40 € (neutre)', T.a5], ['55 € (hiver)', T.a8]].map(([h, c]) => (
+                      <th key={h} style={{ padding: '5px 20px', textAlign: 'center', color: c, borderBottom: `1px solid ${ACCENT}44` }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { v: '0 GWh', vals: [0, 0, 0], note: '(ne peut pas vendre, n\'achète pas à perte)' },
+                    { v: '10 GWh', vals: [245, 395, 545], note: '(vend les 10 GWh au prix du marché, nette de c_op)' },
+                  ].map(({ v, vals, note }) => (
+                    <tr key={v}>
+                      <td style={{ padding: '6px 14px', color: ACCENT, fontWeight: 600 }}>{v}</td>
+                      {vals.map((val, k) => (
+                        <td key={k} style={{ padding: '6px 20px', textAlign: 'center', color: val === 0 ? T.muted : T.text, fontWeight: val > 0 ? 700 : 400 }}>
+                          {val > 0 ? `+${val} €` : '0 €'}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div style={{ color: T.muted, fontSize: 11, fontStyle: 'italic', padding: '6px 10px', background: `${ACCENT}10`, borderRadius: 5 }}>
+            → <K>{"\\mathcal{V}_{T-1}"}</K> calculée. Tous les nœuds (V=10) ont u* = -10 : c'est trivial car il n'y a plus d'avenir.
+            Maintenant on peut calculer <K>{"\\mathcal{V}_{T-2}"}</K>, qui va utiliser ces valeurs dans l'espérance.
+          </div>
+        </div>
+      </div>
+
+      {/* ── Étape t = T-2 ── */}
+      <div style={{ border: `2px solid ${T.a4}44`, borderRadius: 10, overflow: 'hidden', margin: '0 0 12px' }}>
+        <div style={{ background: `${T.a4}22`, padding: '10px 16px', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ background: T.a4, color: '#000', borderRadius: 5, padding: '3px 10px', fontSize: 12, fontWeight: 800 }}>t = T-2 = 0</span>
+          <span style={{ color: T.a4, fontWeight: 700, fontSize: 13 }}>Deuxième backward — l'espérance entre en jeu, vrais arbitrages</span>
+        </div>
+        <div style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.75 }}>
+            C'est ici que la récursion devient non-triviale. L'espérance{' '}
+            <K>{"\\mathbb{E}[\\mathcal{V}_{T-1}(V',\\,S_{t+1})]"}</K> n'est plus zéro —
+            elle vaut les prix que l'on vient de calculer. Pour chaque action <K>{"u"}</K>,
+            on doit calculer cette espérance en utilisant la matrice <K>{"\\Pi"}</K> :
+            <K display>{"\\mathbb{E}[\\mathcal{V}_{T-1}(V',\\,\\cdot)] = \\sum_{k=1}^{3} \\Pi[j][k] \\cdot \\mathcal{V}_{T-1}(V',\\, S_k)"}</K>
+          </div>
+
+          {/* Nœud 1 : (V=10, S=25) — attendre */}
+          <div style={{ background: `${T.a1}0d`, border: `1px solid ${T.a1}33`, borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ background: `${T.a1}33`, color: T.a1, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>Nœud 1</span>
+              <span style={{ color: T.text, fontWeight: 600, fontSize: 12 }}>V = 10 GWh, S = 25 € (été — prix bas)</span>
+            </div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.85 }}>
+              Ligne de Π utilisée : <K>{"\\Pi[S=25] = [0.60,\\, 0.30,\\, 0.10]"}</K>
+              <br />
+              <strong>Option A — Soutirer tout (u = −10), V' = 0 GWh :</strong>
+              <br />
+              <K display>{"\\mathbb{E}[\\mathcal{V}_{T-1}(0,\\,\\cdot)] = \\underbrace{0.60}_{S_k=25} \\times \\underbrace{0}_{\\mathcal{V}_{T-1}(0,25)} + \\underbrace{0.30}_{S_k=40} \\times \\underbrace{0}_{\\mathcal{V}_{T-1}(0,40)} + \\underbrace{0.10}_{S_k=55} \\times \\underbrace{0}_{\\mathcal{V}_{T-1}(0,55)} = 0 \\text{ €}"}</K>
+              <K display>{"\\text{gain}(-10) = \\underbrace{10 \\times (25 - 0.5)}_{\\pi \\,=\\, 245\\text{ €}} + \\underbrace{0}_{\\mathbb{E}=0} = \\mathbf{245}\\text{ €}"}</K>
+              <strong>Option B — Attendre (u = 0), V' = 10 GWh :</strong>
+              <br />
+              <K display>{"\\mathbb{E}[\\mathcal{V}_{T-1}(10,\\,\\cdot)] = \\underbrace{0.60}_{} \\times \\underbrace{245}_{\\mathcal{V}_{T-1}(10,25)} + \\underbrace{0.30}_{} \\times \\underbrace{395}_{\\mathcal{V}_{T-1}(10,40)} + \\underbrace{0.10}_{} \\times \\underbrace{545}_{\\mathcal{V}_{T-1}(10,55)}"}</K>
+              <K display>{"= 147 + 118.5 + 54.5 = \\mathbf{320}\\text{ €}"}</K>
+              <K display>{"\\text{gain}(0) = \\underbrace{0}_{\\pi = 0} + \\underbrace{320}_{\\mathbb{E}} = \\mathbf{320}\\text{ €}"}</K>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${T.a1}18`, borderRadius: 6, padding: '8px 12px', marginTop: 6 }}>
+              <span style={{ background: T.a1, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>u* = 0</span>
+              <span style={{ color: T.a1, fontWeight: 700, fontSize: 12 }}>𝒱₀(10, 25) = 320 € — Attendre !</span>
+              <span style={{ color: T.muted, fontSize: 11 }}>320 &gt; 245 : l'espérance de revente future dépasse le gain spot immédiat au prix bas.</span>
+            </div>
+          </div>
+
+          {/* Nœud 2 : (V=10, S=55) — vendre */}
+          <div style={{ background: `${T.a8}0d`, border: `1px solid ${T.a8}33`, borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ background: `${T.a8}33`, color: T.a8, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>Nœud 2</span>
+              <span style={{ color: T.text, fontWeight: 600, fontSize: 12 }}>V = 10 GWh, S = 55 € (hiver — prix élevé)</span>
+            </div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.85 }}>
+              Ligne de Π utilisée : <K>{"\\Pi[S=55] = [0.10,\\, 0.30,\\, 0.60]"}</K>
+              <br />
+              <strong>Option A — Soutirer tout (u = −10), V' = 0 GWh :</strong>
+              <K display>{"\\text{gain}(-10) = 10 \\times (55 - 0.5) + 0 = \\mathbf{545}\\text{ €}"}</K>
+              <strong>Option B — Attendre (u = 0), V' = 10 GWh :</strong>
+              <K display>{"\\mathbb{E}[\\mathcal{V}_{T-1}(10,\\,\\cdot)] = \\underbrace{0.10}_{} \\times \\underbrace{245}_{} + \\underbrace{0.30}_{} \\times \\underbrace{395}_{} + \\underbrace{0.60}_{} \\times \\underbrace{545}_{}"}</K>
+              <K display>{"= 24.5 + 118.5 + 327 = \\mathbf{470}\\text{ €}"}</K>
+              <K display>{"\\text{gain}(0) = 0 + 470 = \\mathbf{470}\\text{ €}"}</K>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${T.a8}18`, borderRadius: 6, padding: '8px 12px', marginTop: 6 }}>
+              <span style={{ background: T.a8, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>u* = −10</span>
+              <span style={{ color: T.a8, fontWeight: 700, fontSize: 12 }}>𝒱₀(10, 55) = 545 € — Soutirer !</span>
+              <span style={{ color: T.muted, fontSize: 11 }}>545 &gt; 470 : encaisser maintenant au prix hiver. Même si demain risque de rester haut, la certitude d'aujourd'hui l'emporte.</span>
+            </div>
+          </div>
+
+          {/* Nœud 3 : (V=0, S=25) — injecter */}
+          <div style={{ background: `${T.a4}0d`, border: `1px solid ${T.a4}33`, borderRadius: 8, padding: '12px 14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+              <span style={{ background: `${T.a4}33`, color: T.a4, borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>Nœud 3</span>
+              <span style={{ color: T.text, fontWeight: 600, fontSize: 12 }}>V = 0 GWh, S = 25 € (stock vide, prix bas)</span>
+            </div>
+            <div style={{ color: T.muted, fontSize: 12, lineHeight: 1.85 }}>
+              Actions admissibles : <K>{"u \\in \\{0,\\, +10\\}"}</K> (stock vide → pas de soutirage).
+              <br />
+              <strong>Option A — Attendre (u = 0), V' = 0 GWh :</strong>
+              <K display>{"\\text{gain}(0) = 0 + \\mathbb{E}[\\mathcal{V}_{T-1}(0,\\,\\cdot)] = 0 + 0 = \\mathbf{0}\\text{ €}"}</K>
+              <strong>Option B — Injecter tout (u = +10), V' = 10 GWh :</strong>
+              <K display>{"\\pi = -10 \\times (25 + 0.5) = -255\\text{ € (achat de gaz au prix été)}"}</K>
+              <K display>{"\\mathbb{E}[\\mathcal{V}_{T-1}(10,\\,\\cdot)] = 0.60 \\times 245 + 0.30 \\times 395 + 0.10 \\times 545 = 147 + 118.5 + 54.5 = 320\\text{ €}"}</K>
+              <K display>{"\\text{gain}(+10) = \\underbrace{-255}_{\\pi < 0} + \\underbrace{320}_{\\mathbb{E}} = \\mathbf{+65}\\text{ €}"}</K>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, background: `${T.a4}18`, borderRadius: 6, padding: '8px 12px', marginTop: 6 }}>
+              <span style={{ background: T.a4, color: '#000', borderRadius: 4, padding: '2px 8px', fontSize: 11, fontWeight: 700 }}>u* = +10</span>
+              <span style={{ color: T.a4, fontWeight: 700, fontSize: 12 }}>𝒱₀(0, 25) = +65 € — Injecter !</span>
+              <span style={{ color: T.muted, fontSize: 11 }}>On dépense 255 € maintenant pour un gain espéré de 320 € le mois prochain. Rentable grâce à l'arbitrage été/hiver.</span>
+            </div>
+          </div>
+
+          {/* Grille finale V_{T-2} */}
+          <div>
+            <div style={{ color: T.muted, fontSize: 11, marginBottom: 6 }}>Grille complète <K>{"\\mathcal{V}_{T-2}"}</K> — résultat du deuxième backward :</div>
+            <div style={{ overflowX: 'auto' }}>
+              <table style={{ borderCollapse: 'collapse', fontSize: 12 }}>
+                <thead>
+                  <tr>
+                    <th style={{ padding: '5px 14px', textAlign: 'left', color: T.muted, borderBottom: `1px solid ${T.a4}44` }}>V \ S</th>
+                    {[['25 € (été)', T.a1], ['40 € (neutre)', T.a5], ['55 € (hiver)', T.a8]].map(([h, c]) => (
+                      <th key={h} style={{ padding: '5px 20px', textAlign: 'center', color: c, borderBottom: `1px solid ${T.a4}44` }}>{h}</th>
+                    ))}
+                    <th style={{ padding: '5px 12px', textAlign: 'left', color: T.muted, borderBottom: `1px solid ${T.a4}44`, fontSize: 10 }}>Décision u*</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {[
+                    { v: '0 GWh', vals: ['+65 €', '+5 €', '−55 €'], u: ['+10 (injecter)', '+10 (injecter)', '0 (attendre)', ], colors: [T.a4, T.a4, T.muted] },
+                    { v: '10 GWh', vals: ['+320 €', '+395 €', '+545 €'], u: ['0 (attendre)', '−10 ou 0*', '−10 (soutirer)'], colors: [T.a1, T.a5, T.a8] },
+                  ].map(({ v, vals, u, colors }) => (
+                    <tr key={v}>
+                      <td style={{ padding: '6px 14px', color: ACCENT, fontWeight: 600 }}>{v}</td>
+                      {vals.map((val, k) => (
+                        <td key={k} style={{ padding: '6px 20px', textAlign: 'center', color: colors[k], fontWeight: 700 }}>{val}</td>
+                      ))}
+                      <td style={{ padding: '6px 12px', color: T.muted, fontSize: 10 }}>
+                        {u.map((d, k) => <div key={k} style={{ color: colors[k], fontSize: 10 }}>{d}</div>)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div style={{ color: T.muted, fontSize: 11, marginTop: 4, fontStyle: 'italic' }}>
+              * À S=40 et V=10 : gain(−10)=395 € = gain(0)=395 €. Les deux sont équivalents (indifférence de Bellman). En pratique l'algo choisit arbitrairement.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Synthèse récursion ── */}
+      <div style={{ background: `${ACCENT}10`, border: `2px solid ${ACCENT}44`, borderRadius: 8, padding: '14px 18px', margin: '0 0 16px' }}>
+        <div style={{ color: ACCENT, fontWeight: 700, fontSize: 12, marginBottom: 8, textTransform: 'uppercase', letterSpacing: 1 }}>Ce que cet exemple illustre — la récursion en trois points</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {[
+            {
+              num: '①', color: T.a5,
+              title: 'Le backward part du connu (V_T = 0) vers l\'inconnu (V_{T-2})',
+              body: 'On n\'aurait pas pu calculer V_{T-2} sans V_{T-1}, ni V_{T-1} sans V_T. Chaque couche "s\'appuie" sur la couche future déjà calculée — c\'est le principe fondamental du backward induction.',
+            },
+            {
+              num: '②', color: T.a4,
+              title: 'L\'espérance encode toute l\'incertitude future en un seul nombre',
+              body: 'Au nœud (V=10, S=25) à t=T-2 : on ne sait pas si le prix sera 25, 40 ou 55 l\'an prochain. Mais la pondération Π[j][k] × V_{T-1}(V\', S_k) résume tout cela en un seul chiffre (320 €) qui entre directement dans la comparaison avec le gain immédiat (245 €).',
+            },
+            {
+              num: '③', color: ACCENT,
+              title: 'Trois nœuds, trois comportements distincts — automatiquement',
+              body: 'Prix bas + plein → attendre (320 > 245). Prix haut + plein → vendre (545 > 470). Prix bas + vide → injecter (65 > 0). L\'algorithme différencie ces cas sans règle explicite : c\'est la comparaison gain(u) pour chaque u qui les fait émerger naturellement.',
+            },
+          ].map(({ num, color, title, body }) => (
+            <div key={num} style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+              <div style={{ width: 22, height: 22, borderRadius: 4, background: `${color}22`, border: `1px solid ${color}44`, display: 'flex', alignItems: 'center', justifyContent: 'center', color, fontWeight: 800, fontSize: 13, flexShrink: 0 }}>{num}</div>
+              <div>
+                <div style={{ color, fontWeight: 600, fontSize: 12 }}>{title}</div>
+                <div style={{ color: T.muted, fontSize: 11, lineHeight: 1.65, marginTop: 2 }}>{body}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Visualisation pédagogique des structures de données ──────────────── */}
       <Accordion title="Visualisation complète — grilles, matrice Π et backward pas à pas" accent={ACCENT} badge="Détail">
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
