@@ -5,6 +5,52 @@ Pas de backend, pas de state management externe — tout est local / en mémoire
 
 ---
 
+## Gestion des onglets — Workflow multi-agents
+
+**Activer ce workflow** pour toute demande d'ajout, modification ou suppression d'onglet.
+
+### Déclencheurs
+- "ajoute un onglet", "crée un tab", "génère", "implémente" → `CREATE`
+- "modifie", "améliore", "enrichis", "ajoute une section à" → `MODIFY`
+- "supprime", "retire" → `DELETE`
+
+### Étapes à suivre (full auto, commit final)
+
+**Étape 1 — Lire `scripts/agents/orchestrator.md`**
+Détecter : type d'opération, type de sujet (`math_pure` | `finance` | `energy` | `programming` | `simulation`), produire le task spec JSON.
+
+**Étape 2 — Lancer le(s) Content Writer(s)**
+Lire `scripts/agents/content_writer.md` et passer son contenu + le task spec à un agent `general-purpose`.
+- Tab avec N sous-onglets → **N agents en parallèle** (un seul message, N `Agent` tool calls simultanés)
+- Tab simple → 1 agent
+
+**Étape 3 — Valider**
+Lancer un agent `Explore` avec `scripts/agents/validator.md` + le fichier JSX généré.
+- Si violations critiques → passe de correction ciblée (pas de régénération complète)
+- Si uniquement des avertissements → noter et continuer
+
+**Étape 4 — Intégrer directement** (Claude, pas un agent)
+
+| Fichier | Modification |
+|---|---|
+| `src/design/tokens.js` | Ajouter `{ slug, label }` dans la catégorie cible |
+| `src/categories/[Cat]/index.jsx` | (1) import, (2) TAB_SLUGS entry, (3) render condition |
+| `src/App.jsx` | Seulement si nouvelle catégorie : 2 lignes de routes |
+
+**Étape 5 — Commit + push**
+```bash
+git add -p   # ou fichiers spécifiques
+git commit -m "feat: [description courte du contenu ajouté]"
+git push -u origin claude/multi-agent-architecture-Y9cWO
+```
+
+### Référence de qualité
+- Niveau visé : `BellmanTab` dans `src/categories/MathsEnergie/tabs/StockageGaz.jsx`
+- Densité cible : 800–1300 lignes JSX par export function
+- Vérification : `npm run build` → nav vers l'onglet → IntuitionBlock + KaTeX + sliders + graphiques
+
+---
+
 ## Structure du projet (à updater à chaque mise à jour)
 
 ```
